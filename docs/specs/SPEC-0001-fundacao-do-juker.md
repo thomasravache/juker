@@ -86,14 +86,14 @@ Fluxo de entrega: PR → CI (build, lint, UT, IT, arquitetura, E2E, scan, SDD) �
 | SPEC-0004 | Building blocks dos módulos | full | foundation | M | SPEC-0002 | SPEC-0003@1 |
 | SPEC-0005 | Pipeline de CI | full | foundation | M | SPEC-0002 | SPEC-0003@1, SPEC-0025@1 |
 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full | foundation | M | — | SPEC-0005@1 |
-| SPEC-0007 | Walking skeleton: página do bar e TV tocando | full | foundation | M | SPEC-0003, SPEC-0004, SPEC-0005, SPEC-0006, SPEC-0025 | — |
+| SPEC-0007 | Walking skeleton: página do bar e TV tocando | full | foundation | M | SPEC-0003, SPEC-0004, SPEC-0005, SPEC-0025 | — |
 | SPEC-0008 | Observabilidade básica | full | foundation | M | SPEC-0007 | — |
 | SPEC-0009 | Segurança básica e autorização | full | foundation | M | SPEC-0007 | — |
 | SPEC-0026 | Pendências do review da SPEC-0002 | lite | fix | S | SPEC-0002 | — |
 
 ## 5. Estratégia de Entrega
-- **Ambientes:** staging automático a cada merge em `main`; produção pelo mesmo workflow, com aprovação do environment `production` e confirmação do fundador (G6).
-- **Entrega por onda:** a partir da SPEC-0007, cada onda termina em produção. Antes disso, o que existe é só infraestrutura (staging e produção vazios, mas saudáveis).
+- **Ambientes:** **CD adiado por decisão do fundador (2026-09-30)**: nesta fase tudo é validado localmente (AppHost) e no CI do GitHub (SPEC-0005); a entrega de cada onda é o merge na `main` com o CI verde. A SPEC-0006 (staging/produção) fica estacionada com o impedimento IMP-01 e, quando destravada, assume o deploy e as verificações em ambiente real. Este épico só fecha depois dela.
+- **Entrega por onda:** cada onda termina com merge na `main`, CI verde e smoke contra o host local; produção só depois da SPEC-0006.
 - **Feature flags:** N/A na fundação. As flags nascem com as funcionalidades do SPEC-0010.
 - **Rollback:** redeploy da imagem da versão anterior pelo `deploy.yml` (SPEC-0006), com migrations sempre compatíveis com a versão anterior.
 - **Métricas de sucesso pós-release:** pipeline verde de ponta a ponta; tempo de deploy abaixo de 10 min; uptime do skeleton acima de 99% por 7 dias em staging.
@@ -138,3 +138,4 @@ Uma aprovação humana cobre o épico e as specs filhas apresentadas junto com e
 ## 12. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-09-30 | CD adiado: entrega por onda passa a ser merge na main com CI verde; SPEC-0006 estacionada; SPEC-0007 não depende mais dela | Decisão do fundador: infra fora por enquanto, CI antes do CD | SPEC-0006, SPEC-0007, SPEC-0008, SPEC-0009 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), a confirmar no overview |

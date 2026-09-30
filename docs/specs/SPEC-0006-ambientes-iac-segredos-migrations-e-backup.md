@@ -35,6 +35,7 @@ Cria os ambientes **staging** e **produção** como código em VPS da Hetzner: p
 - Backup: `deploy/backup.sh` agendado (systemd timer, 04:30 BRT) com `pg_dump -Fc` enviado para o Hetzner Object Storage (compatível com S3), retenção de 14 dias; `deploy/restore.sh`.
 - `docs/operations.md`: runbook de deploy, rollback, restauração e rotação de segredos.
 - Preenche `deploy_staging`, `deploy_production`, `staging_url` e `production_url` no `sdd-config.yml`.
+- **Verificações em ambiente real herdadas** (transferidas quando o CD foi adiado): smoke E2E-03 da SPEC-0007 após cada deploy e o Lighthouse em staging; bar `juker-smoke` criado em staging e produção; ativação dos alertas e do uptime check da SPEC-0008 e disparo real do alerta `juker-ready-down`; verificação com securityheaders.com da SPEC-0009.
 
 **Não-objetivos (fora do escopo):**
 - Observabilidade e alertas (SPEC-0008).
@@ -216,3 +217,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-09-30 | Recebe as verificações em ambiente real das SPECs 0007, 0008 e 0009 | CD e ambientes adiados por decisão do fundador; testes locais e CI primeiro | SPEC-0007, SPEC-0008, SPEC-0009 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), a confirmar no overview |

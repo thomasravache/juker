@@ -141,11 +141,11 @@ CLI:
 - **E2E-01** — Gerente criado pela CLI abre `/admin/login`, erra a senha e vê "E-mail ou senha inválidos"; entra com a senha temporária, é levado a "Defina sua nova senha", define a nova e chega a `/admin` com o nome "Bar do Rock"; a página de login não tem violações axe.
 
 ### 7.6 Outros
-- Segurança: `dotnet list package --vulnerable` sem High/Critical (job `security` da SPEC-0005); verificação manual dos cabeçalhos no staging com securityheaders.com (nota mínima A).
+- Segurança: `dotnet list package --vulnerable` sem High/Critical (job `security` da SPEC-0005); cabeçalhos conferidos com `curl -I` no host local (IT-07 já os cobre); a verificação com securityheaders.com em staging (nota mínima A) foi transferida para a SPEC-0006.
 
 **Dublês e dados de teste:** `TestGuestSessionIssuer`, `TestTvTokenIssuer`, `FakeSessionStatus`; rotas `*/probe` só no ambiente `Testing`.
 
-**Ambiente de execução:** Testcontainers (Postgres 18) para IT; AppHost + Playwright para E2E; staging para a verificação dos cabeçalhos.
+**Ambiente de execução:** Testcontainers (Postgres 18) para IT; AppHost + Playwright para E2E; host local para a conferência manual dos cabeçalhos.
 
 ## 8. Plano de Rollout
 - **Estratégia:** deploy direto; o primeiro gerente do piloto é criado pela CLI no servidor.
@@ -238,3 +238,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-09-30 | Verificação de cabeçalhos com securityheaders.com transferida para a SPEC-0006; conferência local com curl | CD e ambientes adiados por decisão do fundador | SPEC-0006 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), a confirmar no overview |

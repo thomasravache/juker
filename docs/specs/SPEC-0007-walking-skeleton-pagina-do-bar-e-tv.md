@@ -7,9 +7,9 @@ user_facing: true
 status: approved
 created: 2026-09-30
 parent: SPEC-0001
-depends_on: [SPEC-0003, SPEC-0004, SPEC-0005, SPEC-0006, SPEC-0025]
+depends_on: [SPEC-0003, SPEC-0004, SPEC-0005, SPEC-0025]
 consumes_contract: []
-contract_version: 1
+contract_version: 2
 touches: [src/Modules/Venues/**, src/Web/**, src/Juker.Host/**, tests/Juker.Modules.Venues.UnitTests/**, tests/Juker.IntegrationTests/Venues/**, tests/Juker.IntegrationTests/Web/**, tests/Juker.E2ETests/**, tests/Juker.Web.UnitTests/**]
 adrs: [ADR-0001, ADR-0003, ADR-0004, ADR-0007, ADR-0009, ADR-0013]
 external: []
@@ -34,8 +34,8 @@ A fatia mais fina do produto passando por todas as camadas e chegando à produç
 - `FakeMediaPlayer` (vídeos locais curtos) selecionado por configuração para os E2E.
 - Tailwind v4 standalone no build do `Juker.Web`, com `@theme` gerado dos tokens do Stitch (cores, Oswald/Inter, raios, espaçamentos).
 - Service worker do cliente cacheando o runtime do WASM.
-- Bar fixo **`juker-smoke`** ("Juker Smoke", sem QR público) criado pela CLI em staging e produção no primeiro deploy (passo no runbook de `docs/operations.md`), usado só pelo smoke (ADR-0013).
-- Smoke E2E (`Category=Smoke`) rodando depois de cada deploy (G6) contra o ambiente, via `JUKER_E2E_BASE_URL` (SPEC-0025).
+- Bar fixo **`juker-smoke`** ("Juker Smoke", sem QR público) criado pela CLI (`create-venue`), usado só pelo smoke (ADR-0013).
+- Smoke E2E (`Category=Smoke`) executável contra qualquer host já em execução via `JUKER_E2E_BASE_URL` (SPEC-0025). **Nesta fase (CD adiado), roda contra o host local** (`dotnet run --project src/Aspire/Juker.AppHost -c Release`); a execução pós-deploy em staging/produção entra com a SPEC-0006.
 
 **Não-objetivos (fora do escopo):**
 - Autenticação do gerente e pareamento da TV (SPEC-0009 e SPEC-0021); a `/tv/{slug}` desta spec só toca a lista de demonstração.
@@ -43,9 +43,9 @@ A fatia mais fina do produto passando por todas as camadas e chegando à produç
 - Layout final da TV (SPEC-0021).
 
 ## 3. Dependências
-- **Implementações necessárias:** SPEC-0003 (harness de integração), SPEC-0004 (building blocks), SPEC-0005 (CI), SPEC-0006 (deploy e ambientes), SPEC-0025 (harness de E2E, Playwright e API de teste).
+- **Implementações necessárias:** SPEC-0003 (harness de integração), SPEC-0004 (building blocks), SPEC-0005 (CI), SPEC-0025 (harness de E2E, Playwright e API de teste). A SPEC-0006 (deploy e ambientes) saiu das dependências: CD adiado por decisão do fundador.
 - **Contratos consumidos:** N/A.
-- **Pré-requisitos externos:** domínio e VPS da SPEC-0006; uma TV com mini PC ou Fire TV/Chrome e uma conta YouTube Premium de teste para a verificação manual (7.6); a lista de demonstração com vídeos do YouTube que permitem embed (definida pelo fundador em configuração, não no código).
+- **Pré-requisitos externos:** uma TV com mini PC ou Fire TV/Chrome e uma conta YouTube Premium de teste para a verificação manual (7.6); a lista de demonstração com vídeos do YouTube que permitem embed (definida pelo fundador em configuração, não no código).
 
 ## 4. Decisão Arquitetural
 **Contexto:** projeto novo; ADR-0001 (módulos), ADR-0003 (render mode por área e Tailwind), ADR-0004 (schema por módulo), ADR-0007 (player isolado atrás de interface), ADR-0009 (deploy) e ADR-0013 (E2E e smoke).
@@ -109,7 +109,7 @@ CLI:
 | TV toca em sequência | `/tv/rock` com playlist de 2 itens | item 1 toca; ao terminar, item 2 toca | E2E-01, CT-02 |
 | Vídeo com erro na TV | item 1 falha com `Unavailable` | pula para o item 2 em até 3 s | E2E-01, CT-02 |
 | Visual do design system | componentes renderizados | classes vindas dos tokens (`bg-surface`, `text-primary`, `font-display`) | UT-03 |
-| Smoke pós-deploy | ambiente implantado com o bar `juker-smoke` | `/health/ready` = 200 e `/b/juker-smoke` mostra "Juker Smoke" e "Jukebox ativa" | E2E-03 |
+| Smoke contra host em execução | host local (ou, com a SPEC-0006, o ambiente implantado) com o bar `juker-smoke` | `/health/ready` = 200 e `/b/juker-smoke` mostra "Juker Smoke" e "Jukebox ativa" | E2E-03 |
 
 ## 7. Artefato B — Plano de Testes (TDD)
 
@@ -134,22 +134,22 @@ CLI:
 ### 7.5 Testes E2E
 - **E2E-01** — Com um bar criado pela API de teste, o celular 390×844 (Chromium e WebKit) abre `/b/{slug}` e vê o nome do bar e "Jukebox ativa", sem violações axe; a TV 1920×1080 abre `/tv/{slug}` com o `FakeMediaPlayer` e a playlist [falha, ok1, ok2]: o item com falha é pulado, `ok1` toca até o fim e `ok2` começa.
 - **E2E-02** — Celular (Chromium e WebKit) abre `/b/nao-existe` e vê "Bar não encontrado".
-- **E2E-03** — (Smoke) Contra o ambiente implantado (`JUKER_E2E_BASE_URL`): `/health/ready` = 200 e o celular abre `/b/juker-smoke` e vê "Juker Smoke" e "Jukebox ativa"; roda após cada deploy em staging e produção.
+- **E2E-03** — (Smoke) Contra um host já em execução indicado por `JUKER_E2E_BASE_URL` (nesta fase, o host local em Release com o bar `juker-smoke` criado pela CLI): `/health/ready` = 200 e o celular abre `/b/juker-smoke` e vê "Juker Smoke" e "Jukebox ativa". A execução após cada deploy em staging e produção é responsabilidade da SPEC-0006.
 
 ### 7.6 Outros
 - **Verificação manual do YouTube Premium (obrigatória antes do SPEC-0010):** na TV real do piloto, com o navegador em kiosk logado numa conta Premium e cookies do YouTube liberados, abrir `/tv/rock` com a `DemoPlaylist` real de 10 vídeos e confirmar: autoplay após uma única interação inicial, 10 vídeos seguidos **sem anúncio** e sem intervenção. Evidência: vídeo/foto e hardware usado, registrados no Relatório de Entrega. Se houver anúncios, abrir impedimento `decisão` para o fundador.
-- Performance: Lighthouse mobile em `/b/rock` no staging, LCP ≤ 2,5 s — relatório anexado.
+- Performance: Lighthouse mobile em `/b/rock` com o host local em Release e throttling de 4G, LCP ≤ 2,5 s — relatório anexado (a repetição em staging entra com a SPEC-0006).
 
 **Dublês e dados de teste:** `FakeMediaPlayer` com vídeos MP4 de 3 s em `wwwroot/test-media` (só no ambiente `E2E`); bar próprio por teste criado pela API de teste (`e2e-…`) nos E2E e por builder nos IT; bar fixo `juker-smoke` nos ambientes implantados.
 
-**Ambiente de execução:** IT com Testcontainers; E2E local pelo AppHost e em staging após o deploy (smoke).
+**Ambiente de execução:** IT com Testcontainers; E2E local pelo AppHost e no CI (SPEC-0005); smoke contra o host local (staging depois, com a SPEC-0006).
 
 ## 8. Plano de Rollout
-- **Estratégia:** deploy direto. A `/tv/{slug}` de demonstração não expõe dados (só toca a playlist configurada); ela é substituída pela TV pareada da SPEC-0021.
+- **Estratégia:** sem deploy nesta fase (CD adiado; ver SPEC-0006): a entrega é o merge na `main` com o CI verde. A `/tv/{slug}` de demonstração não expõe dados (só toca a playlist configurada); ela é substituída pela TV pareada da SPEC-0021.
 - **Dados/schema:** migration `venues.Initial` (tabela `venues`, índice único em `slug`), só aditiva.
 - **Compatibilidade:** `/api/v1` é o prefixo de versão pública.
-- **Observabilidade:** logs estruturados do handler; o smoke E2E-03 roda após cada deploy.
-- **Rollback:** redeploy da versão anterior (SPEC-0006); a migration é aditiva.
+- **Observabilidade:** logs estruturados do handler; o smoke E2E-03 roda contra o host local (e após cada deploy, quando a SPEC-0006 existir).
+- **Rollback:** revert do merge na `main`; a migration é aditiva.
 - **Etapas de migração/coexistência:** N/A.
 
 ## 9. Questões em Aberto
@@ -235,3 +235,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 2 | 2026-09-30 | E2E-03 (smoke) passa a rodar contra o host local via `JUKER_E2E_BASE_URL`; dependência da SPEC-0006 removida; Lighthouse local em Release; rollout sem deploy nesta fase | Fundador decidiu deixar a infraestrutura/CD de fora por enquanto: testar localmente até o fim, com o CI do GitHub antes do CD | SPEC-0006 (recebe a execução pós-deploy do smoke e do Lighthouse) | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), a confirmar no overview |

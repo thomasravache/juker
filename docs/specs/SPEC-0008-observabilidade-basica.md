@@ -31,8 +31,8 @@ Liga a telemetria de ponta a ponta: OpenTelemetry (logs, métricas, traces) expo
 - `JukerMetrics` (Meter "Juker") com os instrumentos definidos e documentados: `juker.tv.online` (gauge), `juker.queue.length` (gauge), `juker.requests.added` (counter), `juker.youtube.quota.used` (counter), `juker.playback.errors` (counter), `juker.outbox.pending`/`failed` (gauges da SPEC-0004).
 - Processador de logs que remove IP, `Cookie`, `Authorization`, `Set-Cookie` e parâmetros `pin`/`token`.
 - Verificar e registrar o plano gratuito vigente do backend (Grafana Cloud ou alternativa OTLP, ADR-0010), com fonte e data em `docs/operations.md`.
-- Alertas como código em `deploy/observability/alerts.yaml`: `/health/ready` indisponível por 2 min; taxa de 5xx > 2% em 5 min. Notificação para o e-mail e o celular do fundador.
-- Uptime check externo em `https://<domínio>/health/ready` e `https://staging.<domínio>/health/ready`, a cada 1 min.
+- Alertas como código em `deploy/observability/alerts.yaml` (versionados e validados agora; **ativados no backend quando houver ambiente, com a SPEC-0006**): `/health/ready` indisponível por 2 min; taxa de 5xx > 2% em 5 min. Notificação para o e-mail e o celular do fundador.
+- Uptime check externo (a cada 1 min em `/health/ready` de staging e produção) **definido em `deploy/observability/uptime.yaml` e ativado com a SPEC-0006**.
 
 **Não-objetivos (fora do escopo):**
 - Alertas de negócio (TV offline, cota do YouTube): entram nas specs que emitem as métricas (SPEC-0014, SPEC-0020).
@@ -41,7 +41,7 @@ Liga a telemetria de ponta a ponta: OpenTelemetry (logs, métricas, traces) expo
 ## 3. Dependências
 - **Implementações necessárias:** SPEC-0007 — host publicado pelo pipeline com `/health/*` e o endpoint público do bar para gerar tráfego de teste.
 - **Contratos consumidos:** N/A.
-- **Pré-requisitos externos:** conta no backend de observabilidade (plano gratuito) criada pelo fundador; segredos `OTLP_ENDPOINT`/`OTLP_HEADERS` nos GitHub Environments.
+- **Pré-requisitos externos:** N/A nesta fase — os testes usam um OpenTelemetry Collector local em container; a conta no backend gerenciado e os segredos `OTLP_*` entram com a SPEC-0006.
 
 ## 4. Decisão Arquitetural
 **Contexto:** projeto novo; ADR-0010.
@@ -117,7 +117,7 @@ deploy/observability/alerts.yaml
 - N/A — user_facing: false.
 
 ### 7.6 Outros
-- Disparo real em staging: derrubar o container `juker` por 3 min e confirmar a notificação do alerta `juker-ready-down` no celular do fundador (print como evidência no G6).
+- Disparo real do alerta `juker-ready-down` no celular do fundador: **transferido para a SPEC-0006** (exige ambiente e backend gerenciado).
 
 **Dublês e dados de teste:** endpoint `/_test/fail` registrado apenas no ambiente `Testing`.
 
@@ -210,3 +210,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-09-30 | Alertas e uptime check versionados agora e ativados com a SPEC-0006; conta do backend e segredos OTLP saem dos pré-requisitos; disparo real do alerta transferido para a SPEC-0006 | CD e ambientes adiados por decisão do fundador | SPEC-0006 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), a confirmar no overview |
