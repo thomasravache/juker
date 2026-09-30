@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Fixture do SPEC-0028:IT-01 — fora da Juker.slnx de propósito, irmão do fixture da SPEC-0026:IT-01.
+    Importa o Directory.Build.props da raiz (importação automática do MSBuild). Cada arquivo contém uma forma de
+    bloqueio síncrono via awaiter configurado (ConfigureAwait(false).GetAwaiter().GetResult()), que o
+    BannedSymbols.txt deve rejeitar com RS0030 (ADR-0014, regra 3).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

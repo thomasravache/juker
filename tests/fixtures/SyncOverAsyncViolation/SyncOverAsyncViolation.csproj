@@ -11,4 +11,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Configured/ é outro projeto (SPEC-0028:IT-01), compilado à parte: fica fora deste. -->
+    <Compile Remove="Configured/**" />
+  </ItemGroup>
+
 </Project>
