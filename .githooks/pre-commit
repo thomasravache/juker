@@ -1,0 +1,16 @@
+#!/bin/sh
+# SDD pre-commit: valida specs/ADRs alterados no commit (rascunhos 'proposed' ficam de fora).
+if git diff --cached --name-only | grep -Eq '^docs/(specs|adr)/'; then
+  if ! python3 tools/sdd/spec_graph.py validate --staged; then
+    echo "pre-commit: corrija os erros de validação SDD acima antes de commitar" >&2
+    exit 1
+  fi
+fi
+# Lint (ADR-0014, regra 4): mesmo comando do job lint do CI, só quando há C#/MSBuild/estilo no commit.
+if git diff --cached --name-only | grep -Eq '(\.cs|\.csproj|\.props|\.targets|\.slnx|\.editorconfig)$'; then
+  if ! dotnet format Juker.slnx --verify-no-changes; then
+    echo "pre-commit: rode 'dotnet format Juker.slnx' e adicione as correções ao commit" >&2
+    exit 1
+  fi
+fi
+exit 0
