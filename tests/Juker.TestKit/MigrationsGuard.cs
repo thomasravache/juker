@@ -1,4 +1,4 @@
-#pragma warning disable MA0025 // Scaffold do contrato (SPEC-0003): corpos lançam NotImplementedException até a implementação
+using Microsoft.EntityFrameworkCore;
 
 namespace Juker.TestKit;
 
@@ -6,5 +6,23 @@ namespace Juker.TestKit;
 public static class MigrationsGuard
 {
     /// <summary>Verifica todos os <c>DbContext</c>; a exceção cita cada contexto com mudanças pendentes.</summary>
-    public static void AssertNoPendingModelChanges() => throw new NotImplementedException();
+    public static void AssertNoPendingModelChanges()
+    {
+        var pending = new List<string>();
+        foreach (var contextType in DbContextDiscovery.ContextTypes())
+        {
+            using var context = DbContextDiscovery.Create(contextType);
+            if (context.Database.HasPendingModelChanges())
+            {
+                pending.Add(contextType.FullName!);
+            }
+        }
+
+        if (pending.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"DbContext com mudanças no modelo sem migration: {string.Join(", ", pending)}. " +
+                "Crie a migration com `dotnet ef migrations add <Nome>` no projeto do módulo.");
+        }
+    }
 }
