@@ -12,8 +12,8 @@ internal static class DiagnosticsEndpoints
             return endpoints;
         }
 
-        var names = ModuleCatalog.All.Select(module => module.Name).ToArray();
-        endpoints.MapGet("/_diag/modules", () => TypedResults.Ok(names))
+        // Resolvido do DI a cada requisição: reflete a composição do host (SPEC-0026).
+        endpoints.MapGet("/_diag/modules", (ComposedModules modules) => TypedResults.Ok(modules.Names))
             .ExcludeFromDescription();
 
         return endpoints;
