@@ -1,0 +1,11 @@
+# APIs proibidas só em projetos de teste (IsTestProject=true), ADR-0013/0014.
+# Complementa o BannedSymbols.txt da raiz. Espere por condição (PeriodicTimer, notificações do Aspire,
+# polling com prazo), nunca por tempo fixo.
+M:System.Threading.Thread.Sleep(System.Int32);Espere por condição, não por tempo fixo
+M:System.Threading.Thread.Sleep(System.TimeSpan);Espere por condição, não por tempo fixo
+M:System.Threading.Tasks.Task.Delay(System.Int32);Espere por condição, não por tempo fixo
+M:System.Threading.Tasks.Task.Delay(System.TimeSpan);Espere por condição, não por tempo fixo
+M:System.Threading.Tasks.Task.Delay(System.Int32,System.Threading.CancellationToken);Espere por condição, não por tempo fixo
+M:System.Threading.Tasks.Task.Delay(System.TimeSpan,System.Threading.CancellationToken);Espere por condição, não por tempo fixo
+M:System.Threading.Tasks.Task.Delay(System.TimeSpan,System.TimeProvider);Espere por condição, não por tempo fixo
+M:System.Threading.Tasks.Task.Delay(System.TimeSpan,System.TimeProvider,System.Threading.CancellationToken);Espere por condição, não por tempo fixo

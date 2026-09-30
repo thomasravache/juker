@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Fixture do SPEC-0002:IT-03 — fora da Juker.slnx de propósito.
+    Importa o Directory.Build.props da raiz (importação automática do MSBuild) e contém violações
+    que o build deve rejeitar: RS0030 (BannedSymbols.txt) e MA0001 (Meziantou, elevada a erro).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

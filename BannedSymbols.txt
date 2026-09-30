@@ -1,0 +1,28 @@
+# APIs proibidas no build (ADR-0014, SPEC-0002). Aplicado a src/ e tests/ pelo Directory.Build.props.
+# Violação = RS0030 (erro, pois TreatWarningsAsErrors=true).
+# Thread.Sleep e Task.Delay ficam em .config/BannedSymbols.Tests.txt: só valem para projetos de teste.
+
+# Relógio do sistema → injete TimeProvider (ADR-0002/0012)
+P:System.DateTime.Now;Use TimeProvider.GetLocalNow()
+P:System.DateTime.UtcNow;Use TimeProvider.GetUtcNow()
+P:System.DateTime.Today;Use TimeProvider.GetLocalNow().Date
+P:System.DateTimeOffset.Now;Use TimeProvider.GetLocalNow()
+P:System.DateTimeOffset.UtcNow;Use TimeProvider.GetUtcNow()
+
+# HttpClient criado à mão → IHttpClientFactory ou cliente tipado
+M:System.Net.Http.HttpClient.#ctor;Use IHttpClientFactory ou um cliente tipado
+M:System.Net.Http.HttpClient.#ctor(System.Net.Http.HttpMessageHandler);Use IHttpClientFactory ou um cliente tipado
+M:System.Net.Http.HttpClient.#ctor(System.Net.Http.HttpMessageHandler,System.Boolean);Use IHttpClientFactory ou um cliente tipado
+
+# Bloqueio síncrono de Task → await
+P:System.Threading.Tasks.Task`1.Result;Use await
+M:System.Threading.Tasks.Task.Wait;Use await
+M:System.Threading.Tasks.Task.Wait(System.Int32);Use await
+M:System.Threading.Tasks.Task.Wait(System.TimeSpan);Use await
+M:System.Threading.Tasks.Task.Wait(System.Threading.CancellationToken);Use await
+M:System.Threading.Tasks.Task.Wait(System.Int32,System.Threading.CancellationToken);Use await
+M:System.Threading.Tasks.Task.Wait(System.TimeSpan,System.Threading.CancellationToken);Use await
+
+# Console → ILogger. Exceção: a CLI administrativa em src/Juker.Host/Cli/**, com supressão
+# de RS0030 no nível do arquivo e comentário do motivo (ADR-0014, regra 3).
+T:System.Console;Use ILogger<T> (Console só em src/Juker.Host/Cli/**)
