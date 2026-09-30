@@ -18,10 +18,17 @@ Rode na raiz do repositório. O runner é o Microsoft.Testing.Platform (`global.
 
 Os testes de integração precisam do Docker (a imagem `postgres:18` é baixada na primeira execução).
 
-Um projeto de teste sem nenhum teste selecionado não é falha: o Microsoft.Testing.Platform termina com o código 8
-nesse caso, e o `tests/Directory.Build.props` ignora esse código (`--ignore-exit-code 8`). É isso que permite
-filtrar por categoria na solução inteira e manter projetos de UT ainda vazios. Falhas de teste continuam
-terminando com código diferente de zero.
+O Microsoft.Testing.Platform termina com o código 8 quando nenhum teste roda num projeto. **Por padrão isso é
+falha**: um projeto de teste que perdeu seus testes quebra o `dotnet test`. Um projeto só aceita zero testes com
+`<JukerAllowZeroTests>true</JukerAllowZeroTests>` no próprio `.csproj`. Nesse caso, o `tests/Directory.Build.props`
+acrescenta `--ignore-exit-code 8`. Hoje usam a propriedade:
+
+- os projetos de UT ainda vazios. A spec que acrescentar os primeiros testes num deles remove a propriedade;
+- o `Juker.ArchitectureTests`, que o filtro `Category=Integration` esvazia de propósito.
+
+A propriedade é lida do texto do `.csproj`, porque o `dotnet test` lê os argumentos na avaliação do projeto,
+antes do corpo do `.csproj`. Declare-a como elemento simples dentro de um `<PropertyGroup>`. Falhas de teste
+continuam terminando com código diferente de zero.
 
 ## Projetos
 
@@ -42,6 +49,8 @@ Ao criar um projeto de teste novo:
 1. Adicione o projeto à `Juker.slnx`, na pasta `/tests/`.
 2. Adicione um `ProjectReference` com `ReferenceOutputAssembly="false"` no `tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj`.
    Sem isso, o `arch_test` não compila o projeto e a suíte de arquitetura falha dizendo qual referência falta.
+3. Não use `JukerAllowZeroTests`, a menos que o projeto nasça sem testes. Nesse caso, remova a propriedade junto
+   com os primeiros testes.
 
 ## Convenções obrigatórias
 
@@ -82,7 +91,20 @@ Na subida, a fixture cria o banco `juker_template` com:
 2. as migrations reais de todos os `DbContext` da solução (`Database.Migrate()`, nunca `EnsureCreated`).
 
 Depois ela marca o modelo como template (sem conexões). Cada classe pede o próprio banco, clonado do modelo com
-`CREATE DATABASE … TEMPLATE juker_template`. O clone leva menos de 1 s (na prática, dezenas de milissegundos):
+`CREATE DATABASE … TEMPLATE juker_template`. O clone leva menos de 1 s (na prática, dezenas de milissegundos).
+
+A subida tem que ficar abaixo de 10 s com a imagem em cache (SPEC-0003, seção 5). A fixture registra o tempo numa
+mensagem de diagnóstico do xUnit (`PostgresFixture: container postgres:18 pronto em … ms; juker_template … pronto
+em … ms`). O terminal do `dotnet test` não mostra essa mensagem. Para ver o valor, gere o log de diagnóstico da
+plataforma e procure por `PostgresFixture`:
+
+```bash
+dotnet test --project tests/Juker.IntegrationTests -c Release --diagnostic --diagnostic-verbosity Information \
+  --diagnostic-output-directory artifacts/diag
+grep -h PostgresFixture artifacts/diag/*.diag
+```
+
+Uso numa classe de teste:
 
 ```csharp
 [Trait("Category", "Integration")]
@@ -108,7 +130,10 @@ no processo e nos `Juker.*` que eles referenciam (a partir do `Juker.Host`, todo
 instanciado, nesta ordem, por:
 
 1. um `IDesignTimeDbContextFactory<TContext>` no mesmo assembly (**o jeito recomendado**: é o mesmo que o
-   `dotnet ef migrations add` usa e carrega as opções do módulo);
+   `dotnet ef migrations add` usa e carrega as opções do módulo). A fábrica precisa configurar o Npgsql com uma
+   **connection string** (`UseNpgsql("Host=…")`), nunca com um `NpgsqlDataSource`. A fixture troca a conexão por
+   `Database.SetConnectionString(...)` para migrar o `juker_template`, e isso não funciona quando o contexto foi
+   montado sobre um data source;
 2. um construtor que recebe `DbContextOptions<TContext>` (Npgsql);
 3. um construtor sem parâmetros com `OnConfiguring`.
 
@@ -177,13 +202,13 @@ Aspire ficam de fora.
 | Regra | O que falha |
 |---|---|
 | ARQ-01 `ModuleBoundaries` | um módulo usando um tipo de outro módulo fora do `.Contracts` dele |
-| ARQ-02 `ContractsAreLeaves` | um `.Contracts` usando código Juker que não seja `.Contracts` ou `Juker.SharedKernel` |
+| ARQ-02 `ContractsAreLeaves` | um `.Contracts` usando código Juker que não seja `Juker.SharedKernel` ou outro `.Contracts` (nem `Juker.Infrastructure`, nem internos de módulo). O `IIntegrationEvent` fica no `Juker.SharedKernel` (SPEC-0004, emendada) |
 | ARQ-03 `DbContextOwnership` | `DbContext` fora de módulo, mais de um por módulo, ou o `DbContext` de um módulo usado por outro módulo ou pelo Web |
 | ARQ-04 `DomainPurity` | um namespace `…Domain…` usando EF Core, ASP.NET Core, Npgsql ou `…Infrastructure…` |
-| ARQ-05 `WebBoundaries` | `Juker.Web*` usando internos de módulo, `Juker.Infrastructure` ou `Juker.Host` |
+| ARQ-05 `WebBoundaries` | `Juker.Web*` usando código Juker que não seja `.Contracts` ou `Juker.SharedKernel` (internos de módulo, `Juker.Infrastructure`, `Juker.Host`) |
 | ARQ-06 `ForbiddenDependencies` | qualquer uso (produção ou teste) de MediatR, MassTransit ou FluentAssertions, em qualquer versão |
 | ARQ-07 `MediaProviderIsolation` | tipo com `YouTube` no nome, ou dependência de um, fora de `Juker.Modules.Catalog.Infrastructure` e `Juker.Web.Client.Tv` |
-| ARQ-08 `TestingPolicy` | teste usando EF Core InMemory/Sqlite, bibliotecas de mock HTTP ou `HttpMessageHandler` (mock ou subclasse) |
+| ARQ-08 `TestingPolicy` | teste usando EF Core InMemory/Sqlite ou bibliotecas de mock HTTP, uma subclasse de `HttpMessageHandler` escrita à mão, ou `HttpMessageHandler` como argumento genérico de biblioteca de mock (`Substitute.For<HttpMessageHandler>()`, `Mock<HttpMessageHandler>`). Usar o handler do TestServer (`server.CreateHandler()`) é permitido |
 
 Cada regra tem dois testes. Um prova que ela detecta a violação do fixture `Juker.ArchitectureTests.Violations`, e o
 outro prova que a solução real passa. Uma violação traz a regra, o tipo que viola e o motivo, citando a dependência.
@@ -193,7 +218,9 @@ outro prova que a solução real passa. Uma violação traz a regra, o tipo que 
 `DesignTokenPolicy` varre `.razor`, `.razor.css` e `.css` em `src/` (ignorando `bin/` e `obj/`). A política falha,
 com arquivo e linha, quando encontra:
 
-- cor literal (`#fff`, `#ff007a`, `rgb(`, `hsl(`, `oklch(`…);
+- cor literal (`#fff`, `#ff007a`, `rgb(`, `hsl(`, `oklch(`…), inclusive em atributos entre aspas (`fill="#ff007a"`,
+  `stroke='#fff'`) e em parâmetros de componente (`Color="#ff007a"`). O valor de `href`, `xlink:href`, `src`,
+  `action` e `formaction` (como `href="#add"`) é âncora, não cor;
 - valor arbitrário do Tailwind com cor (`bg-[#fff]`);
 - `font-family`.
 
