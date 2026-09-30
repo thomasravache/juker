@@ -15,10 +15,11 @@ public sealed class WebBoundaries
         // Quando a regra avalia o assembly de fixture
         var violations = new WebBoundariesRule().Evaluate(ViolationsFixture.Subject());
 
-        // Então aponta o componente do Web que usa um interno do módulo Queue
+        // Então aponta exatamente o componente do Web que usa um interno do módulo Queue (não o QueueSummary,
+        // que usa só o .Contracts e o SharedKernel)
         violations.Should().OnlyContain(violation => violation.Rule == "ARQ-05");
-        violations.Select(violation => violation.Offender)
-            .Should().Contain("Juker.Web.Components.QueuePanel");
+        violations.Select(violation => violation.Offender).Distinct(StringComparer.Ordinal)
+            .Should().BeEquivalentTo("Juker.Web.Components.QueuePanel");
     }
 
     [Fact]

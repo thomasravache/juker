@@ -9,7 +9,10 @@ namespace Juker.IntegrationTests.Harness;
 public sealed class MigrationsGuardTests
 {
     private const string FixtureAssembly = "Juker.IntegrationTests.PendingModelChanges";
-    private const string FixtureContext = "WidgetsDbContext";
+    private const string FixtureContext = "Juker.IntegrationTests.PendingModelChanges.WidgetsDbContext";
+
+    // Texto do próprio guard: garante que a falha é a detecção da mudança, não um erro ao instanciar o contexto.
+    private const string GuardMessage = "mudanças no modelo sem migration";
 
     [Fact(Timeout = 600_000)]
     [Trait("Spec", "SPEC-0003:IT-05")]
@@ -31,9 +34,9 @@ public sealed class MigrationsGuardTests
             // Quando o MigrationsGuard roda no processo do fixture
             var run = await DotnetCli.RunAsync([executable], cancellationToken);
 
-            // Então falha citando o contexto
+            // Então falha com a mensagem do guard citando o contexto
             run.ExitCode.Should().NotBe(0, "o guard deve falhar. Saída:\n{0}", run.Output);
-            run.Output.Should().Contain(FixtureContext);
+            run.Output.Should().Contain(GuardMessage).And.Contain(FixtureContext);
         }
         finally
         {

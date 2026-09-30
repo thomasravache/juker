@@ -6,13 +6,19 @@
     tests/Juker.ArchitectureTests), fora da Juker.slnx e de qualquer código de produção.
     ARQ-06: MediatR, MassTransit e FluentAssertions NÃO são referenciados (licença); os tipos proibidos são
     simulados por tipos declarados nesses namespaces dentro deste assembly (pasta Forbidden/).
-    ARQ-08: referencia de verdade o EF Core InMemory (MIT), como faria um projeto de teste fora da política.
+    ARQ-08: referencia de verdade o EF Core InMemory (MIT), como faria um projeto de teste fora da política, e usa o
+    TestServer (Microsoft.AspNetCore.Mvc.Testing) no controle permitido pelo ADR-0012, regra 9.
   -->
   <PropertyGroup>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
   </ItemGroup>
 

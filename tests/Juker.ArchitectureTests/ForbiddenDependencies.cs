@@ -15,12 +15,14 @@ public sealed class ForbiddenDependencies
         // Quando a regra avalia o assembly de fixture (MediatR, MassTransit e FluentAssertions simulados por namespace)
         var violations = new ForbiddenDependenciesRule().Evaluate(ViolationsFixture.Subject());
 
-        // Então aponta cada tipo Juker que depende de uma das três bibliotecas proibidas
+        // Então aponta exatamente cada tipo Juker que depende de uma das três bibliotecas proibidas (não o
+        // MediatorDispatcher, que é handler próprio, nem os tipos simulados das bibliotecas)
         violations.Should().OnlyContain(violation => violation.Rule == "ARQ-06");
-        violations.Select(violation => violation.Offender)
-            .Should().Contain("Juker.Modules.Venues.Features.Register.RegisterVenueRequest")
-            .And.Contain("Juker.Modules.Queue.Infrastructure.QueueEventPublisher")
-            .And.Contain("Juker.Modules.Catalog.Infrastructure.SongAssertions");
+        violations.Select(violation => violation.Offender).Distinct(StringComparer.Ordinal)
+            .Should().BeEquivalentTo(
+                "Juker.Modules.Venues.Features.Register.RegisterVenueRequest",
+                "Juker.Modules.Queue.Infrastructure.QueueEventPublisher",
+                "Juker.Modules.Catalog.Infrastructure.SongAssertions");
     }
 
     [Fact]

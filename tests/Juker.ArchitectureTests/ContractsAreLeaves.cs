@@ -15,10 +15,13 @@ public sealed class ContractsAreLeaves
         // Quando a regra avalia o assembly de fixture
         var violations = new ContractsAreLeavesRule().Evaluate(ViolationsFixture.Subject());
 
-        // Então aponta o tipo do .Contracts que expõe um interno do módulo
+        // Então aponta exatamente os tipos do .Contracts que dependem de um interno de módulo ou do
+        // Juker.Infrastructure (regra estrita: só SharedKernel e outros .Contracts), e não o SessionStarted
         violations.Should().OnlyContain(violation => violation.Rule == "ARQ-02");
-        violations.Select(violation => violation.Offender)
-            .Should().Contain("Juker.Modules.Sessions.Contracts.SessionDto");
+        violations.Select(violation => violation.Offender).Distinct(StringComparer.Ordinal)
+            .Should().BeEquivalentTo(
+                "Juker.Modules.Sessions.Contracts.SessionDto",
+                "Juker.Modules.Sessions.Contracts.SessionClosedEvent");
     }
 
     [Fact]

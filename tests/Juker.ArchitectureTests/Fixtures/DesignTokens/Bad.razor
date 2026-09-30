@@ -1,6 +1,12 @@
-@* Fixture da política de tokens do design (ADR-0014, regra 7): três violações, uma por linha. Não é compilado. *@
+@* Fixture da política de tokens do design (ADR-0014, regra 7): uma violação por linha nas linhas 3-10. Não é compilado. *@
 <section class="bg-surface text-on-surface p-4">
     <h1 style="color: #ff007a">Juker</h1>
     <button class="bg-[#fff] rounded-lg px-4">Pedir música</button>
     <p style="font-family: Georgia, serif">Fila do bar</p>
+    <svg viewBox="0 0 24 24"><path fill="#ff007a"/></svg>
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke='#fff'/></svg>
+    <Badge Color="#ff007a" Text="Nova" />
+    <div style="background: rgb(255 0 122)">Tocando agora</div>
+    <div style="border-color: hsl(320 100% 50%)">Próxima</div>
+    <a href="#add" class="text-primary">Adicionar à fila</a>
 </section>

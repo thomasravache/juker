@@ -3,6 +3,7 @@ using AwesomeAssertions;
 using Juker.TestKit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using Xunit;
 
 namespace Juker.IntegrationTests.Harness;
@@ -25,6 +26,10 @@ public sealed class JukerApiFactoryTests(PostgresFixture db)
         using var client = factory.CreateClient();
         using var ready = await client.GetAsync(new Uri("/health/ready", UriKind.Relative), cancellationToken);
         ready.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // E o host usa o banco da classe (clonado do modelo), não o juker_template nem outro banco
+        var database = new NpgsqlConnectionStringBuilder(factory.Services.GetRequiredService<NpgsqlDataSource>().ConnectionString).Database;
+        database.Should().StartWith("juker_").And.NotBe("juker_template");
 
         // E o TimeProvider resolvido é o FakeTimeProvider exposto pela factory
         factory.Services.GetRequiredService<TimeProvider>().Should().BeSameAs(time);
