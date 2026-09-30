@@ -1,0 +1,28 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Aspire/">
+    <Project Path="src/Aspire/Juker.AppHost/Juker.AppHost.csproj" />
+    <Project Path="src/Aspire/Juker.ServiceDefaults/Juker.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Juker.SharedKernel/Juker.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Host/">
+    <Project Path="src/Juker.Host/Juker.Host.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/Catalog/Juker.Modules.Catalog/Juker.Modules.Catalog.csproj" />
+    <Project Path="src/Modules/Catalog/Juker.Modules.Catalog.Contracts/Juker.Modules.Catalog.Contracts.csproj" />
+    <Project Path="src/Modules/Playback/Juker.Modules.Playback/Juker.Modules.Playback.csproj" />
+    <Project Path="src/Modules/Playback/Juker.Modules.Playback.Contracts/Juker.Modules.Playback.Contracts.csproj" />
+    <Project Path="src/Modules/Queue/Juker.Modules.Queue/Juker.Modules.Queue.csproj" />
+    <Project Path="src/Modules/Queue/Juker.Modules.Queue.Contracts/Juker.Modules.Queue.Contracts.csproj" />
+    <Project Path="src/Modules/Sessions/Juker.Modules.Sessions/Juker.Modules.Sessions.csproj" />
+    <Project Path="src/Modules/Sessions/Juker.Modules.Sessions.Contracts/Juker.Modules.Sessions.Contracts.csproj" />
+    <Project Path="src/Modules/Venues/Juker.Modules.Venues/Juker.Modules.Venues.csproj" />
+    <Project Path="src/Modules/Venues/Juker.Modules.Venues.Contracts/Juker.Modules.Venues.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj" />
+  </Folder>
+</Solution>
