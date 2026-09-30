@@ -5,19 +5,8 @@
   -->
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-  <PropertyGroup Label="Projetos sem testes (opt-in)">
-    <!--
-      Microsoft.Testing.Platform termina com o código 8 quando nenhum teste é executado num projeto. Por padrão isso
-      é falha: um projeto de teste que perdeu seus testes precisa quebrar o build. Um projeto opta por aceitar zero
-      testes com <JukerAllowZeroTests>true</JukerAllowZeroTests> no próprio .csproj. Isso vale para os projetos de UT
-      ainda vazios (cada spec remove a propriedade ao acrescentar testes) e para o Juker.ArchitectureTests, que o filtro
-      Category=Integration esvazia de propósito.
-
-      O dotnet test (MTP) lê TestingPlatformCommandLineArguments na avaliação do projeto, e este arquivo é avaliado
-      antes do .csproj. Por isso a opção é lida do texto do .csproj (ou de -p:JukerAllowZeroTests=true).
-    -->
-    <JukerAllowZeroTests Condition="'$(JukerAllowZeroTests)' == '' And Exists('$(MSBuildProjectFullPath)') And $([System.Text.RegularExpressions.Regex]::IsMatch($([System.IO.File]::ReadAllText('$(MSBuildProjectFullPath)')), '&lt;JukerAllowZeroTests&gt;\s*true\s*&lt;/JukerAllowZeroTests&gt;'))">true</JukerAllowZeroTests>
+  <PropertyGroup>
+    <!-- Projetos sem testes: opt-in por projeto, aplicado em tests/Directory.Build.targets -->
     <JukerAllowZeroTests Condition="'$(JukerAllowZeroTests)' == ''">false</JukerAllowZeroTests>
-    <TestingPlatformCommandLineArguments Condition="'$(JukerAllowZeroTests)' == 'true'">$(TestingPlatformCommandLineArguments) --ignore-exit-code 8</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 </Project>

@@ -3,7 +3,7 @@
   <!--
     Testes de unidade dos building blocks (src/BuildingBlocks/*).
     Sem testes nesta spec: cada spec traz os seus (SPEC-0003, ADR-0011). Enquanto estiver vazio, o projeto aceita
-    zero testes (JukerAllowZeroTests, ver tests/Directory.Build.props). A spec que acrescentar os primeiros testes
+    zero testes (JukerAllowZeroTests, ver tests/Directory.Build.targets). A spec que acrescentar os primeiros testes
     remove a propriedade, para que um projeto que perca seus testes volte a falhar.
   -->
   <PropertyGroup>

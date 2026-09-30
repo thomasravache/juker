@@ -20,15 +20,18 @@ Os testes de integração precisam do Docker (a imagem `postgres:18` é baixada 
 
 O Microsoft.Testing.Platform termina com o código 8 quando nenhum teste roda num projeto. **Por padrão isso é
 falha**: um projeto de teste que perdeu seus testes quebra o `dotnet test`. Um projeto só aceita zero testes com
-`<JukerAllowZeroTests>true</JukerAllowZeroTests>` no próprio `.csproj`. Nesse caso, o `tests/Directory.Build.props`
-acrescenta `--ignore-exit-code 8`. Hoje usam a propriedade:
+`<JukerAllowZeroTests>true</JukerAllowZeroTests>` no próprio `.csproj`. Nesse caso, o `tests/Directory.Build.targets`
+acrescenta `--ignore-exit-code 8` a `TestingPlatformCommandLineArguments`. Hoje usam a propriedade:
 
 - os projetos de UT ainda vazios. A spec que acrescentar os primeiros testes num deles remove a propriedade;
 - o `Juker.ArchitectureTests`, que o filtro `Category=Integration` esvazia de propósito.
 
-A propriedade é lida do texto do `.csproj`, porque o `dotnet test` lê os argumentos na avaliação do projeto,
-antes do corpo do `.csproj`. Declare-a como elemento simples dentro de um `<PropertyGroup>`. Falhas de teste
-continuam terminando com código diferente de zero.
+O `tests/Directory.Build.props` só define o padrão (`false`). A decisão fica no `tests/Directory.Build.targets`,
+que o MSBuild avalia depois do `.csproj` e que, portanto, enxerga o valor definido pelo projeto. O `dotnet test`
+lê os argumentos no resultado final da avaliação. Para conferir, rode
+`dotnet msbuild <projeto> -getProperty:TestingPlatformCommandLineArguments`. O `tests/Directory.Build.targets`
+também importa um `Directory.Build.targets` da raiz, se um dia existir. Falhas de teste continuam terminando com
+código diferente de zero.
 
 ## Projetos
 
