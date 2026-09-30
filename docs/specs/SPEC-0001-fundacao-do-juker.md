@@ -91,6 +91,7 @@ Fluxo de entrega: PR → CI (build, lint, UT, IT, arquitetura, E2E, scan, SDD) �
 | SPEC-0009 | Segurança básica e autorização | full | foundation | M | SPEC-0007 | — |
 | SPEC-0026 | Pendências do review da SPEC-0002 | lite | fix | S | SPEC-0002 | — |
 | SPEC-0027 | Pendências do review da SPEC-0003 | lite | refactor | S | SPEC-0003 | — |
+| SPEC-0028 | Pendências do review da SPEC-0026 | lite | fix | S | SPEC-0026 | — |
 
 ## 5. Estratégia de Entrega
 - **Ambientes:** **CD adiado por decisão do fundador (2026-09-30)**: nesta fase tudo é validado localmente (AppHost) e no CI do GitHub (SPEC-0005); a entrega de cada onda é o merge na `main` com o CI verde. A SPEC-0006 (staging/produção) fica estacionada com o impedimento IMP-01 e, quando destravada, assume o deploy e as verificações em ambiente real. Este épico só fecha depois dela.

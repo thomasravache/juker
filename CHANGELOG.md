@@ -8,6 +8,9 @@ Cada entrada cita a spec de origem (`SPEC-NNNN`); gere-as com `spec_graph.py rep
 
 ## [Unreleased]
 
+### Fixed
+- `GetAwaiter().GetResult()` (Task/ValueTask) passa a ser API proibida no build; `/_diag/modules` lista os módulos que o host de fato compôs; nota sobre o hook de pre-commit no `AGENTS.md` (SPEC-0026)
+
 ### Added
 - Harness de testes de integração (`Juker.TestKit`): Postgres real com banco por classe clonado de um modelo migrado, `JukerApiFactory` com relógio controlado e outbox desligado, `MigrationsGuard` e `FakeHttpServer` (SPEC-0003)
 - Suíte de arquitetura com as regras ARQ-01..ARQ-08, teste de convenções de testes e política de tokens do design (SPEC-0003)

@@ -47,7 +47,10 @@ Jukebox colaborativa para bares: monólito modular em .NET 10 com vertical slice
 - **CHANGELOG.md** no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), cada entrada citando a spec.
 - **SemVer** ([Versionamento Semântico](https://semver.org/lang/pt-BR/)): quebra de compatibilidade = major (`!` no commit).
 - Hooks em `.githooks/` (mensagem de commit, validação de specs e lint). A ativação é decisão do fundador:
-  `git config core.hooksPath .githooks`.
+  `git config core.hooksPath .githooks`. O pre-commit é opcional (o CI repete as mesmas verificações) e roda
+  `dotnet format --verify-no-changes` sobre a árvore de trabalho, não sobre o que está no stage: mudanças não
+  adicionadas também contam. Um novo `spec_graph.py vendor --hooks` sobrescreve `.githooks/pre-commit`; a extensão
+  de lint precisa ser reaplicada depois (SPEC-0026).
 
 <!-- sdd:start -->
 ## Processo de desenvolvimento (SDD)

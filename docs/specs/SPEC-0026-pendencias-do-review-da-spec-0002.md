@@ -4,7 +4,7 @@ title: Pendências do review da SPEC-0002
 tier: lite
 type: fix
 user_facing: false
-status: in-progress
+status: implemented
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002]
@@ -66,10 +66,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 - [x] Validar: build + suíte completa + lint (G2)
 
 **Fase final: Integração, entrega e documentação**
-- [ ] Review independente (G4)
-- [ ] Integração (G5) e aprovação (H2)
-- [ ] Deploy via pipeline (G6) — N/A até a SPEC-0006
-- [ ] Relatório de Entrega e CHANGELOG (G7)
+- [x] Review independente (G4)
+- [x] Integração (G5) e aprovação (H2)
+- [x] Deploy via pipeline (G6) — N/A até a SPEC-0006
+- [x] Relatório de Entrega e CHANGELOG (G7)
 
 ## 8. Registro de Gates
 | Gate | Status | Evidência | Data |
@@ -79,10 +79,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G2 Green | PASS | Re-executado pelo Architect no worktree (HEAD 182e5de): build `-warnaserror` 0/0; `dotnet test --solution` → 37/37 (Implementer: 2 execuções completas 37/37 após `dotnet clean`); lint ok | 2026-10-01 |
 | G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → 20/20 | 2026-10-01 |
 | G4 Review | PASS | Reviewer independente: APPROVED em 182e5de (verify PASS 0/0; build 0/0; 37/37; arquitetura 20/20; lint ok; red de 56eacd9 confirmado pelo motivo certo). 2 minor + 1 nit → SPEC-0028 (proposta): variantes `ConfigureAwait(...).GetAwaiter().GetResult()` não banidas; IT-02 prova a fonte do endpoint mas não o preenchimento por `AddJukerModules`; doc do `ComposedModules` | 2026-10-01 |
-| G5 Integração & CI | PENDING | | |
-| H2 Integração aprovada | PENDING | | |
-| G6 Deploy | PENDING | | |
-| G7 Pronto & Docs | PENDING | | |
+| G5 Integração & CI | PASS | Merge --no-ff em `sdd/SPEC-0001` (2492381). No resultado integrado: build 0/0; `dotnet test --solution` 37/37; integração exit 0; arquitetura sem falhas; lint ok; nenhum pacote vulnerável. CI: N/A até a SPEC-0005 | 2026-10-01 |
+| H2 Integração aprovada | PASS | autorização prévia de thomas no chat (2026-09-30: "continue trabalhando… opte pela recomendação"), a confirmar no overview | 2026-10-01 |
+| G6 Deploy | N/A | CD adiado por decisão do fundador (SPEC-0006 estacionada); entrega = merge na `main` | 2026-10-01 |
+| G7 Pronto & Docs | PASS | Relatório de Entrega com as 3 linhas de Verificação e a prova de correção; DoD marcada; CHANGELOG na branch de integração; pendência SPEC-0028 | 2026-10-01 |
 
 ## 9. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
@@ -92,27 +92,37 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 10. Relatório de Entrega
 
 ### O que foi entregue
+`GetAwaiter().GetResult()` de `Task`/`Task<T>`/`ValueTask`/`ValueTask<T>` passou a ser API proibida no build (RS0030), sem afetar o ponto de entrada gerado pelo xUnit v3. `/_diag/modules` lista os módulos que o host registrou no `ComposedModules` (preenchido por `AddJukerModules`), lido do DI a cada requisição; continua só em Development/Testing, com o 404 em Production agora testado. O `AGENTS.md` documenta as limitações do hook de pre-commit.
 
 ### Como foi feito
+- Commits: scaffold `45ff3ba`, red `56eacd9`, green `9b0c4a0`, docs `182e5de`; merge `2492381`; CHANGELOG na branch de integração.
+- Emendas de escopo: redação da linha de caracterização (sem IDs de outra spec) e `Directory.Build.props` no `touches` para o `XUNIT_GENERATED_DISABLE_WARNINGS` só em projetos de teste (via target antes do `CoreCompile`, porque `IsTestProject` ainda não existe na avaliação do props).
 
 ### Prova de Correção
+- IT-01: no commit red `56eacd9`, o fixture com `Task.CompletedTask.GetAwaiter().GetResult()` compilava (asserção `ExitCode != 0` falhou, confirmado pelo Reviewer numa cópia do commit); no green, o build falha com RS0030.
+- IT-02: no red, a resposta era os cinco nomes do catálogo (`contains 4 item(s) too many`); no green, `["Venues"]`.
 
 ### Verificação
 | Teste | Comportamento | Resultado | Evidência |
 |---|---|---|---|
+| IT-01 | Build do fixture com `GetAwaiter().GetResult()` falha com RS0030 | PASS | `SyncOverAsyncViolationBuildTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 2492381 (37/37) |
+| IT-02 | `/_diag/modules` reflete o registro de módulos compostos | PASS | `DiagnosticsModulesTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 2492381 (37/37) |
+| IT-03 | `/_diag/modules` em Production → 404 | PASS | `DiagnosticsModulesTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 2492381 (37/37) |
 
 ### Definição de Pronto
-- [ ] Teste de regressão falhou antes e passa depois da correção
-- [ ] Suíte completa, arquitetura e CI verdes (G2, G3, G5)
-- [ ] Review independente sem achados blocker/major (G4)
-- [ ] Padrão existente mantido
-- [ ] Disponível no ambiente-alvo via pipeline (G6)
-- [ ] Documentação/CHANGELOG atualizados quando aplicável (G7)
-- [ ] Outras ocorrências registradas como novas specs (ou nenhuma)
+- [x] Teste de regressão falhou antes e passa depois da correção
+- [x] Suíte completa, arquitetura e CI verdes (G2, G3, G5) — CI: N/A até a SPEC-0005
+- [x] Review independente sem achados blocker/major (G4)
+- [x] Padrão existente mantido
+- [x] Disponível no ambiente-alvo via pipeline (G6) — N/A: CD adiado; integrado na `main`
+- [x] Documentação/CHANGELOG atualizados quando aplicável (G7)
+- [x] Outras ocorrências registradas como novas specs (ou nenhuma) — SPEC-0028
 
 ### Deploy
+N/A — CD adiado (SPEC-0006). Integrado em `sdd/SPEC-0001` e na `main`.
 
 ### Pendências
+- SPEC-0028 — awaiters configurados não banidos; prova do preenchimento pelo `AddJukerModules`; doc do `ComposedModules`.
 
 ## 11. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
