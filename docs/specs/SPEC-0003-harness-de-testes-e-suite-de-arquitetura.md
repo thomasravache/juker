@@ -10,7 +10,7 @@ parent: SPEC-0001
 depends_on: [SPEC-0002]
 consumes_contract: []
 contract_version: 2
-touches: [tests/Juker.TestKit/**, tests/Juker.IntegrationTests/**, tests/Juker.ArchitectureTests/**, tests/Juker.Modules.*/**, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.Web.UnitTests/**, tests/Directory.Build.props, Directory.Packages.props, Juker.slnx, docs/testing.md, tools/recordings/**]
+touches: [tests/Juker.TestKit/**, tests/Juker.IntegrationTests/**, tests/Juker.ArchitectureTests/**, tests/Juker.Modules.*/**, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.Web.UnitTests/**, tests/Directory.Build.props, tests/Directory.Build.targets, Directory.Packages.props, Juker.slnx, docs/testing.md, tools/recordings/**]
 adrs: [ADR-0001, ADR-0002, ADR-0004, ADR-0007, ADR-0011, ADR-0012, ADR-0014]
 external: []
 size: M
@@ -225,5 +225,6 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-10-01 | `touches` inclui `tests/Directory.Build.targets` | O opt-in `JukerAllowZeroTests` precisa ler a propriedade do projeto depois da avaliação do `.csproj` (em `.props` ela ainda não existe); a alternativa de ler o `.csproj` como texto é frágil | Nenhuma | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | escopo | 2026-09-30 | Seção 7.6 sem o helper axe (pertence à SPEC-0025); ARQ-06 proíbe FluentAssertions em qualquer versão (a verificação por namespace não distingue versões; usamos AwesomeAssertions) | Apontado pelo Test-writer no G1 | Nenhuma | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | SPEC-0004, SPEC-0005, SPEC-0025 (consomem SPEC-0003@1 → revisar e fixar @2) | thomas, 2026-09-30 |
