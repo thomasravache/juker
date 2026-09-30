@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Fixture do SPEC-0003:IT-05 — fora da Juker.slnx e excluído do build do Juker.IntegrationTests.
+    WidgetsDbContext tem a propriedade Widget.Color, que não existe na última migration (snapshot):
+    o MigrationsGuard, executado neste processo, deve falhar citando o contexto.
+    O teste compila e executa este projeto num diretório temporário (artifacts-path).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Juker.IntegrationTests.PendingModelChanges</AssemblyName>
+    <RootNamespace>Juker.IntegrationTests.PendingModelChanges</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Juker.TestKit\Juker.TestKit.csproj" />
+  </ItemGroup>
+
+</Project>

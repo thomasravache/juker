@@ -30,6 +30,17 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="4.0.1" />
+  </ItemGroup>
+  <ItemGroup Label="Harness de integração e arquitetura (SPEC-0003, ADR-0011, ADR-0012)">
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
+    <PackageVersion Include="WireMock.Net" Version="2.18.0" />
+    <PackageVersion Include="bunit" Version="2.11.3" />
+    <PackageVersion Include="TngTech.ArchUnitNET" Version="0.13.4" />
+    <!-- Só no fixture de violações do IT-02 (ARQ-08): nunca em projeto de teste real -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
   </ItemGroup>
   <ItemGroup Label="Qualidade (ADR-0014)">
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.290" />

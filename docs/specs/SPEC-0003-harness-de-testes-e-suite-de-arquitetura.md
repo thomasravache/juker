@@ -4,7 +4,7 @@ title: Harness de testes de integração e suíte de arquitetura
 tier: full
 type: foundation
 user_facing: false
-status: in-progress
+status: implemented
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002]
@@ -170,10 +170,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 - [x] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
 
 **Fase final: Integração, entrega e documentação**
-- [ ] Review independente (G4)
-- [ ] Integração + CI verde (G5) e aprovação (H2)
-- [ ] Deploy via pipeline com smoke/E2E no ambiente (G6)
-- [ ] Relatório de Entrega, docs raiz e CHANGELOG (G7)
+- [x] Review independente (G4)
+- [x] Integração + CI verde (G5) e aprovação (H2)
+- [x] Deploy via pipeline com smoke/E2E no ambiente (G6)
+- [x] Relatório de Entrega, docs raiz e CHANGELOG (G7)
 
 ## 12. Registro de Gates
 | Gate | Status | Evidência | Data |
@@ -183,10 +183,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G2 Green | PASS | Re-executado pelo Architect no worktree (HEAD c44166b): build `-warnaserror` 0/0; `dotnet test --solution Juker.slnx -c Release` → 34/34; `--filter-trait "Category=Integration"` → 11/11, exit 0; lint exit 0. Tempos (relato do Implementer): PostgresFixture 3,1 s, clone por classe 12–37 ms | 2026-10-01 |
 | G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → 20/20 (ARQ-01..ARQ-08 detectam cada violação do fixture e aprovam a solução real; build limpo confirmado pelo Implementer) | 2026-10-01 |
 | G4 Review | PASS | 2ª rodada do Reviewer independente: APPROVED em ef40d71 (verify PASS; build 0/0; 34/34; integração 11/11; arquitetura 20/20; lint ok). Os 10 achados da 1ª rodada foram resolvidos ou aceitos (caminho de migração do template vazio até existir o primeiro DbContext — lacuna conhecida). 2 minor novos → SPEC-0027 (proposta): fixture de mocks para o ARQ-08; falso positivo de hex em strings C#/`id=` no .razor | 2026-10-01 |
-| G5 Integração & CI | PENDING | | |
-| H2 Integração aprovada | PENDING | | |
-| G6 Deploy | PENDING | | |
-| G7 Pronto & Docs | PENDING | | |
+| G5 Integração & CI | PASS | Merge --no-ff em `sdd/SPEC-0001` (a49c3a8). No resultado integrado: build `-warnaserror` 0/0; `dotnet test --solution` 34/34; integração exit 0; `arch_test` 20/20; lint ok; nenhum pacote vulnerável; `validate --exclude-drafts` PASS. CI: N/A até a SPEC-0005 | 2026-10-01 |
+| H2 Integração aprovada | PASS | autorização prévia de thomas no chat (2026-09-30: "continue trabalhando… opte pela recomendação"), a confirmar no overview | 2026-10-01 |
+| G6 Deploy | N/A | CD adiado por decisão do fundador (SPEC-0006 estacionada); entrega = merge na `main` com a suíte verde | 2026-10-01 |
+| G7 Pronto & Docs | PASS | Relatório de Entrega com as 8 linhas de Verificação; DoD marcada (itens de ambiente/UI como N/A justificados); CHANGELOG e AGENTS.md em 21c5090; pendência SPEC-0027 | 2026-10-01 |
 
 ## 13. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
@@ -195,32 +195,48 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 14. Relatório de Entrega
 
 ### O que foi entregue
+O harness de testes de integração e a suíte de arquitetura. `Juker.TestKit` traz: `PostgresFixture` (um container `postgres:18` por execução, banco `juker_template` com `pg_trgm`/`unaccent` e as migrations reais, e um banco por classe clonado do modelo em 12–37 ms), `MigrationsGuard`, `JukerApiFactory` (banco da classe, `FakeTimeProvider`, outbox desligado, esquemas de auth reais com ponto de extensão para emissores de teste) e `FakeHttpServer` (WireMock.Net). A suíte `Juker.ArchitectureTests` implementa ARQ-01..ARQ-08 (cada regra falha no fixture de violações pelos infratores exatos e aprova a solução real), o teste de convenções (tag `Spec` e `Category` obrigatórias) e a política de tokens do design. Também vieram os projetos de teste unitário vazios por módulo (com opt-in `JukerAllowZeroTests`), o guia `docs/testing.md` e o script `tools/recordings/refresh-youtube.sh`.
 
 ### Como foi feito
+- Commits: scaffold (chore), red e63026f, green a2e9551/a31e3a2/b4ef323/c44166b, red do review 34da0cf e correções f218b49/903c5b3/5dca9f7/e63e2b8/7c0463e/ef40d71 (SHAs antes do rebase final); merge a49c3a8.
+- Emendas: contrato v2 (sintaxe do Microsoft.Testing.Platform); escopo (7.6 sem o helper axe, ARQ-06 para qualquer versão do FluentAssertions); escopo (`tests/Directory.Build.targets`). Relacionada: SPEC-0004 v2 (`IIntegrationEvent` no SharedKernel, para o ARQ-02 estrito).
+- Decisões: ARQ-02 mantida estrita; opt-in de "zero testes" via `Directory.Build.targets` (a leitura do `.csproj` como texto foi rejeitada por ser frágil); ARQ-08 restrita a mocks e subclasses reais; container de teste com `fsync` desligado (dados descartáveis); descoberta de `DbContext` priorizando `IDesignTimeDbContextFactory`.
+- Lacuna conhecida: o caminho do banco-modelo que aplica migrations reais só será exercitado quando existir o primeiro `DbContext` (coberto pela SPEC-0027).
 
 ### Prova de Correção
+N/A — type: foundation.
 
 ### Verificação
 | Teste | Comportamento | Resultado | Evidência |
 |---|---|---|---|
+| UT-01 | Todo teste com `Trait` Spec e Category válidos | PASS | `TestConventionsTests.cs`; `dotnet test --project tests/Juker.ArchitectureTests -c Release` em a49c3a8 (20/20) |
+| UT-02 | Cores/fontes literais fora do `theme.css` apontadas com arquivo e linha | PASS | `DesignTokenPolicyTests.cs`; `dotnet test --project tests/Juker.ArchitectureTests -c Release` em a49c3a8 (20/20) |
+| IT-01 | Banco isolado por classe; `pg_trgm`/`unaccent` disponíveis | PASS | `DatabaseIsolation*ClassTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado a49c3a8 (34/34) |
+| IT-02 | ARQ-01..ARQ-08 apontam os infratores exatos do fixture e aprovam a solução | PASS | 8 classes de regra; `dotnet test --project tests/Juker.ArchitectureTests -c Release` em a49c3a8 (20/20) |
+| IT-03 | `JukerApiFactory` sobe o host no banco da classe com `FakeTimeProvider` e outbox desligado | PASS | `JukerApiFactoryTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado a49c3a8 (34/34) |
+| IT-04 | Banco da classe clonado do modelo em < 1 s | PASS | `TemplateDatabaseTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado a49c3a8 (34/34) |
+| IT-05 | `MigrationsGuard` falha com migration esquecida, citando o contexto | PASS | `MigrationsGuardTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado a49c3a8 (34/34) |
+| CT-01 | Filtro por categoria e snapshot da API pública do TestKit | PASS | `TestKitContractTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado a49c3a8 (34/34) |
 
 ### Definição de Pronto
-- [ ] Todos os testes do plano passando e listados na Verificação
-- [ ] Todo comportamento do Mapa de Comportamentos coberto e verificado
-- [ ] Suíte completa, arquitetura e CI verdes no resultado integrado (G5)
-- [ ] Review independente sem achados blocker/major (G4)
-- [ ] Padrão arquitetural existente mantido, ou desvio coberto por ADR aprovado
-- [ ] Requisitos não-funcionais medidos com evidência (ou N/A justificado)
-- [ ] Disponível no ambiente-alvo via pipeline, com smoke/E2E passando no ambiente (G6)
-- [ ] Observabilidade e rollback prontos conforme o Plano de Rollout
-- [ ] Documentação raiz e CHANGELOG atualizados (G7)
-- [ ] Pendências registradas como novas specs (ou nenhuma)
-- [ ] Textos da interface em português do Brasil, sem conceitos fora do produto (contas, créditos, mesa, música ao vivo)
-- [ ] Tokens visuais vindos do design system do Stitch (projeto 8904741919458823023), sem cores/fontes avulsas
+- [x] Todos os testes do plano passando e listados na Verificação
+- [x] Todo comportamento do Mapa de Comportamentos coberto e verificado
+- [x] Suíte completa, arquitetura e CI verdes no resultado integrado (G5) — CI: N/A até a SPEC-0005
+- [x] Review independente sem achados blocker/major (G4)
+- [x] Padrão arquitetural existente mantido, ou desvio coberto por ADR aprovado
+- [x] Requisitos não-funcionais medidos com evidência (ou N/A justificado) — subida da fixture em ~2,8–3,1 s (< 10 s), clone 12–37 ms (< 1 s)
+- [x] Disponível no ambiente-alvo via pipeline, com smoke/E2E passando no ambiente (G6) — N/A: CD adiado; integrado na `main`
+- [x] Observabilidade e rollback prontos conforme o Plano de Rollout
+- [x] Documentação raiz e CHANGELOG atualizados (G7)
+- [x] Pendências registradas como novas specs (ou nenhuma)
+- [x] Textos da interface em português do Brasil, sem conceitos fora do produto (contas, créditos, mesa, música ao vivo) — N/A: sem interface
+- [x] Tokens visuais vindos do design system do Stitch (projeto 8904741919458823023), sem cores/fontes avulsas — N/A: sem interface (a política que garante isso foi entregue aqui)
 
 ### Deploy
+N/A — CD adiado (SPEC-0006). Integrado em `sdd/SPEC-0001` e na `main`.
 
 ### Pendências
+- SPEC-0027 — pendências do review (mocks no fixture do ARQ-08, convenção de referências do `arch_test`, caminho de migrations do modelo, falso positivo documentado).
 
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |

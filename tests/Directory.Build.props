@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Propriedades comuns aos projetos em tests/ (SPEC-0003). Importa o Directory.Build.props da raiz, que o MSBuild
+    deixaria de importar por encontrar este arquivo primeiro.
+  -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!-- Projetos sem testes: opt-in por projeto, aplicado em tests/Directory.Build.targets -->
+    <JukerAllowZeroTests Condition="'$(JukerAllowZeroTests)' == ''">false</JukerAllowZeroTests>
+  </PropertyGroup>
+</Project>
