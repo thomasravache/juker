@@ -10,7 +10,7 @@ parent: SPEC-0001
 depends_on: []
 consumes_contract: []
 contract_version: 2
-touches: [global.json, Directory.Build.props, Directory.Packages.props, .editorconfig, BannedSymbols.txt, tests/fixtures/**, .gitignore, .gitattributes, Juker.slnx, .config/**, src/Aspire/**, src/Juker.Host/**, src/BuildingBlocks/Juker.SharedKernel/**, src/Modules/**, src/Web/**, tests/Juker.IntegrationTests/Tooling/**, README.md, CLAUDE.md, AGENTS.md, CHANGELOG.md, tools/sdd/**, .githooks/**, .github/pull_request_template.md]
+touches: [global.json, Directory.Build.props, Directory.Packages.props, .editorconfig, BannedSymbols.txt, tests/fixtures/**, .gitignore, .gitattributes, Juker.slnx, .config/**, src/Aspire/**, src/Juker.Host/**, src/BuildingBlocks/Juker.SharedKernel/**, src/Modules/**, src/Web/**, tests/Juker.IntegrationTests/Tooling/**, tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj, nuget.config, README.md, CLAUDE.md, AGENTS.md, CHANGELOG.md, tools/sdd/**, .githooks/**, .github/pull_request_template.md]
 adrs: [ADR-0001, ADR-0002, ADR-0003, ADR-0009, ADR-0014]
 external: []
 size: M
@@ -30,6 +30,7 @@ Cria a solução `Juker.slnx` com o AppHost do Aspire, o host único, os cinco m
 - `global.json` fixando o SDK .NET 10 (feature band estável mais recente no momento da implementação, `rollForward: latestFeature`).
 - `Directory.Build.props`: `Nullable=enable`, `ImplicitUsings=enable`, `TreatWarningsAsErrors=true`, `AnalysisLevel=latest-recommended`, `EnforceCodeStyleInBuild=true`, `InvariantGlobalization=false` (pt-BR), `LangVersion=latest`.
 - Qualidade de código (ADR-0014): **Meziantou.Analyzer** e **Microsoft.CodeAnalysis.BannedApiAnalyzers** em todos os projetos via `Directory.Build.props`; `BannedSymbols.txt` na raiz com as APIs proibidas do ADR-0014 (relógio do sistema, `Thread.Sleep`/`Task.Delay` em testes, `new HttpClient()`, bloqueio síncrono de `Task`, `Console.*` fora de `src/Juker.Host/Cli/**`); `.editorconfig` com as severidades revisadas, cada regra desligada comentada com o motivo e `dotnet_diagnostic.MA0001.severity = error` (comparação de texto sem `StringComparison`, que é Info por padrão no Meziantou); `tests/fixtures/QualityViolations` (projeto fora da solução) usado pelo IT-03.
+- `nuget.config` na raiz com `<clear/>`, somente a fonte nuget.org e package source mapping (`*` → nuget.org), para o build ser igual na máquina do fundador e no CI e nenhum pacote vir de feeds globais da máquina.
 - `Directory.Packages.props` com gerenciamento central de versões (Aspire 13.x estável, EF Core 10, Npgsql, FluentValidation).
 - `.editorconfig` com as convenções de estilo; `dotnet format --verify-no-changes` como lint.
 - Projetos: `Juker.AppHost`, `Juker.ServiceDefaults`, `Juker.Host`, `Juker.SharedKernel` (vazio além de `AssemblyMarker`), `Juker.Modules.{Venues,Sessions,Catalog,Queue,Playback}` + `.Contracts`, `Juker.Web`, `Juker.Web.Client`.
@@ -190,7 +191,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | Gate | Status | Evidência | Data |
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0002` → G0 [SPEC-0002]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0014) | 2026-09-30 |
-| G1 Red | PENDING | | |
+| G1 Red | FAIL | `verify SPEC-0002 --base sdd/SPEC-0001` no worktree (HEAD d30a4ec): red antes do green PASS, rastreabilidade 6/6 PASS, 6/6 testes falhando por asserção; FAIL: commit test(...) altera `Juker.slnx` (deve ir em chore) e `tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj` fora de `touches` — ambos causados pelo pacote/spec do Architect | 2026-09-30 |
 | G2 Green | PENDING | | |
 | G3 Arquitetura | PENDING | | |
 | G4 Review | PENDING | | |
@@ -237,4 +238,5 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 2 (escopo) | 2026-09-30 | `touches` passa a incluir `tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj` e `nuget.config`; objetivo novo: `nuget.config` só com nuget.org e package source mapping. Contrato inalterado | G1 FAIL: projeto de teste fora do `touches`; NU1507 na máquina do fundador (duas fontes NuGet globais) | Nenhuma | thomas, 2026-09-30 |
 | 2 | 2026-09-30 | IT-03 verifica MA0001 (elevada a erro no `.editorconfig`) em vez de MA0006; forma do `ModuleCatalog`/`ModuleDescriptor` e de `/_diag/modules` definidas no contrato; UT-02 passa a verificar também o gerenciamento central estrito; IT-03 define como construir a cópia limpa | IMP-01 (SPEC_DEFECT do Test-writer): `string.Equals(a, b)` dispara MA0001 (Info por padrão), não MA0006; lacunas no contrato | Nenhuma (nenhuma spec consome o contrato da SPEC-0002) | thomas, 2026-09-30 |
