@@ -9,7 +9,7 @@ created: 2026-10-01
 parent: SPEC-0001
 depends_on: [SPEC-0003]
 consumes_contract: []
-touches: [tests/Juker.ArchitectureTests/**, tests/Juker.IntegrationTests/Harness/**, tests/Juker.IntegrationTests/Fixtures/**, docs/testing.md]
+touches: [tests/Juker.ArchitectureTests/**, tests/Juker.TestKit/**, tests/Juker.IntegrationTests/Harness/**, tests/Juker.IntegrationTests/Fixtures/**, docs/testing.md]
 adrs: [ADR-0012, ADR-0014]
 external: []
 size: S
@@ -24,7 +24,8 @@ O review independente da SPEC-0003 (G4 aprovado em ef40d71) deixou quatro lacuna
 1. O ramo do ARQ-08 que detecta mocks de `HttpMessageHandler` via NSubstitute/Moq (argumento genérico) funciona, mas não tem caso no fixture `Violations`: uma regressão nele passaria despercebida.
 2. Um projeto de teste novo que não seja referenciado pelo `Juker.ArchitectureTests.csproj` (com `ReferenceOutputAssembly=false`) só é percebido num `arch_test` a partir de um build limpo.
 3. O caminho do banco-modelo que aplica as migrations reais (`TemplateDatabase`) ainda não é exercitado, porque não existe nenhum `DbContext` na solução.
-4. A política de tokens do design aponta como cor qualquer trecho hexadecimal em string C# ou em atributo fora da lista de âncoras (ex.: `NavigateTo("#add")`, `id="#abc"`): é um falso positivo seguro, mas não documentado.
+4. **Teste instável:** o CT-01 da SPEC-0003 (`Comando_test_integration_lista_somente_os_testes_Integration`) roda um `dotnet test --solution` aninhado dentro da suíte e falhou de forma intermitente em execuções completas (visto duas vezes em 2026-10-01), provavelmente por disputa de `bin`/`obj` com outros builds aninhados.
+5. A política de tokens do design aponta como cor qualquer trecho hexadecimal em string C# ou em atributo fora da lista de âncoras (ex.: `NavigateTo("#add")`, `id="#abc"`): é um falso positivo seguro, mas não documentado.
 
 ## 2. Causa Raiz
 Casos não cobertos pelo plano de testes original da SPEC-0003 (achados minor do G4, aceitos como pendência).
@@ -33,6 +34,7 @@ Casos não cobertos pelo plano de testes original da SPEC-0003 (achados minor do
 - Fixture `Violations`: tipos fake nos namespaces `NSubstitute` (`Substitute.For<T>()`) e `Moq` (`Mock<T>`), um infrator de cada que usa `HttpMessageHandler` e um controle que mocka outro tipo; os infratores entram no conjunto exato do ARQ-08.
 - Teste de convenção: todo projeto `tests/**` do `Juker.slnx` (exceto fixtures) é `ProjectReference` do `Juker.ArchitectureTests.csproj`.
 - Fixture de `DbContext` "limpo" (com migration) aplicado pelo `TemplateDatabase`: o banco da classe tem a tabela dessa migration.
+- CT-01 da SPEC-0003 isolado: o `dotnet test` aninhado usa `--no-build` sobre artefatos próprios (`--artifacts-path` temporário) ou a coleção do teste é serializada em relação aos outros builds aninhados; aceitar a correção só com 10 execuções completas seguidas sem falha.
 - `docs/testing.md`: como escrever navegação por fragmento em `.razor` sem acionar a política de tokens.
 - **Não muda:** contrato do `Juker.TestKit` (snapshot), regras ARQ-01..ARQ-08 em produção.
 
@@ -46,6 +48,7 @@ Casos não cobertos pelo plano de testes original da SPEC-0003 (achados minor do
 - Caracterização: N/A — área já coberta pelos testes da SPEC-0003, que continuam valendo.
 - **UT-01** — (guarda: passa antes da mudança) Dado o fixture com `Substitute.For<HttpMessageHandler>()` e `new Mock<HttpMessageHandler>()`, quando o ARQ-08 avalia, então os dois são apontados e o controle `Substitute.For<IDisposable>()` não é.
 - **UT-02** — Dado o `Juker.slnx`, quando o teste de convenção compara os projetos `tests/**` com as `ProjectReference` do `Juker.ArchitectureTests.csproj`, então falha listando qualquer projeto ausente (hoje passa; com um projeto de exemplo ausente num fixture de solução, falha).
+- **IT-02** — (regressão do teste instável) 10 execuções seguidas de `dotnet test --solution Juker.slnx -c Release` terminam sem nenhuma falha do CT-01 da SPEC-0003 (evidência: script de repetição e saídas).
 - **IT-01** — Dado um `DbContext` de fixture com uma migration, quando o `TemplateDatabase` prepara o modelo, então o banco clonado da classe contém a tabela criada pela migration.
 
 ## 5. Questões em Aberto
