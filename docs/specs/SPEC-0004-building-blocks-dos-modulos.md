@@ -234,7 +234,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | Gate | Status | Evidência | Data |
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0004` → 0 erros após a emenda v4 (contrato completo); checklist de julgamento do G0 revisado pelo Architect | 2026-10-01 |
-| G1 Red | PENDING | | |
+| G1 Red | PASS | `verify SPEC-0004 --base sdd/SPEC-0001` no worktree (HEAD 7f28318): red antes do green PASS, commits red só alteram testes PASS, rastreabilidade 11/11 PASS; `dotnet test --solution` → total 65, failed 24 (NotImplementedException do scaffold / host sem `AddJukerInfrastructure`), succeeded 41 (inclui a guarda CT-01, snapshot escrito a partir do contrato) | 2026-10-01 |
 | G2 Green | PENDING | | |
 | G3 Arquitetura | PENDING | | |
 | G4 Review | PENDING | | |
