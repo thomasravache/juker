@@ -27,6 +27,8 @@
     <Project Path="src/Web/Juker.Web.Client/Juker.Web.Client.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj" />
     <Project Path="tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj" />
+    <Project Path="tests/Juker.TestKit/Juker.TestKit.csproj" />
   </Folder>
 </Solution>

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Suíte de arquitetura (SPEC-0003, ADR-0001/0002/0004/0007/0012/0014): regras ARQ-01..ARQ-08 com ArchUnitNET,
+    convenções de rastreabilidade dos testes e a política de tokens do design system.
+    Comando do G3: arch_test no docs/specs/sdd-config.yml
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Fixtures (projetos próprios e arquivos de UI) não fazem parte deste assembly -->
+    <Compile Remove="Fixtures/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="TngTech.ArchUnitNET" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Juker.Host\Juker.Host.csproj" />
+    <ProjectReference Include="..\..\src\Web\Juker.Web\Juker.Web.csproj" />
+  </ItemGroup>
+
+</Project>

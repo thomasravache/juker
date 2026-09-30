@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Aspire\Juker.AppHost\Juker.AppHost.csproj" />
     <ProjectReference Include="..\..\src\Juker.Host\Juker.Host.csproj" />
+    <ProjectReference Include="..\Juker.TestKit\Juker.TestKit.csproj" />
   </ItemGroup>
 
 </Project>
