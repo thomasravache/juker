@@ -4,7 +4,7 @@ title: Pendências do review da SPEC-0026
 tier: lite
 type: fix
 user_facing: false
-status: in-progress
+status: implemented
 created: 2026-10-01
 parent: SPEC-0001
 depends_on: [SPEC-0026]
@@ -60,10 +60,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 - [x] Validar: build + suíte completa + arquitetura + lint (G2/G3)
 
 **Fase final: Integração, entrega e documentação**
-- [ ] Review independente (G4)
-- [ ] Integração (G5) e aprovação (H2)
-- [ ] Deploy via pipeline (G6) — N/A enquanto o CD estiver adiado
-- [ ] Relatório de Entrega e CHANGELOG (G7)
+- [x] Review independente (G4)
+- [x] Integração (G5) e aprovação (H2)
+- [x] Deploy via pipeline (G6) — N/A enquanto o CD estiver adiado
+- [x] Relatório de Entrega e CHANGELOG (G7)
 
 ## 8. Registro de Gates
 | Gate | Status | Evidência | Data |
@@ -73,10 +73,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G2 Green | PASS | Re-executado pelo Architect (HEAD 2605283): build 0/0; `dotnet test --solution` 39/39 (Implementer: 2 execuções 39/39 após `dotnet clean`); lint ok | 2026-10-01 |
 | G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → sem falhas | 2026-10-01 |
 | G4 Review | PASS | Reviewer independente: APPROVED em 2605283 (verify PASS 0/0; build 0/0; 39/39; arquitetura 20/20; lint ok; IT-01 vermelho em bc010b7 pelo motivo certo). 2 minor: IT-02 é guarda (rotulado); risco residual aceito — o nome composto não é amarrado a um serviço registrado porque os `Add*Module` ainda estão vazios (revisitar quando o primeiro módulo registrar serviços, a partir da SPEC-0007) | 2026-10-01 |
-| G5 Integração & CI | PENDING | | |
-| H2 Integração aprovada | PENDING | | |
-| G6 Deploy | PENDING | | |
-| G7 Pronto & Docs | PENDING | | |
+| G5 Integração & CI | PASS | Merge --no-ff em `sdd/SPEC-0001` (473807b): build 0/0; `dotnet test --solution` 39/39; integração exit 0; lint ok. CI: N/A até a SPEC-0005 | 2026-10-01 |
+| H2 Integração aprovada | PASS | autorização prévia de thomas no chat (2026-09-30: "continue trabalhando… opte pela recomendação"), a confirmar no overview | 2026-10-01 |
+| G6 Deploy | N/A | CD adiado por decisão do fundador; entrega = merge na `main` | 2026-10-01 |
+| G7 Pronto & Docs | PASS | Relatório de Entrega, prova de correção e Verificação; DoD marcada; CHANGELOG na branch de integração | 2026-10-01 |
 
 ## 9. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
@@ -85,27 +85,34 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 10. Relatório de Entrega
 
 ### O que foi entregue
+As quatro formas de `ConfigureAwait(...).GetAwaiter().GetResult()` (Task, Task<T>, ValueTask, ValueTask<T>) passam a disparar RS0030 no build. Um teste prova que o host real registra `ComposedModules` com exatamente os módulos adicionados por `AddJukerModules`, e a documentação do `ComposedModules` foi corrigida.
 
 ### Como foi feito
+Red `bc010b7` (fixture irmão `SyncOverAsyncViolation/Configured` com um arquivo por forma; teste de registro com a composição real) e green `2605283` (quatro doc-IDs no `BannedSymbols.txt`, doc XML); merge `473807b`.
 
 ### Prova de Correção
+IT-01: em `bc010b7` o fixture dos awaiters configurados compilava (asserção `ExitCode != 0` falhou, confirmado pelo Reviewer); em `2605283` o build falha com RS0030 em cada um dos quatro arquivos.
 
 ### Verificação
 | Teste | Comportamento | Resultado | Evidência |
 |---|---|---|---|
+| IT-01 | Cada forma de awaiter configurado falha com RS0030 | PASS | `SyncOverAsyncViolationBuildTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 473807b (39/39) |
+| IT-02 | Host real registra `ComposedModules` com os módulos de `AddJukerModules` | PASS | `ComposedModulesRegistrationTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 473807b (39/39) |
 
 ### Definição de Pronto
-- [ ] Teste de regressão falhou antes e passa depois da correção
-- [ ] Suíte completa, arquitetura e CI verdes (G2, G3, G5)
-- [ ] Review independente sem achados blocker/major (G4)
-- [ ] Padrão existente mantido
-- [ ] Disponível no ambiente-alvo via pipeline (G6)
-- [ ] Documentação/CHANGELOG atualizados quando aplicável (G7)
-- [ ] Outras ocorrências registradas como novas specs (ou nenhuma)
+- [x] Teste de regressão falhou antes e passa depois da correção
+- [x] Suíte completa, arquitetura e CI verdes (G2, G3, G5) — CI: N/A até a SPEC-0005
+- [x] Review independente sem achados blocker/major (G4)
+- [x] Padrão existente mantido
+- [x] Disponível no ambiente-alvo via pipeline (G6) — N/A: CD adiado; integrado na `main`
+- [x] Documentação/CHANGELOG atualizados quando aplicável (G7)
+- [x] Outras ocorrências registradas como novas specs (ou nenhuma) — nenhuma; risco residual aceito registrado no G4
 
 ### Deploy
+N/A — CD adiado (SPEC-0006). Integrado em `sdd/SPEC-0001` e na `main`.
 
 ### Pendências
+Nenhuma.
 
 ## 11. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |

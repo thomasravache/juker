@@ -5,7 +5,7 @@
 ## Saúde
 
 - Validação (G0): **0 erro(s), 3 aviso(s)** — rode `spec_graph.py validate`
-- Specs: approved 23, implemented 3
+- Specs: approved 21, in-progress 1, implemented 4
 - Impedimentos: **1 aberto(s)**, 3 resolvido(s)
 
 ## Impedimentos Abertos
@@ -16,15 +16,14 @@
 
 ## Plano de Execução
 
-**Em andamento:** —  
+**Em andamento:** SPEC-0004  
 **Paradas por impedimento:** —  
-**Próximo lote:** SPEC-0004, SPEC-0028
+**Próximo lote:** —
 
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
-| 1 | SPEC-0004 | Building blocks dos módulos | full/M | approved | ✅ pronta |  |
+| 1 | SPEC-0004 | Building blocks dos módulos | full/M | in-progress | 🔄 em andamento |  |
 | 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 0d) |  |
-| 1 | SPEC-0028 | Pendências do review da SPEC-0026 | lite/S | approved | ✅ pronta |  |
 | 2 | SPEC-0005 | Pipeline de CI | full/M | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0004 |
 | 3 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0004; saiu da onda 2: arquivos em comum com SPEC-0005 |
 | 4 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ⛔ aguarda implementação de SPEC-0004; aguarda implementação de SPEC-0005; aguarda implementação de SPEC-0025 |  |
@@ -50,7 +49,7 @@
 
 | Épico | Título | Status | Progresso |
 |---|---|---|---|
-| SPEC-0001 | Fundação do Juker | approved | 3/12 implementadas |
+| SPEC-0001 | Fundação do Juker | approved | 4/12 implementadas |
 | SPEC-0010 | MVP Jukebox colaborativa | approved | 0/14 implementadas |
 
 ## Grafo de Dependências
@@ -62,16 +61,14 @@ flowchart LR
   subgraph E0001["SPEC-0001 · Fundação do Juker"]
     S0002["SPEC-0002<br/>Repositório, solução e tooling"]:::implemented
     S0003["SPEC-0003<br/>Harness de testes de integração e suíte…"]:::implemented
-    S0004["SPEC-0004<br/>Building blocks dos módulos"]:::approved
+    S0004["SPEC-0004<br/>Building blocks dos módulos"]:::inprogress
     S0005["SPEC-0005<br/>Pipeline de CI"]:::approved
     S0006["SPEC-0006<br/>Ambientes, IaC, segredos, migrations e …"]:::approved
     S0007["SPEC-0007<br/>Walking skeleton: página do bar e TV to…"]:::approved
     S0008["SPEC-0008<br/>Observabilidade básica"]:::approved
     S0009["SPEC-0009<br/>Segurança básica e autorização"]:::approved
     S0025["SPEC-0025<br/>Harness de E2E e ambiente de teste cont…"]:::approved
-    S0026["SPEC-0026<br/>Pendências do review da SPEC-0002"]:::implemented
     S0027["SPEC-0027<br/>Pendências do review da SPEC-0003"]:::approved
-    S0028["SPEC-0028<br/>Pendências do review da SPEC-0026"]:::approved
   end
   subgraph E0010["SPEC-0010 · MVP Jukebox colaborativa"]
     S0011["SPEC-0011<br/>Bar, configurações da noite e termos de…"]:::approved
@@ -152,9 +149,7 @@ flowchart LR
   S0020 -. contrato v1 .-> S0024
   S0012 -. contrato v1 .-> S0024
   S0003 --> S0025
-  S0002 --> S0026
   S0003 --> S0027
-  S0026 --> S0028
   classDef proposed fill:#fef3c7,stroke:#d97706,color:#111
   classDef approved fill:#dbeafe,stroke:#2563eb,color:#111
   classDef inprogress fill:#ede9fe,stroke:#7c3aed,color:#111
@@ -169,7 +164,7 @@ flowchart LR
 | [SPEC-0001](SPEC-0001-fundacao-do-juker.md) | Fundação do Juker | epic | foundation | approved | 2026-09-30 | — | — | — |
 | [SPEC-0002](SPEC-0002-repositorio-solucao-e-tooling.md) | Repositório, solução e tooling | full | foundation | implemented | 2026-09-30 | SPEC-0001 | — | — |
 | [SPEC-0003](SPEC-0003-harness-de-testes-e-suite-de-arquitetura.md) | Harness de testes de integração e suíte de arquitetura | full | foundation | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002 | — |
-| [SPEC-0004](SPEC-0004-building-blocks-dos-modulos.md) | Building blocks dos módulos | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@2 |
+| [SPEC-0004](SPEC-0004-building-blocks-dos-modulos.md) | Building blocks dos módulos | full | foundation | in-progress | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@2 |
 | [SPEC-0005](SPEC-0005-pipeline-de-ci.md) | Pipeline de CI | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@2, SPEC-0025@2 |
 | [SPEC-0006](SPEC-0006-ambientes-iac-segredos-migrations-e-backup.md) | Ambientes, IaC, segredos, migrations e backup | full | foundation | approved | 2026-09-30 | SPEC-0001 | — | SPEC-0005@2 |
 | [SPEC-0007](SPEC-0007-walking-skeleton-pagina-do-bar-e-tv.md) | Walking skeleton: página do bar e TV tocando | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0003, SPEC-0004, SPEC-0005, SPEC-0025 | — |
@@ -193,7 +188,7 @@ flowchart LR
 | [SPEC-0025](SPEC-0025-harness-de-e2e-e-ambiente-de-teste-controlavel.md) | Harness de E2E e ambiente de teste controlável | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0003 | — |
 | [SPEC-0026](SPEC-0026-pendencias-do-review-da-spec-0002.md) | Pendências do review da SPEC-0002 | lite | fix | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002 | — |
 | [SPEC-0027](SPEC-0027-pendencias-do-review-da-spec-0003.md) | Pendências do review da SPEC-0003 | lite | refactor | approved | 2026-10-01 | SPEC-0001 | SPEC-0003 | — |
-| [SPEC-0028](SPEC-0028-pendencias-do-review-da-spec-0026.md) | Pendências do review da SPEC-0026 | lite | fix | approved | 2026-10-01 | SPEC-0001 | SPEC-0026 | — |
+| [SPEC-0028](SPEC-0028-pendencias-do-review-da-spec-0026.md) | Pendências do review da SPEC-0026 | lite | fix | implemented | 2026-10-01 | SPEC-0001 | SPEC-0026 | — |
 
 ## ADRs
 
