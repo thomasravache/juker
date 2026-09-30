@@ -1,0 +1,20 @@
+# Saídas de build e teste
+bin/
+obj/
+artifacts/
+TestResults/
+*.trx
+coverage*.xml
+
+# IDEs e arquivos de usuário
+.vs/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+.DS_Store
+
+# Segredos locais (nunca versionar)
+.env
+.env.*
+appsettings.*.local.json

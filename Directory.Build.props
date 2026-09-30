@@ -1,0 +1,27 @@
+<Project>
+  <!--
+    Propriedades comuns a todos os projetos do Juker (SPEC-0002, ADR-0014).
+    Também é importado pelo fixture tests/fixtures/QualityViolations (SPEC-0002:IT-03).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- pt-BR: datas, números e comparação de texto dependem de ICU -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- O restore usa sempre o nuget.config da raiz, inclusive para projetos fora da árvore que importam este arquivo -->
+    <RestoreConfigFile>$(MSBuildThisFileDirectory)nuget.config</RestoreConfigFile>
+  </PropertyGroup>
+
+  <ItemGroup Label="Qualidade (ADR-0014)">
+    <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" Link="BannedSymbols.txt" Visible="false" />
+    <!-- Itens são avaliados depois de todas as propriedades: IsTestProject do .csproj já está definido aqui -->
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory).config/BannedSymbols.Tests.txt" Link="BannedSymbols.Tests.txt" Visible="false" Condition="'$(IsTestProject)' == 'true'" />
+  </ItemGroup>
+</Project>

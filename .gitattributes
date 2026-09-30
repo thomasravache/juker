@@ -1,0 +1,22 @@
+# Normaliza finais de linha no repositório (LF), com exceções explícitas.
+* text=auto eol=lf
+
+*.cs      text diff=csharp
+*.csproj  text
+*.props   text
+*.targets text
+*.slnx    text
+*.razor   text
+*.json    text
+*.yml     text
+*.yaml    text
+*.md      text diff=markdown
+*.sh      text eol=lf
+*.cmd     text eol=crlf
+*.bat     text eol=crlf
+*.ps1     text eol=crlf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
