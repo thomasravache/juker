@@ -60,10 +60,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 7. Checklist de Implementação
 
 **Fase 1: Regressão**
-- [ ] Red: escrever IT-01, IT-02 e IT-03 com a tag `SPEC-0026:<ID>` e confirmar que IT-01 e IT-02 falham pelo motivo certo (IT-03 é guarda: passa antes da mudança)
-- [ ] Green: banir os awaiters, criar o registro de módulos compostos e a nota no AGENTS.md
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + suíte completa + lint (G2)
+- [x] Red: escrever IT-01, IT-02 e IT-03 com a tag `SPEC-0026:<ID>` e confirmar que IT-01 e IT-02 falham pelo motivo certo (IT-03 é guarda: passa antes da mudança)
+- [x] Green: banir os awaiters, criar o registro de módulos compostos e a nota no AGENTS.md
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + suíte completa + lint (G2)
 
 **Fase final: Integração, entrega e documentação**
 - [ ] Review independente (G4)
@@ -76,8 +76,8 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0026` → G0 [SPEC-0026]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect | 2026-09-30 |
 | G1 Red | PASS | `verify SPEC-0026 --base sdd/SPEC-0001` no worktree (HEAD 9a49e15): red antes do green PASS, commits red só alteram testes PASS, rastreabilidade 3/3 PASS; `dotnet test --solution` → IT-01 e IT-02 vermelhos pelo motivo certo, IT-03 verde (guarda) | 2026-10-01 |
-| G2 Green | PENDING | | |
-| G3 Arquitetura | PENDING | | |
+| G2 Green | PASS | Re-executado pelo Architect no worktree (HEAD 182e5de): build `-warnaserror` 0/0; `dotnet test --solution` → 37/37 (Implementer: 2 execuções completas 37/37 após `dotnet clean`); lint ok | 2026-10-01 |
+| G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → 20/20 | 2026-10-01 |
 | G4 Review | PENDING | | |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
