@@ -8,7 +8,7 @@ status: approved
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: []
-consumes_contract: [SPEC-0005@1]
+consumes_contract: [SPEC-0005@2]
 contract_version: 1
 touches: [deploy/**, .github/workflows/deploy.yml, src/Aspire/Juker.AppHost/Publish/**, tests/Juker.DeployTests/**, docs/operations.md]
 adrs: [ADR-0004, ADR-0009]
@@ -43,7 +43,7 @@ Cria os ambientes **staging** e **produção** como código em VPS da Hetzner: p
 
 ## 3. Dependências
 - **Implementações necessárias:** N/A.
-- **Contratos consumidos:** SPEC-0005@1 — o output `image_digest` e a tag `ghcr.io/<owner>/juker:<sha>` do job `image`.
+- **Contratos consumidos:** SPEC-0005@2 — o output `image_digest` e a tag `ghcr.io/<owner>/juker:<sha>` do job `image`.
 - **Pré-requisitos externos:** **domínio registrado** e DNS apontando para as VPS (`staging.<domínio>` e `<domínio>`), a ser definido pelo fundador; conta Hetzner com duas VPS (CX22 ou equivalente) e um bucket de Object Storage; segredos cadastrados nos GitHub Environments `staging` e `production`.
 
 ## 4. Decisão Arquitetural
@@ -116,7 +116,7 @@ Servidor (/opt/juker):
 - **IT-04** — Deploy de uma imagem que nunca fica pronta: após 90 s, a versão anterior volta e o job termina vermelho.
 
 ### 7.4 Testes de Contrato
-- **CT-01** — `tests/Juker.DeployTests` lê `deploy.yml` e verifica: as entradas `env`/`version`, o `environment` igual ao input `env`, o consumo do output/tag do CI (SPEC-0005@1) e que o environment `production` está declarado (a exigência de aprovação é conferida na configuração do repositório, com print como evidência).
+- **CT-01** — `tests/Juker.DeployTests` lê `deploy.yml` e verifica: as entradas `env`/`version`, o `environment` igual ao input `env`, o consumo do output/tag do CI (SPEC-0005@2) e que o environment `production` está declarado (a exigência de aprovação é conferida na configuração do repositório, com print como evidência).
 
 ### 7.5 Testes E2E
 - N/A — user_facing: false (o smoke E2E pós-deploy entra com a SPEC-0007).
@@ -181,6 +181,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 13. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
 |---|---|---|---|---|---|---|---|---|
+| IMP-01 | 2026-09-30 | G1 | externo | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real | Spec adiada na onda 2 por decisão do fundador (2026-09-30) | thomas (provisionar a infraestrutura e cadastrar os segredos) |  |  |
 
 ## 14. Relatório de Entrega
 

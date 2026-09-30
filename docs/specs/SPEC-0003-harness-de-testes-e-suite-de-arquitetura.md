@@ -9,7 +9,7 @@ created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002]
 consumes_contract: []
-contract_version: 1
+contract_version: 2
 touches: [tests/Juker.TestKit/**, tests/Juker.IntegrationTests/**, tests/Juker.ArchitectureTests/**, tests/Juker.Modules.*/**, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.Web.UnitTests/**, tests/Directory.Build.props, Directory.Packages.props, Juker.slnx, docs/testing.md, tools/recordings/**]
 adrs: [ADR-0001, ADR-0002, ADR-0004, ADR-0007, ADR-0011, ADR-0012, ADR-0014]
 external: []
@@ -89,9 +89,10 @@ Convenções:
   [Trait("Category", "Unit"|"Integration"|"E2E"|"Smoke"|"Architecture")]
 
 Comandos (sdd-config.yml):
-  test:             dotnet test Juker.slnx -c Release
-  test_integration: dotnet test Juker.slnx -c Release --filter Category=Integration
-  arch_test:        dotnet test tests/Juker.ArchitectureTests -c Release
+  test:             dotnet test --solution Juker.slnx -c Release
+  test_integration: dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Integration"
+  arch_test:        dotnet test --project tests/Juker.ArchitectureTests -c Release
+  (Microsoft.Testing.Platform — global.json test.runner; nada de sintaxe VSTest)
 ```
 
 **Arquivos/módulos afetados:** ver `touches` no frontmatter.
@@ -108,7 +109,7 @@ Comandos (sdd-config.yml):
 | Regras de arquitetura detectam violação | assembly de fixture com cada violação ARQ-01..ARQ-08 | cada regra falha com a violação correspondente | IT-02 |
 | Regras de arquitetura aprovam a solução | assemblies reais da solução | todas as regras passam | IT-02 |
 | Host de teste real | `JukerApiFactory` com o banco da classe | `/health/ready` = 200, `TimeProvider` substituído pelo `FakeTimeProvider` e dispatcher do outbox desligado | IT-03 |
-| Filtros por categoria | `--filter Category=Integration` | só testes de integração são executados | CT-01 |
+| Filtros por categoria | `--filter-trait "Category=Integration"` | só testes de integração são executados | CT-01 |
 
 ## 7. Artefato B — Plano de Testes (TDD)
 
@@ -128,7 +129,7 @@ Comandos (sdd-config.yml):
 - **IT-05** — Um `DbContext` de fixture com uma propriedade nova sem migration faz o `MigrationsGuard` falhar citando o contexto; para os `DbContext` reais da solução, passa.
 
 ### 7.4 Testes de Contrato
-- **CT-01** — Executar `dotnet test --filter Category=Integration --list-tests` retorna somente testes marcados como Integration, e a API pública do `Juker.TestKit` bate com o snapshot aprovado (contrato consumido pelas SPECs 0004, 0005, 0025 e por todas as specs com IT).
+- **CT-01** — Executar `dotnet test --solution Juker.slnx --filter-trait "Category=Integration" --list-tests` retorna somente testes marcados como Integration, e a API pública do `Juker.TestKit` bate com o snapshot aprovado (contrato consumido pelas SPECs 0004, 0005, 0025 e por todas as specs com IT).
 
 ### 7.5 Testes E2E
 - N/A — user_facing: false.
@@ -227,3 +228,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | SPEC-0004, SPEC-0005, SPEC-0025 (consomem SPEC-0003@1 → revisar e fixar @2) | thomas, 2026-09-30 |

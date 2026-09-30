@@ -8,8 +8,8 @@ status: approved
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002]
-consumes_contract: [SPEC-0003@1, SPEC-0025@1]
-contract_version: 1
+consumes_contract: [SPEC-0003@2, SPEC-0025@2]
+contract_version: 2
 touches: [.github/workflows/ci.yml, .github/workflows/mutation.yml, .github/dependabot.yml, .gitleaks.toml, .config/dotnet-tools.json, tools/sdd/**, tools/ci/**, tests/Juker.CiTests/**, tests/**/stryker-config.json, docs/ci.md]
 adrs: [ADR-0009, ADR-0011, ADR-0013, ADR-0014]
 external: []
@@ -44,7 +44,7 @@ Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, 
 
 ## 3. Dependências
 - **Implementações necessárias:** SPEC-0002 — solução compilável e `tools/sdd` vendorizado.
-- **Contratos consumidos:** SPEC-0003@1 — comandos `test`, `test_integration` e `arch_test` e categorias de teste; SPEC-0025@1 — comando `test_e2e`, navegadores e o diretório dos artefatos de falha.
+- **Contratos consumidos:** SPEC-0003@2 — comandos `test`, `test_integration` e `arch_test` e categorias de teste; SPEC-0025@2 — comando `test_e2e`, navegadores e o diretório dos artefatos de falha.
 - **Pré-requisitos externos:** repositório no GitHub com Actions habilitado; permissão `packages: write` para o GHCR.
 
 ## 4. Decisão Arquitetural
@@ -76,10 +76,10 @@ on: pull_request (branches: main) | push (branches: main)
 jobs (checks obrigatórios na proteção da main):
   build          → dotnet build Juker.slnx -c Release -warnaserror
   lint           → dotnet format Juker.slnx --verify-no-changes
-  unit           → dotnet test ... --filter Category=Unit
-  integration    → dotnet test ... --filter Category=Integration   (Docker do runner)
-  architecture   → dotnet test tests/Juker.ArchitectureTests
-  e2e            → playwright install --with-deps chromium webkit ; dotnet test tests/Juker.E2ETests
+  unit           → dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Unit"
+  integration    → dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Integration"   (Docker do runner)
+  architecture   → dotnet test --project tests/Juker.ArchitectureTests -c Release
+  e2e            → playwright install --with-deps chromium webkit ; dotnet test --project tests/Juker.E2ETests -c Release
                    (AppHost + Playwright) ; em falha: upload de TestResults/playwright/** como "playwright-traces"
   security       → dotnet list package --vulnerable --include-transitive ; gitleaks detect
   coverage       → needs: unit, integration ; reportgenerator (Cobertura) ; diff-cover --compare-branch=origin/main --fail-under=80
@@ -220,3 +220,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | Nenhuma (nenhuma spec consome o contrato da SPEC-0005 além da SPEC-0006, que usa só o output/tag da imagem, inalterados) | thomas, 2026-09-30 |

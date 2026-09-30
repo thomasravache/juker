@@ -6,18 +6,24 @@
 
 - Validação (G0): **0 erro(s), 3 aviso(s)** — rode `spec_graph.py validate`
 - Specs: approved 23, implemented 1
-- Impedimentos: **0 aberto(s)**, 1 resolvido(s)
+- Impedimentos: **1 aberto(s)**, 1 resolvido(s)
+
+## Impedimentos Abertos
+
+| Spec | ID | Tipo | Fase/Gate | Responsável | Aberto em | Idade | Descrição |
+|---|---|---|---|---|---|---|---|
+| SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 0d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
 
 ## Plano de Execução
 
 **Em andamento:** —  
 **Paradas por impedimento:** —  
-**Próximo lote:** SPEC-0003, SPEC-0006
+**Próximo lote:** SPEC-0003
 
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
 | 1 | SPEC-0003 | Harness de testes de integração e suíte de arquitetura | full/M | approved | ✅ pronta |  |
-| 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ✅ pronta |  |
+| 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 0d) |  |
 | 2 | SPEC-0004 | Building blocks dos módulos | full/M | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0003 |
 | 2 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | approved | ⛔ aguarda implementação de SPEC-0003 |  |
 | 2 | SPEC-0026 | Pendências do review da SPEC-0002 | lite/S | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0003 |
@@ -83,11 +89,11 @@ flowchart LR
   end
   S0002 --> S0003
   S0002 --> S0004
-  S0003 -. contrato v1 .-> S0004
+  S0003 -. contrato v2 .-> S0004
   S0002 --> S0005
-  S0003 -. contrato v1 .-> S0005
-  S0025 -. contrato v1 .-> S0005
-  S0005 -. contrato v1 .-> S0006
+  S0003 -. contrato v2 .-> S0005
+  S0025 -. contrato v2 .-> S0005
+  S0005 -. contrato v2 .-> S0006
   S0003 --> S0007
   S0004 --> S0007
   S0005 --> S0007
@@ -160,9 +166,9 @@ flowchart LR
 | [SPEC-0001](SPEC-0001-fundacao-do-juker.md) | Fundação do Juker | epic | foundation | approved | 2026-09-30 | — | — | — |
 | [SPEC-0002](SPEC-0002-repositorio-solucao-e-tooling.md) | Repositório, solução e tooling | full | foundation | implemented | 2026-09-30 | SPEC-0001 | — | — |
 | [SPEC-0003](SPEC-0003-harness-de-testes-e-suite-de-arquitetura.md) | Harness de testes de integração e suíte de arquitetura | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | — |
-| [SPEC-0004](SPEC-0004-building-blocks-dos-modulos.md) | Building blocks dos módulos | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@1 |
-| [SPEC-0005](SPEC-0005-pipeline-de-ci.md) | Pipeline de CI | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@1, SPEC-0025@1 |
-| [SPEC-0006](SPEC-0006-ambientes-iac-segredos-migrations-e-backup.md) | Ambientes, IaC, segredos, migrations e backup | full | foundation | approved | 2026-09-30 | SPEC-0001 | — | SPEC-0005@1 |
+| [SPEC-0004](SPEC-0004-building-blocks-dos-modulos.md) | Building blocks dos módulos | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@2 |
+| [SPEC-0005](SPEC-0005-pipeline-de-ci.md) | Pipeline de CI | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@2, SPEC-0025@2 |
+| [SPEC-0006](SPEC-0006-ambientes-iac-segredos-migrations-e-backup.md) | Ambientes, IaC, segredos, migrations e backup | full | foundation | approved | 2026-09-30 | SPEC-0001 | — | SPEC-0005@2 |
 | [SPEC-0007](SPEC-0007-walking-skeleton-pagina-do-bar-e-tv.md) | Walking skeleton: página do bar e TV tocando | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0003, SPEC-0004, SPEC-0005, SPEC-0006, SPEC-0025 | — |
 | [SPEC-0008](SPEC-0008-observabilidade-basica.md) | Observabilidade básica | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0007 | — |
 | [SPEC-0009](SPEC-0009-seguranca-basica-e-autorizacao.md) | Segurança básica e autorização | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0007 | — |

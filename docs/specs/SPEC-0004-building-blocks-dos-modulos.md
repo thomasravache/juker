@@ -8,7 +8,7 @@ status: approved
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002]
-consumes_contract: [SPEC-0003@1]
+consumes_contract: [SPEC-0003@2]
 contract_version: 1
 touches: [src/BuildingBlocks/**, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.IntegrationTests/BuildingBlocks/**, tests/Juker.ArchitectureTests/PublicApi/**, tests/Juker.TestKit/Outbox/**]
 adrs: [ADR-0002, ADR-0004, ADR-0006, ADR-0008, ADR-0012]
@@ -44,7 +44,7 @@ Fornece aos módulos o "kit" comum: tipo `Result`/`Error`, handlers de comando e
 
 ## 3. Dependências
 - **Implementações necessárias:** SPEC-0002 — projetos `BuildingBlocks` e `Directory.Packages.props`.
-- **Contratos consumidos:** SPEC-0003@1 — `PostgresFixture`, `JukerApiFactory` e convenções de tag para os testes desta spec (enquanto a SPEC-0003 não estiver implementada, os testes usam dublês conforme o contrato do TestKit).
+- **Contratos consumidos:** SPEC-0003@2 — `PostgresFixture`, `JukerApiFactory` e convenções de tag para os testes desta spec (enquanto a SPEC-0003 não estiver implementada, os testes usam dublês conforme o contrato do TestKit).
 - **Pré-requisitos externos:** FluentValidation (Apache-2.0), PublicApiGenerator (MIT).
 
 ## 4. Decisão Arquitetural

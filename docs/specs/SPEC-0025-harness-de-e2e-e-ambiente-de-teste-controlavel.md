@@ -9,7 +9,7 @@ created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0003]
 consumes_contract: []
-contract_version: 1
+contract_version: 2
 touches: [tests/Juker.E2ETests/**, tests/Juker.TestKit/E2E/**, tests/Juker.IntegrationTests/Testing/**, src/Juker.Host/Testing/**, Directory.Packages.props, Juker.slnx, docs/testing.md]
 adrs: [ADR-0003, ADR-0011, ADR-0013]
 external: []
@@ -97,8 +97,8 @@ Host — somente ASPNETCORE_ENVIRONMENT=E2E (AddE2ETestingSupport / MapTestEndpo
 
 Smoke: JUKER_E2E_BASE_URL=https://staging.<domínio> → roda só Category=Smoke contra a URL, sem AppHost
 Comandos (sdd-config.yml):
-  test_e2e:   dotnet test tests/Juker.E2ETests -c Release
-  smoke_test: dotnet test tests/Juker.E2ETests -c Release --filter Category=Smoke
+  test_e2e:   dotnet test --project tests/Juker.E2ETests -c Release
+  smoke_test: dotnet test --project tests/Juker.E2ETests -c Release --filter-trait "Category=Smoke"
 ```
 
 **Arquivos/módulos afetados:** ver `touches` no frontmatter.
@@ -126,10 +126,10 @@ Comandos (sdd-config.yml):
 ### 7.3 Testes de Integração
 - **IT-01** — `AspireAppFixture` sobe o AppHost no ambiente `E2E` e `/health/ready` responde 200 em menos de 60 s; a `PlaywrightFixture` abre uma página de teste (`/_test/ping`, HTML mínimo) em Chromium e WebKit e o `AssertNoA11yViolationsAsync` não encontra violações.
 - **IT-02** — Com o host em `E2E`: `POST /_test/clock/advance` (900 s) avança o `TimeProvider` do host em 15 min; duas chamadas a `POST /_test/venues` criam bares distintos com slug `e2e-…`. Com o host em `Staging` e em `Production` (WebApplicationFactory com o ambiente trocado): `/_test/*` responde 404 e o `TimeProvider` resolvido é `TimeProvider.System`.
-- **IT-03** — Um teste de exemplo marcado para falhar (executado isolado pelo IT via `dotnet test --filter`) deixa `trace.zip`, `video.webm` e `screenshot.png` em `TestResults/playwright/<teste>/`.
+- **IT-03** — Um teste de exemplo marcado para falhar (executado isolado pelo IT via `dotnet test --project … --filter-trait`) deixa `trace.zip`, `video.webm` e `screenshot.png` em `TestResults/playwright/<teste>/`.
 
 ### 7.4 Testes de Contrato
-- **CT-01** — Com `JUKER_E2E_BASE_URL` apontando para um servidor local de teste, `dotnet test --filter Category=Smoke --list-tests` lista só os Smoke e a execução não sobe o AppHost nem chama `/_test/*`; e a API pública do `Juker.TestKit.E2E` bate com o snapshot aprovado (consumida pela SPEC-0005 e por todas as specs com E2E).
+- **CT-01** — Com `JUKER_E2E_BASE_URL` apontando para um servidor local de teste, `dotnet test --project tests/Juker.E2ETests --filter-trait "Category=Smoke" --list-tests` lista só os Smoke e a execução não sobe o AppHost nem chama `/_test/*`; e a API pública do `Juker.TestKit.E2E` bate com o snapshot aprovado (consumida pela SPEC-0005 e por todas as specs com E2E).
 
 ### 7.5 Testes E2E
 - N/A — user_facing: false (o harness é validado pelos IT; a primeira jornada real é a da SPEC-0007).
@@ -226,3 +226,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | SPEC-0005 (consome SPEC-0025@1 → revisar e fixar @2) | thomas, 2026-09-30 |
