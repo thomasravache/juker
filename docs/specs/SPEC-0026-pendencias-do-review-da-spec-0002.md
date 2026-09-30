@@ -45,7 +45,7 @@ O review independente da SPEC-0002 (G4 aprovado em d5ba5a4) deixou três lacunas
 **Outras ocorrências:** Nenhuma. O ajuste de texto no ADR-0014 sobre supressões de aviso do MSBuild (`NoWarn` no `.csproj` com comentário, quando o `.editorconfig` não controla o aviso, caso do ASPIRE010) é feito pelo Architect junto com esta spec.
 
 ## 4. Plano de Testes (TDD)
-- Caracterização: N/A — área já coberta pelos testes da SPEC-0002 (UT-01..03, IT-01..03), que continuam valendo.
+- Caracterização: N/A — área já coberta pelos testes unitários e de integração da SPEC-0002, que continuam valendo.
 - **IT-01** — Dado o fixture `tests/fixtures/SyncOverAsyncViolation` (fora da solução, importa o `Directory.Build.props`) com `Task.CompletedTask.GetAwaiter().GetResult()`, quando `dotnet build` roda, então termina com código ≠ 0 e a saída contém `RS0030`; hoje o build passa (regressão).
 - **IT-02** — Dado um host de teste (WebApplicationFactory em `Development`) em que a composição de módulos é substituída para registrar só `Venues`, quando `GET /_diag/modules` é chamado, então a resposta é `["Venues"]`; hoje retorna os cinco nomes do catálogo (regressão).
 - **IT-03** — (guarda: passa antes da mudança) Dado o host em `Production`, quando `GET /_diag/modules` é chamado, então a resposta é 404.
@@ -115,3 +115,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 11. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-10-01 | Redação da linha de caracterização sem IDs de teste de outra spec | O `verify` lia os IDs da SPEC-0002 como testes planejados da SPEC-0026 (apontado pelo Test-writer) | Nenhuma | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
