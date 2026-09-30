@@ -4,7 +4,7 @@ title: Pendências do review da SPEC-0003
 tier: lite
 type: refactor
 user_facing: false
-status: proposed
+status: approved
 created: 2026-10-01
 parent: SPEC-0001
 depends_on: [SPEC-0003]
@@ -13,8 +13,8 @@ touches: [tests/Juker.ArchitectureTests/**, tests/Juker.TestKit/**, tests/Juker.
 adrs: [ADR-0012, ADR-0014]
 external: []
 size: S
-approved_by:
-approved_at:
+approved_by: thomas (autorização prévia de 2026-09-30, a confirmar no overview)
+approved_at: 2026-09-30
 ---
 
 # SPEC-0027 — Pendências do review da SPEC-0003
@@ -58,6 +58,18 @@ Nenhuma.
 Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o humano responder "Aprovado".
 
 ## 7. Checklist de Implementação
+
+**Fase 1: Regressão**
+- [ ] Red: escrever UT-01, UT-02, IT-01, IT-02 com a tag `SPEC-0027:<ID>`; confirmar que as regressões falham pelo motivo certo (guardas marcadas passam antes da mudança)
+- [ ] Green: implementar a mudança proposta
+- [ ] Refactor mantendo tudo verde
+- [ ] Validar: build + suíte completa + arquitetura + lint (G2/G3)
+
+**Fase final: Integração, entrega e documentação**
+- [ ] Review independente (G4)
+- [ ] Integração (G5) e aprovação (H2)
+- [ ] Deploy via pipeline (G6) — N/A enquanto o CD estiver adiado
+- [ ] Relatório de Entrega e CHANGELOG (G7)
 
 ## 8. Registro de Gates
 | Gate | Status | Evidência | Data |
