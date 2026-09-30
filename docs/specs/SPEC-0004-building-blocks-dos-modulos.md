@@ -4,13 +4,13 @@ title: Building blocks dos módulos
 tier: full
 type: foundation
 user_facing: false
-status: approved
+status: in-progress
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002]
 consumes_contract: [SPEC-0003@2]
-contract_version: 2
-touches: [src/BuildingBlocks/**, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.IntegrationTests/BuildingBlocks/**, tests/Juker.ArchitectureTests/PublicApi/**, tests/Juker.TestKit/Outbox/**]
+contract_version: 3
+touches: [src/BuildingBlocks/**, Juker.slnx, Directory.Packages.props, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.IntegrationTests/BuildingBlocks/**, tests/Juker.ArchitectureTests/PublicApi/**, tests/Juker.TestKit/Outbox/**]
 adrs: [ADR-0002, ADR-0004, ADR-0006, ADR-0008, ADR-0012]
 external: []
 size: M
@@ -93,7 +93,8 @@ public interface IIntegrationEventHandler<TEvent> where TEvent : IIntegrationEve
 public static class ModuleRegistration { IServiceCollection AddModuleHandlers(this IServiceCollection s, Assembly a); }
 public interface IOutboxDrainer { Task<int> DrainAsync(CancellationToken ct); }   // retorna quantas mensagens entregou
 Configuração: Outbox:DispatcherEnabled (bool, padrão true) · Outbox:IntervalMs (padrão 500)
-TestKit: public static Task DrainOutboxAsync(this JukerApiFactory f)   // resolve IOutboxDrainer e drena até vazio
+TestKit: internal static Task DrainOutboxAsync(this JukerApiFactory f)   // resolve IOutboxDrainer e drena até vazio;
+         // internal (InternalsVisibleTo Juker.IntegrationTests) para não alterar a API pública congelada do TestKit (SPEC-0003 CT-01)
 public static class ResultHttpExtensions { IResult ToHttpResult<T>(this Result<T> r, Func<T, IResult> onSuccess); }
 
 Mapeamento ErrorType → HTTP (ProblemDetails, application/problem+json, com "code"):
@@ -238,4 +239,5 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 3 | 2026-10-01 | `DrainOutboxAsync` passa a `internal` (visível ao Juker.IntegrationTests); `touches` inclui `Juker.slnx` e `Directory.Packages.props` (novo projeto Juker.Infrastructure e pacotes) | Evitar mudar o snapshot público do TestKit aprovado na SPEC-0003 e permitir registrar o projeto novo | Nenhuma (nenhuma spec consome o contrato da SPEC-0004) | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | 2 | 2026-10-01 | `IIntegrationEvent` passa do `Juker.Infrastructure` para o `Juker.SharedKernel`; `IIntegrationEventHandler<T>` continua no Infrastructure | Review da SPEC-0003: ARQ-02 só permite que `.Contracts` referencie `SharedKernel` e outros `.Contracts`; eventos de integração vivem nos `.Contracts` e implementam `IIntegrationEvent` | Consumidores futuros do evento (SPECs 0011+) — nenhum implementado ainda | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |

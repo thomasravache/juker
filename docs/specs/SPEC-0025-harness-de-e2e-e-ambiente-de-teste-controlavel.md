@@ -10,7 +10,7 @@ parent: SPEC-0001
 depends_on: [SPEC-0003]
 consumes_contract: []
 contract_version: 2
-touches: [tests/Juker.E2ETests/**, tests/Juker.TestKit/E2E/**, tests/Juker.IntegrationTests/Testing/**, src/Juker.Host/Testing/**, Directory.Packages.props, Juker.slnx, docs/testing.md]
+touches: [tests/Juker.E2ETests/**, tests/Juker.TestKit.E2E/**, tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, src/Juker.Host/Program.cs, src/Juker.Host/Juker.Host.csproj, tests/Juker.IntegrationTests/Testing/**, src/Juker.Host/Testing/**, Directory.Packages.props, Juker.slnx, docs/testing.md]
 adrs: [ADR-0003, ADR-0011, ADR-0013]
 external: []
 size: M
@@ -27,7 +27,7 @@ Implementa a estratégia do ADR-0013: o app sobe inteiro pelo `Aspire.Hosting.Te
 **Motivação:** as jornadas do Juker dependem de tempo (PIN, virada da noite, TV offline), de vários aparelhos ao mesmo tempo e de iPhones; sem esse harness, os E2E seriam lentos, instáveis ou dependeriam de rede e relógio real.
 
 **Objetivos (dentro do escopo):**
-- Projeto `tests/Juker.E2ETests` e `tests/Juker.TestKit/E2E`.
+- Projetos `tests/Juker.E2ETests` e `tests/Juker.TestKit.E2E` (assembly próprio, namespace `Juker.TestKit.E2E`, para não alterar a API pública congelada do `Juker.TestKit` da SPEC-0003); ambos referenciados pelo `Juker.ArchitectureTests.csproj` com `ReferenceOutputAssembly=false` (convenção da SPEC-0003).
 - `AspireAppFixture`: sobe o `Juker.AppHost` com `ASPNETCORE_ENVIRONMENT=E2E` (Postgres em container do próprio AppHost), uma vez por execução.
 - `PlaywrightFixture`: Chromium e WebKit; `NewGuestPageAsync(Chromium|WebKit)` (390×844, pt-BR, fuso America/Sao_Paulo), `NewTvPageAsync()` (1920×1080), `NewAdminPageAsync(mobile)` (1280×800 ou 390×844); relógio do navegador via `page.Clock`; em falha, `trace.zip`, vídeo e screenshot em `TestResults/playwright/<teste>/`; `AssertNoA11yViolationsAsync` (axe-core, A/AA).
 - `PageObject` base e a convenção de pastas `tests/Juker.E2ETests/Pages/<Área>/`.
@@ -226,4 +226,5 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-10-01 | Tipos de E2E em assembly próprio `Juker.TestKit.E2E` (antes: pasta dentro do Juker.TestKit); `touches` inclui o `Program.cs`/`.csproj` do host (registro condicional) e o `.csproj` da suíte de arquitetura | O snapshot público do Juker.TestKit está congelado (SPEC-0003 CT-01); o host precisa chamar `AddE2ETestingSupport()` | Nenhuma — a API do contrato (namespace e tipos) não muda | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | SPEC-0005 (consome SPEC-0025@1 → revisar e fixar @2) | thomas, 2026-09-30 |
