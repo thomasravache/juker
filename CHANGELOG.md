@@ -9,6 +9,8 @@ Cada entrada cita a spec de origem (`SPEC-NNNN`); gere-as com `spec_graph.py rep
 ## [Unreleased]
 
 ### Added
+- Harness de testes de integração (`Juker.TestKit`): Postgres real com banco por classe clonado de um modelo migrado, `JukerApiFactory` com relógio controlado e outbox desligado, `MigrationsGuard` e `FakeHttpServer` (SPEC-0003)
+- Suíte de arquitetura com as regras ARQ-01..ARQ-08, teste de convenções de testes e política de tokens do design (SPEC-0003)
 - Solução .NET 10 com AppHost do Aspire, host único e os cinco módulos com seus contratos; `/health/live`, `/health/ready` e `/_diag/modules` (SPEC-0002)
 - Analisadores de qualidade (Meziantou, APIs proibidas no build), gerenciamento central de pacotes e `nuget.config` só com nuget.org (SPEC-0002)
 - Controle SDD no repositório: `tools/sdd`, hooks de git (não ativados), template de PR e convenções em `AGENTS.md`/`CLAUDE.md` (SPEC-0002)
