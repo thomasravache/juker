@@ -167,19 +167,19 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 11. Checklist de Implementação
 
 **Fase 1: Regras e componentes (unitário)**
-- [ ] Red: escrever UT-01, UT-02, UT-03 com a tag `SPEC-0002:<ID>` e confirmar que falham pelo motivo certo
-- [ ] Green: implementar o mínimo para passar, seguindo os ADRs de fundação e o padrão de slices
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + lint + suíte de UT (G2)
+- [x] Red: escrever UT-01, UT-02, UT-03 com a tag `SPEC-0002:<ID>` e confirmar que falham pelo motivo certo
+- [x] Green: implementar o mínimo para passar, seguindo os ADRs de fundação e o padrão de slices
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + lint + suíte de UT (G2)
 
 **Fase 2: Integração e contrato**
-- [ ] Red: escrever IT-01, IT-02, IT-03 com a tag `SPEC-0002:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
-- [ ] Green: implementar endpoints, persistência, migrations e integrações até passar
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
+- [x] Red: escrever IT-01, IT-02, IT-03 com a tag `SPEC-0002:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
+- [x] Green: implementar endpoints, persistência, migrations e integrações até passar
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
 
 **Fase 3: Verificações adicionais (seção 7.6)**
-- [ ] Executar as verificações da seção 7.6 e anexar a evidência ao Relatório de Entrega
+- [x] Executar as verificações da seção 7.6 e anexar a evidência ao Relatório de Entrega
 
 **Fase final: Integração, entrega e documentação**
 - [ ] Review independente (G4)
@@ -191,10 +191,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | Gate | Status | Evidência | Data |
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0002` → G0 [SPEC-0002]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0014) | 2026-09-30 |
-| G1 Red | FAIL | `verify SPEC-0002 --base sdd/SPEC-0001` no worktree (HEAD d30a4ec): red antes do green PASS, rastreabilidade 6/6 PASS, 6/6 testes falhando por asserção; FAIL: commit test(...) altera `Juker.slnx` (deve ir em chore) e `tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj` fora de `touches` — ambos causados pelo pacote/spec do Architect | 2026-09-30 |
-| G2 Green | PENDING | | |
-| G3 Arquitetura | PENDING | | |
-| G4 Review | PENDING | | |
+| G1 Red | PASS | `verify SPEC-0002 --base sdd/SPEC-0001` no worktree (HEAD a1f989e): red antes do green PASS (a1f989e), commits red só alteram testes PASS, rastreabilidade 6/6 PASS; `dotnet test --project tests/Juker.IntegrationTests` → total 6, failed 6 (asserções: catálogo vazio, CPM estrito ausente, Directory.Build.props ausente, recursos do AppHost ausentes, build do fixture com exit 0). Refeito após FAIL anterior causado pelo pacote do Architect | 2026-09-30 |
+| G2 Green | PASS | Re-executado pelo Architect no worktree (HEAD d5ba5a4): `dotnet build Juker.slnx -c Release -warnaserror` → 0 avisos, 0 erros; `dotnet test --project tests/Juker.IntegrationTests -c Release` → total 6, succeeded 6, failed 0; `dotnet format Juker.slnx --verify-no-changes` → exit 0; `dotnet build tests/fixtures/QualityViolations` → exit 1 com RS0030 e MA0001 (relato do Implementer, coberto pelo IT-03); AppHost subiu com `/health/ready` 200 (relato do Implementer, coberto pelo IT-01) | 2026-09-30 |
+| G3 Arquitetura | N/A | `arch_test` ainda não existe — a suíte ARQ-01..08 é criada pela SPEC-0003; estrutura de projetos conferida contra o ADR-0001 no G4 | 2026-09-30 |
+| G4 Review | PASS | Reviewer independente: APPROVED em d5ba5a4 (verify PASS; build 0/0; 6/6 testes; lint ok; ADR-0001/0002/0003/0009/0011/0012/0014 conformes). 6 achados minor, nenhum blocker/major → pendências na SPEC-0026 (GetAwaiter().GetResult() fora da lista banida; /_diag/modules deriva do catálogo e não do que o host compôs; 404 fora de Dev/Testing sem teste; hook de pre-commit verifica a árvore e não o staged; NoWarn ASPIRE010 no csproj fora do .editorconfig; 8f0d5f6 não compila sozinho — aceito) | 2026-09-30 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |

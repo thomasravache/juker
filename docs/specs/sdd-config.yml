@@ -6,12 +6,12 @@ base_branch: main
 max_parallel: 3
 
 # --- Build e testes (G2, G5) --- criados por SPEC-0002 / SPEC-0003
-build: ""                 # alvo: "dotnet build Juker.slnx -c Release -warnaserror"
-test: ""                  # alvo: "dotnet test Juker.slnx -c Release"
+build: "dotnet build Juker.slnx -c Release -warnaserror"
+test: "dotnet test --solution Juker.slnx -c Release"   # Microsoft.Testing.Platform (xUnit v3): --solution/--project
 test_integration: ""      # alvo: "dotnet test Juker.slnx -c Release --filter Category=Integration"
 test_e2e: ""              # SPEC-0025 — alvo: "dotnet test tests/Juker.E2ETests -c Release"
 smoke_test: ""            # SPEC-0025 — alvo: "dotnet test tests/Juker.E2ETests -c Release --filter Category=Smoke"
-lint: ""                  # alvo: "dotnet format Juker.slnx --verify-no-changes"
+lint: "dotnet format Juker.slnx --verify-no-changes"
 coverage: ""              # SPEC-0005 — alvo: "reportgenerator … && diff-cover coverage.cobertura.xml --compare-branch=origin/main --fail-under=80"
 coverage_min_changed_lines: 80
 mutation: ""              # SPEC-0005 — alvo: "dotnet stryker -f tests/Juker.Modules.Queue.UnitTests/stryker-config.json" (não bloqueante)
