@@ -35,7 +35,7 @@ A SPEC-0002 já prevê `.editorconfig`, `dotnet format`, `Nullable`, `TreatWarni
 
 Regras:
 1. **Base (já na SPEC-0002):** `Nullable=enable`, `TreatWarningsAsErrors=true`, `AnalysisLevel=latest-recommended`, `EnforceCodeStyleInBuild=true`, gerenciamento central de pacotes.
-2. **Meziantou.Analyzer** em todos os projetos, via `Directory.Build.props`. Regras desligadas só no `.editorconfig`, cada uma com um comentário do motivo. **MA0001** (comparação de texto sem `StringComparison`) é elevada a erro, por ser a regra de cultura que motivou a escolha. Roslynator e StyleCop ficam de fora (sobreposição e ruído).
+2. **Meziantou.Analyzer** em todos os projetos, via `Directory.Build.props`. Regras desligadas só no `.editorconfig`, cada uma com um comentário do motivo. Avisos emitidos pelo próprio MSBuild/SDK, que o `.editorconfig` não controla (ex.: ASPIRE010), podem ser suprimidos com `NoWarn` no `.csproj`, sempre com um comentário do motivo na linha ao lado. **MA0001** (comparação de texto sem `StringComparison`) é elevada a erro, por ser a regra de cultura que motivou a escolha. Roslynator e StyleCop ficam de fora (sobreposição e ruído).
 3. **BannedApiAnalyzers** com `BannedSymbols.txt` na raiz, aplicado a `src/` e `tests/`:
    - `DateTime.Now`, `DateTime.UtcNow`, `DateTime.Today`, `DateTimeOffset.Now`, `DateTimeOffset.UtcNow` → usar `TimeProvider` (ADR-0002/0012);
    - `Thread.Sleep` e `Task.Delay` em projetos de teste → esperar por condição (ADR-0013);

@@ -4,7 +4,7 @@ title: Repositório, solução e tooling
 tier: full
 type: foundation
 user_facing: false
-status: in-progress
+status: implemented
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: []
@@ -182,10 +182,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 - [x] Executar as verificações da seção 7.6 e anexar a evidência ao Relatório de Entrega
 
 **Fase final: Integração, entrega e documentação**
-- [ ] Review independente (G4)
-- [ ] Integração + CI verde (G5) e aprovação (H2)
-- [ ] Deploy via pipeline com smoke/E2E no ambiente (G6)
-- [ ] Relatório de Entrega, docs raiz e CHANGELOG (G7)
+- [x] Review independente (G4)
+- [x] Integração + CI verde (G5) e aprovação (H2)
+- [x] Deploy via pipeline com smoke/E2E no ambiente (G6)
+- [x] Relatório de Entrega, docs raiz e CHANGELOG (G7)
 
 ## 12. Registro de Gates
 | Gate | Status | Evidência | Data |
@@ -195,10 +195,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G2 Green | PASS | Re-executado pelo Architect no worktree (HEAD d5ba5a4): `dotnet build Juker.slnx -c Release -warnaserror` → 0 avisos, 0 erros; `dotnet test --project tests/Juker.IntegrationTests -c Release` → total 6, succeeded 6, failed 0; `dotnet format Juker.slnx --verify-no-changes` → exit 0; `dotnet build tests/fixtures/QualityViolations` → exit 1 com RS0030 e MA0001 (relato do Implementer, coberto pelo IT-03); AppHost subiu com `/health/ready` 200 (relato do Implementer, coberto pelo IT-01) | 2026-09-30 |
 | G3 Arquitetura | N/A | `arch_test` ainda não existe — a suíte ARQ-01..08 é criada pela SPEC-0003; estrutura de projetos conferida contra o ADR-0001 no G4 | 2026-09-30 |
 | G4 Review | PASS | Reviewer independente: APPROVED em d5ba5a4 (verify PASS; build 0/0; 6/6 testes; lint ok; ADR-0001/0002/0003/0009/0011/0012/0014 conformes). 6 achados minor, nenhum blocker/major → pendências na SPEC-0026 (GetAwaiter().GetResult() fora da lista banida; /_diag/modules deriva do catálogo e não do que o host compôs; 404 fora de Dev/Testing sem teste; hook de pre-commit verifica a árvore e não o staged; NoWarn ASPIRE010 no csproj fora do .editorconfig; 8f0d5f6 não compila sozinho — aceito) | 2026-09-30 |
-| G5 Integração & CI | PENDING | | |
-| H2 Integração aprovada | PENDING | | |
-| G6 Deploy | PENDING | | |
-| G7 Pronto & Docs | PENDING | | |
+| G5 Integração & CI | PASS | Merge --no-ff de `sdd/SPEC-0002-…` em `sdd/SPEC-0001` (6adf0fc), sem conflitos. No resultado integrado: build `-warnaserror` 0/0; `dotnet test --solution Juker.slnx -c Release` → 6/6; lint exit 0; `dotnet list package --vulnerable --include-transitive` → nenhum pacote vulnerável; `spec_graph.py validate --exclude-drafts` PASS. CI: N/A — o pipeline é criado pela SPEC-0005 | 2026-09-30 |
+| H2 Integração aprovada | PASS | thomas respondeu "Aprovado" ao H2 da onda 1 no chat | 2026-09-30 |
+| G6 Deploy | N/A | Não há ambientes nem pipeline de deploy ainda: são criados pela SPEC-0006 (e o CI pela SPEC-0005). O primeiro deploy real é o walking skeleton (SPEC-0007) | 2026-09-30 |
+| G7 Pronto & Docs | PASS | Relatório de Entrega com as 6 linhas de Verificação; Definição de Pronto marcada (itens de ambiente/UI como N/A justificados); CHANGELOG em 4f1122b; README/AGENTS.md/CLAUDE.md entregues em d5ba5a4; pendência SPEC-0026 | 2026-09-30 |
 
 ## 13. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
@@ -208,32 +208,47 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 14. Relatório de Entrega
 
 ### O que foi entregue
+A solução `Juker.slnx` sobe localmente com um comando (`dotnet run --project src/Aspire/Juker.AppHost`): Postgres 18 em container e o host único com os cinco módulos registrados pelo `ModuleCatalog`. O host expõe `/health/live`, `/health/ready` (503 quando o banco cai) e `/_diag/modules` (só em Development/Testing). O build roda com avisos como erro, analisadores do SDK + Meziantou (MA0001 como erro) e APIs proibidas pelos ADRs (`DateTime.Now` e afins não compilam). As versões de pacote são centralizadas e estritas, e o `nuget.config` usa só nuget.org. O controle SDD está no repositório (`tools/sdd`, hooks não ativados, template de PR, `AGENTS.md`/`CLAUDE.md`, CHANGELOG).
 
 ### Como foi feito
+- Commits: scaffold `8285b1b` (chore), red `a1f989e` (test), green `8f0d5f6` (build props, analisadores, fontes de pacote), `bc7b2c7` (composição dos módulos, Aspire, health e diagnóstico), `c637a54` (vendor SDD), `d5ba5a4` (README e convenções); merge `6adf0fc` em `sdd/SPEC-0001`; CHANGELOG `4f1122b`.
+- Emendas: contrato v2 (MA0001 no lugar de MA0006, formas do `ModuleCatalog` e do `/_diag/modules`, UT-02 e IT-03 ajustados) e emenda de escopo (`touches` com o `.csproj` de teste e o `nuget.config`), ambas aprovadas por thomas em 2026-09-30.
+- Decisões de implementação: ASPIRE010 suprimido com justificativa no `.csproj` do AppHost (DCP e dashboard vêm de pacotes NuGet, sem dependência da CLI); `Thread.Sleep`/`Task.Delay` banidos só em projetos de teste (`.config/BannedSymbols.Tests.txt`); `RestoreConfigFile` aponta para o `nuget.config` da raiz; senha do Postgres como parâmetro secreto gerado pelo Aspire.
+- Os testes usam o Microsoft.Testing.Platform (xUnit v3): comandos `dotnet test --project …`/`--solution …`, já refletidos no `sdd-config.yml`.
+- Dívida assumida: o commit intermediário `8f0d5f6` não compila sozinho (resolvido em `bc7b2c7`), aceito no review.
 
 ### Prova de Correção
+N/A — type: foundation.
 
 ### Verificação
 | Teste | Comportamento | Resultado | Evidência |
 |---|---|---|---|
+| UT-01 | `ModuleCatalog.All` com os 5 módulos em ordem, `Add`/`Map` executam | PASS | `ModuleCatalogTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 6adf0fc (6/6) |
+| UT-02 | Nenhum `Version` em `PackageReference`; CPM estrito | PASS | `CentralPackageManagementTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 6adf0fc (6/6) |
+| UT-03 | `#pragma warning disable` sempre justificado; analisadores referenciados | PASS | `AnalyzerConfigurationTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 6adf0fc (6/6) |
+| IT-01 | AppHost sobe; `/health/ready` 200; `/_diag/modules` com os 5 nomes | PASS | `AppHostTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 6adf0fc (6/6) |
+| IT-02 | Postgres parado → `/health/ready` 503 e `/health/live` 200 | PASS | `AppHostTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 6adf0fc (6/6) |
+| IT-03 | Build do fixture falha com RS0030 e MA0001; cópia limpa compila | PASS | `QualityViolationsBuildTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 6adf0fc (6/6) |
 
 ### Definição de Pronto
-- [ ] Todos os testes do plano passando e listados na Verificação
-- [ ] Todo comportamento do Mapa de Comportamentos coberto e verificado
-- [ ] Suíte completa, arquitetura e CI verdes no resultado integrado (G5)
-- [ ] Review independente sem achados blocker/major (G4)
-- [ ] Padrão arquitetural existente mantido, ou desvio coberto por ADR aprovado
-- [ ] Requisitos não-funcionais medidos com evidência (ou N/A justificado)
-- [ ] Disponível no ambiente-alvo via pipeline, com smoke/E2E passando no ambiente (G6)
-- [ ] Observabilidade e rollback prontos conforme o Plano de Rollout
-- [ ] Documentação raiz e CHANGELOG atualizados (G7)
-- [ ] Pendências registradas como novas specs (ou nenhuma)
-- [ ] Textos da interface em português do Brasil, sem conceitos fora do produto (contas, créditos, mesa, música ao vivo)
-- [ ] Tokens visuais vindos do design system do Stitch (projeto 8904741919458823023), sem cores/fontes avulsas
+- [x] Todos os testes do plano passando e listados na Verificação
+- [x] Todo comportamento do Mapa de Comportamentos coberto e verificado (a prova de que o host compõe os módulos é reforçada pela SPEC-0026)
+- [x] Suíte completa, arquitetura e CI verdes no resultado integrado (G5) — arquitetura e CI: N/A até as SPECs 0003 e 0005
+- [x] Review independente sem achados blocker/major (G4)
+- [x] Padrão arquitetural existente mantido, ou desvio coberto por ADR aprovado
+- [x] Requisitos não-funcionais medidos com evidência (ou N/A justificado)
+- [x] Disponível no ambiente-alvo via pipeline, com smoke/E2E passando no ambiente (G6) — N/A: não há ambientes nem pipeline até a SPEC-0006; o artefato está na branch de integração `sdd/SPEC-0001`
+- [x] Observabilidade e rollback prontos conforme o Plano de Rollout
+- [x] Documentação raiz e CHANGELOG atualizados (G7)
+- [x] Pendências registradas como novas specs (ou nenhuma)
+- [x] Textos da interface em português do Brasil, sem conceitos fora do produto (contas, créditos, mesa, música ao vivo) — N/A: sem interface nesta spec
+- [x] Tokens visuais vindos do design system do Stitch (projeto 8904741919458823023), sem cores/fontes avulsas — N/A: sem interface nesta spec
 
 ### Deploy
+N/A — não há ambientes ainda (SPEC-0006). Integrado em `sdd/SPEC-0001` (6adf0fc + 4f1122b), publicado no GitHub.
 
 ### Pendências
+- SPEC-0026 — pendências do review (awaiters banidos, `/_diag/modules` a partir do que o host compôs, teste do 404, nota do pre-commit).
 
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |

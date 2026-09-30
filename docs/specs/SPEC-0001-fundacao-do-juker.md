@@ -89,6 +89,7 @@ Fluxo de entrega: PR → CI (build, lint, UT, IT, arquitetura, E2E, scan, SDD) �
 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full | foundation | M | SPEC-0003, SPEC-0004, SPEC-0005, SPEC-0006, SPEC-0025 | — |
 | SPEC-0008 | Observabilidade básica | full | foundation | M | SPEC-0007 | — |
 | SPEC-0009 | Segurança básica e autorização | full | foundation | M | SPEC-0007 | — |
+| SPEC-0026 | Pendências do review da SPEC-0002 | lite | fix | S | SPEC-0002 | — |
 
 ## 5. Estratégia de Entrega
 - **Ambientes:** staging automático a cada merge em `main`; produção pelo mesmo workflow, com aprovação do environment `production` e confirmação do fundador (G6).
