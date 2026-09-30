@@ -158,16 +158,16 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 11. Checklist de Implementação
 
 **Fase 1: Regras e componentes (unitário)**
-- [ ] Red: escrever UT-01, UT-02 com a tag `SPEC-0003:<ID>` e confirmar que falham pelo motivo certo
-- [ ] Green: implementar o mínimo para passar, seguindo os ADRs de fundação e o padrão de slices
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + lint + suíte de UT (G2)
+- [x] Red: escrever UT-01, UT-02 com a tag `SPEC-0003:<ID>` e confirmar que falham pelo motivo certo
+- [x] Green: implementar o mínimo para passar, seguindo os ADRs de fundação e o padrão de slices
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + lint + suíte de UT (G2)
 
 **Fase 2: Integração e contrato**
-- [ ] Red: escrever IT-01, IT-02, IT-03, IT-04, IT-05, CT-01 com a tag `SPEC-0003:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
-- [ ] Green: implementar endpoints, persistência, migrations e integrações até passar
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
+- [x] Red: escrever IT-01, IT-02, IT-03, IT-04, IT-05, CT-01 com a tag `SPEC-0003:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
+- [x] Green: implementar endpoints, persistência, migrations e integrações até passar
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
 
 **Fase final: Integração, entrega e documentação**
 - [ ] Review independente (G4)
@@ -180,8 +180,8 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0003` → G0 [SPEC-0003]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0014) | 2026-09-30 |
 | G1 Red | PASS | `verify SPEC-0003 --base sdd/SPEC-0001` no worktree (HEAD fb6237f): red antes do green PASS, commits red só alteram testes PASS, rastreabilidade 8/8 PASS; `dotnet test --solution Juker.slnx -c Release` → total 34, failed 27 (NotImplementedException/asserção), succeeded 7 (6 da SPEC-0002 + guarda CT-01 do snapshot da API pública) | 2026-09-30 |
-| G2 Green | PENDING | | |
-| G3 Arquitetura | PENDING | | |
+| G2 Green | PASS | Re-executado pelo Architect no worktree (HEAD c44166b): build `-warnaserror` 0/0; `dotnet test --solution Juker.slnx -c Release` → 34/34; `--filter-trait "Category=Integration"` → 11/11, exit 0; lint exit 0. Tempos (relato do Implementer): PostgresFixture 3,1 s, clone por classe 12–37 ms | 2026-10-01 |
+| G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → 20/20 (ARQ-01..ARQ-08 detectam cada violação do fixture e aprovam a solução real; build limpo confirmado pelo Implementer) | 2026-10-01 |
 | G4 Review | PENDING | | |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
