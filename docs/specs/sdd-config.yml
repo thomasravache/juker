@@ -1,0 +1,77 @@
+# Configuração SDD do Juker — lida pelos agentes (comandos dos gates) e por spec_graph.py.
+# Comandos rodam na raiz do repositório. Enquanto a fundação (SPEC-0001) não for implementada,
+# os comandos ficam "" e os gates correspondentes são N/A apontando a spec que os cria.
+
+base_branch: main
+max_parallel: 3
+
+# --- Build e testes (G2, G5) --- criados por SPEC-0002 / SPEC-0003
+build: ""                 # alvo: "dotnet build Juker.slnx -c Release -warnaserror"
+test: ""                  # alvo: "dotnet test Juker.slnx -c Release"
+test_integration: ""      # alvo: "dotnet test Juker.slnx -c Release --filter Category=Integration"
+test_e2e: ""              # SPEC-0025 — alvo: "dotnet test tests/Juker.E2ETests -c Release"
+smoke_test: ""            # SPEC-0025 — alvo: "dotnet test tests/Juker.E2ETests -c Release --filter Category=Smoke"
+lint: ""                  # alvo: "dotnet format Juker.slnx --verify-no-changes"
+coverage: ""              # SPEC-0005 — alvo: "reportgenerator … && diff-cover coverage.cobertura.xml --compare-branch=origin/main --fail-under=80"
+coverage_min_changed_lines: 80
+mutation: ""              # SPEC-0005 — alvo: "dotnet stryker -f tests/Juker.Modules.Queue.UnitTests/stryker-config.json" (não bloqueante)
+
+# --- Arquitetura e segurança (G3, G5) --- criados por SPEC-0003 / SPEC-0004
+arch_test: ""             # alvo: "dotnet test tests/Juker.ArchitectureTests -c Release"
+security_scan: ""         # alvo: "dotnet list package --vulnerable --include-transitive && gitleaks detect"
+
+# --- CI/CD e ambientes (G5, G6) --- criados por SPEC-0004 / SPEC-0005
+ci: ""                    # alvo: "gh pr checks --watch"
+deploy_staging: ""        # alvo: "merge em main → workflow deploy (staging)"
+deploy_production: ""     # alvo: "gh workflow run deploy.yml -f env=production (com aprovação do environment)"
+staging_url: ""           # domínio a definir (pré-requisito externo de SPEC-0005)
+production_url: ""
+
+# --- Rastreabilidade e escopo (G1, G4) ---
+test_paths:
+  - "tests/**"
+  - "**/*.Tests/**"
+  - "**/*Tests/**"
+scope_exempt:
+  - "docs/specs/**"
+  - "docs/adr/**"
+dependency_manifests:
+  - "Directory.Packages.props"
+  - "Directory.Build.props"
+  - "**/*.csproj"
+  - "global.json"
+  - ".config/dotnet-tools.json"
+
+# --- Board / tracker ---
+tracker:
+  provider: none
+  project: ""
+  mode: push
+  labels:
+    - sdd
+  blocked_label: sdd-bloqueado
+  statuses:
+    proposed: ""
+    approved: ""
+    in-progress: ""
+    implemented: ""
+    deprecated: ""
+  issue_types:
+    epic: ""
+    feature: ""
+    fix: ""
+    refactor: ""
+    migration: ""
+    foundation: ""
+
+# --- Pull requests ---
+pr_title: "{conv}: {title} [{id}]"
+
+# --- Documentação (G7) ---
+root_docs:
+  - CLAUDE.md
+  - README.md
+changelog: CHANGELOG.md
+dod_extra:
+  - "Textos da interface em português do Brasil, sem conceitos fora do produto (contas, créditos, mesa, música ao vivo)"
+  - "Tokens visuais vindos do design system do Stitch (projeto 8904741919458823023), sem cores/fontes avulsas"

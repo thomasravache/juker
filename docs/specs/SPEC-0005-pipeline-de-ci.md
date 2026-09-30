@@ -1,0 +1,222 @@
+---
+id: SPEC-0005
+title: Pipeline de CI
+tier: full
+type: foundation
+user_facing: false
+status: approved
+created: 2026-09-30
+parent: SPEC-0001
+depends_on: [SPEC-0002]
+consumes_contract: [SPEC-0003@1, SPEC-0025@1]
+contract_version: 1
+touches: [.github/workflows/ci.yml, .github/workflows/mutation.yml, .github/dependabot.yml, .gitleaks.toml, .config/dotnet-tools.json, tools/sdd/**, tools/ci/**, tests/Juker.CiTests/**, tests/**/stryker-config.json, docs/ci.md]
+adrs: [ADR-0009, ADR-0011, ADR-0013, ADR-0014]
+external: []
+size: M
+approved_by: thomas
+approved_at: 2026-09-30
+---
+
+# SPEC-0005 — Pipeline de CI
+
+## 1. Visão Geral
+Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, lint, testes unitários, integração (com Docker), arquitetura, E2E (Playwright), auditoria de dependências, varredura de segredos, o job SDD (`validate` + `pr-check`) e o build da imagem do container. Os jobs viram checks obrigatórios na proteção da `main`, que fica sempre verde e implantável.
+
+## 2. Motivação & Escopo
+**Motivação:** o modelo não lembra do processo; o CI garante que nada chega à `main` sem spec aprovada, testes vermelhos antes dos verdes e todos os gates.
+
+**Objetivos (dentro do escopo):**
+- `.github/workflows/ci.yml` com os jobs `build`, `lint`, `unit`, `integration`, `architecture`, `e2e`, `security`, `sdd` e `image`, com cache do NuGet e dos navegadores do Playwright.
+- `e2e`: instala Chromium e WebKit (`playwright install --with-deps chromium webkit`), roda o `test_e2e` e, **quando falha**, publica `TestResults/playwright/**` (trace, vídeo e screenshot) como artefato `playwright-traces` (ADR-0013).
+- Qualidade (ADR-0014): `unit` e `integration` coletam cobertura com coverlet; o job `coverage` junta os relatórios com ReportGenerator (Cobertura) e roda `diff-cover` exigindo **≥ 80% das linhas alteradas** do PR (bloqueante, sem meta global); `.github/workflows/mutation.yml` roda o Stryker.NET (ferramenta local em `.config/dotnet-tools.json`) toda noite e sob demanda, só nas classes críticas listadas nos `stryker-config.json`, com `break` em 80% (não bloqueia PR; resultado publicado como artefato).
+- `sdd`: `python3 tools/sdd/spec_graph.py validate --exclude-drafts` e `pr-check` com `PR_TITLE`/`PR_BODY` (via `spec_graph.py vendor --ci github`).
+- `security`: `dotnet list package --vulnerable --include-transitive` (falha em High/Critical) e `gitleaks detect`.
+- `image`: build da imagem do `Juker.Host` (Dockerfile gerado pelo Aspire/SDK container) com tag `sha`; publicação no GHCR só em push na `main` (usada por SPEC-0006).
+- Resultados de teste publicados como artefato (TRX) e resumo no job.
+- `dependabot.yml` para NuGet e GitHub Actions (semanal).
+- `docs/ci.md` com a lista de checks obrigatórios e a instrução para o fundador ativar a proteção de branch (ação humana).
+- Preenche `ci`, `lint`, `security_scan`, `coverage` e `mutation` no `sdd-config.yml`.
+
+**Não-objetivos (fora do escopo):**
+- Deploy em qualquer ambiente (SPEC-0006).
+- Ativar a proteção de branch (é configuração da conta, feita pelo fundador).
+
+## 3. Dependências
+- **Implementações necessárias:** SPEC-0002 — solução compilável e `tools/sdd` vendorizado.
+- **Contratos consumidos:** SPEC-0003@1 — comandos `test`, `test_integration` e `arch_test` e categorias de teste; SPEC-0025@1 — comando `test_e2e`, navegadores e o diretório dos artefatos de falha.
+- **Pré-requisitos externos:** repositório no GitHub com Actions habilitado; permissão `packages: write` para o GHCR.
+
+## 4. Decisão Arquitetural
+**Contexto:** projeto novo; ADR-0009 (GitHub Actions, GHCR), ADR-0011 (ferramentas de teste) e ADR-0013 (E2E com Chromium e WebKit e artefatos de falha).
+
+**Decisão:** um único workflow de CI com jobs paralelos após o `build`, reutilizando os artefatos de build, e o job `image` dependente de todos os jobs de qualidade.
+
+**Justificativa:** o feedback fica rápido com os jobs em paralelo, e a imagem só existe se tudo passou.
+
+**Desvio do padrão existente:** Nenhum.
+
+**Alternativas descartadas:** workflows separados por nível (mais difícil de tornar obrigatórios); CI de terceiros (ADR-0009).
+
+**ADRs:** ADR-0009, ADR-0011, ADR-0013, ADR-0014.
+
+## 5. Requisitos Não-Funcionais
+- **Desempenho e escala:** duração total do CI num PR típico abaixo de 12 min — medida nas execuções do IT-04.
+- **Segurança:** permissões mínimas por job (`contents: read`; `packages: write` só no `image` em `main`); actions de terceiros fixadas por SHA; nenhum segredo exposto em PR de fork — verificado por `actionlint` (UT-01) e no G4.
+- **Privacidade e dados pessoais:** N/A — sem dados de usuários.
+- **Disponibilidade e resiliência:** jobs idempotentes; falha de rede no restore tenta de novo uma vez (retry do `setup-dotnet`) — sem retry de testes (teste instável é defeito).
+- **Acessibilidade (UI):** N/A.
+- **Custo:** dentro da cota gratuita de minutos do GitHub para repositório privado — acompanhado no resumo de uso mensal.
+
+## 6. Artefato A — Contrato
+**Interface:** nomes dos checks obrigatórios, gatilhos e artefatos do workflow `ci.yml`.
+
+```text
+on: pull_request (branches: main) | push (branches: main)
+jobs (checks obrigatórios na proteção da main):
+  build          → dotnet build Juker.slnx -c Release -warnaserror
+  lint           → dotnet format Juker.slnx --verify-no-changes
+  unit           → dotnet test ... --filter Category=Unit
+  integration    → dotnet test ... --filter Category=Integration   (Docker do runner)
+  architecture   → dotnet test tests/Juker.ArchitectureTests
+  e2e            → playwright install --with-deps chromium webkit ; dotnet test tests/Juker.E2ETests
+                   (AppHost + Playwright) ; em falha: upload de TestResults/playwright/** como "playwright-traces"
+  security       → dotnet list package --vulnerable --include-transitive ; gitleaks detect
+  coverage       → needs: unit, integration ; reportgenerator (Cobertura) ; diff-cover --compare-branch=origin/main --fail-under=80
+  sdd            → spec_graph.py validate --exclude-drafts ; spec_graph.py pr-check (só em PR)
+  image          → needs: todos acima; push em main publica ghcr.io/<owner>/juker:<sha>
+artefatos: test-results-<job> (TRX), coverage-report, playwright-traces (só em falha do e2e), image digest (output "image_digest")
+mutation.yml (não obrigatório): on schedule (diário, 03:00 UTC) | workflow_dispatch
+  → dotnet stryker -f tests/<Módulo>.UnitTests/stryker-config.json (break 80) ; artefato mutation-report
+```
+
+**Arquivos/módulos afetados:** ver `touches` no frontmatter.
+
+### 6.1 Mapa de Comportamentos
+| Cenário | Condição / Entrada | Resultado esperado | Testes |
+|---|---|---|---|
+| Workflow válido | `ci.yml` | `actionlint` sem erros; actions fixadas por SHA | UT-01 |
+| Teste vermelho | PR com um teste unitário falhando | job `unit` falha e o PR fica bloqueado | IT-01 |
+| PR sem spec | título/corpo sem `SPEC-NNNN` aprovada | job `sdd` falha | IT-02 |
+| Segredo commitado | PR com uma chave de API fake | job `security` falha (gitleaks) | IT-03 |
+| PR saudável | todos os gates atendidos | todos os checks verdes; imagem construída sem publicar | IT-04 |
+| Push na main | merge de um PR verde | imagem publicada no GHCR com tag `sha` e digest no output | IT-04, CT-01 |
+| Cobertura do diff | PR com código novo sem teste (cobertura das linhas alteradas < 80%) | job `coverage` falha e o PR fica bloqueado | IT-06 |
+| Mutation testing | disparo manual do `mutation.yml` | relatório do Stryker publicado; score abaixo de 80% deixa o workflow vermelho sem bloquear PRs | IT-07 |
+| E2E falha | PR com um E2E quebrado | job `e2e` falha e o artefato `playwright-traces` com o trace do teste fica disponível na execução | IT-05 |
+
+## 7. Artefato B — Plano de Testes (TDD)
+
+### 7.1 Testes de Caracterização
+- N/A — projeto novo.
+
+### 7.2 Testes Unitários
+- **UT-01** — Dado `.github/workflows/ci.yml`, quando `actionlint` roda (teste em `tests/Juker.CiTests` que invoca o binário), então não há erros e toda `uses:` de terceiros está fixada por SHA de 40 caracteres.
+
+### 7.3 Testes de Integração
+<!-- Executados como PRs de verificação descartáveis no repositório real; evidência = URL da execução. -->
+- **IT-01** — Branch `ci-check/red-test` com um teste unitário falhando: o job `unit` falha e o PR não pode ser mesclado.
+- **IT-02** — Branch `ci-check/no-spec` com PR sem referência a spec aprovada: o job `sdd` falha no `pr-check`.
+- **IT-03** — Branch `ci-check/secret` com uma chave fake no formato do gitleaks: o job `security` falha.
+- **IT-04** — PR saudável: todos os checks verdes em até 12 min (E2E em Chromium e WebKit); após o merge, a imagem aparece no GHCR com a tag do SHA.
+- **IT-06** — Branch `ci-check/uncovered` com um método novo sem teste: o job `coverage` falha informando a porcentagem das linhas alteradas; com um teste cobrindo o método, passa.
+- **IT-07** — Disparo manual do `mutation.yml` gera o artefato `mutation-report`; com um `stryker-config.json` de verificação apontando para uma classe de exemplo com teste fraco, o workflow termina vermelho por score abaixo de 80%.
+- **IT-05** — Branch `ci-check/e2e-fail` com um E2E que falha: o job `e2e` fica vermelho e a execução tem o artefato `playwright-traces` contendo o `trace.zip` do teste.
+
+### 7.4 Testes de Contrato
+- **CT-01** — O workflow publica o output `image_digest` e a tag `ghcr.io/<owner>/juker:<sha>` que o `deploy.yml` (SPEC-0006) consome; um teste em `tests/Juker.CiTests` lê o YAML e verifica os nomes dos jobs, do output e da tag.
+
+### 7.5 Testes E2E
+- N/A — user_facing: false.
+
+### 7.6 Outros
+- N/A.
+
+**Dublês e dados de teste:** branches `ci-check/*` descartáveis, apagadas após a evidência.
+
+**Ambiente de execução:** GitHub Actions (runner `ubuntu-latest`).
+
+## 8. Plano de Rollout
+- **Estratégia:** deploy direto do workflow; a proteção de branch é ativada pelo fundador depois do IT-04 verde.
+- **Dados/schema:** N/A.
+- **Compatibilidade:** mudar nomes de jobs exige atualizar a proteção de branch (documentado em `docs/ci.md`).
+- **Observabilidade:** resumo de testes por job; notificações de falha do GitHub para o fundador.
+- **Rollback:** reverter o commit do workflow.
+- **Etapas de migração/coexistência:** N/A.
+
+## 9. Questões em Aberto
+Nenhuma.
+
+## 10. Aprovação (H1)
+Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o humano responder "Aprovado". O arquiteto nunca aprova a própria spec.
+
+## 11. Checklist de Implementação
+
+**Fase 1: Regras e componentes (unitário)**
+- [ ] Red: escrever UT-01 com a tag `SPEC-0005:<ID>` e confirmar que falham pelo motivo certo
+- [ ] Green: implementar o mínimo para passar, seguindo os ADRs de fundação e o padrão de slices
+- [ ] Refactor mantendo tudo verde
+- [ ] Validar: build + lint + suíte de UT (G2)
+
+**Fase 2: Integração e contrato**
+- [ ] Red: escrever IT-01, IT-02, IT-03, IT-04, IT-05, IT-06, IT-07, CT-01 com a tag `SPEC-0005:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
+- [ ] Green: implementar endpoints, persistência, migrations e integrações até passar
+- [ ] Refactor mantendo tudo verde
+- [ ] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
+
+**Fase final: Integração, entrega e documentação**
+- [ ] Review independente (G4)
+- [ ] Integração + CI verde (G5) e aprovação (H2)
+- [ ] Deploy via pipeline com smoke/E2E no ambiente (G6)
+- [ ] Relatório de Entrega, docs raiz e CHANGELOG (G7)
+
+## 12. Registro de Gates
+| Gate | Status | Evidência | Data |
+|---|---|---|---|
+| G0 Spec | PASS | `spec_graph.py validate SPEC-0005` → G0 [SPEC-0005]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0014) | 2026-09-30 |
+| G1 Red | PENDING | | |
+| G2 Green | PENDING | | |
+| G3 Arquitetura | PENDING | | |
+| G4 Review | PENDING | | |
+| G5 Integração & CI | PENDING | | |
+| H2 Integração aprovada | PENDING | | |
+| G6 Deploy | PENDING | | |
+| G7 Pronto & Docs | PENDING | | |
+
+## 13. Registro de Impedimentos
+| ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
+|---|---|---|---|---|---|---|---|---|
+
+## 14. Relatório de Entrega
+
+### O que foi entregue
+
+### Como foi feito
+
+### Prova de Correção
+
+### Verificação
+| Teste | Comportamento | Resultado | Evidência |
+|---|---|---|---|
+
+### Definição de Pronto
+- [ ] Todos os testes do plano passando e listados na Verificação
+- [ ] Todo comportamento do Mapa de Comportamentos coberto e verificado
+- [ ] Suíte completa, arquitetura e CI verdes no resultado integrado (G5)
+- [ ] Review independente sem achados blocker/major (G4)
+- [ ] Padrão arquitetural existente mantido, ou desvio coberto por ADR aprovado
+- [ ] Requisitos não-funcionais medidos com evidência (ou N/A justificado)
+- [ ] Disponível no ambiente-alvo via pipeline, com smoke/E2E passando no ambiente (G6)
+- [ ] Observabilidade e rollback prontos conforme o Plano de Rollout
+- [ ] Documentação raiz e CHANGELOG atualizados (G7)
+- [ ] Pendências registradas como novas specs (ou nenhuma)
+- [ ] Textos da interface em português do Brasil, sem conceitos fora do produto (contas, créditos, mesa, música ao vivo)
+- [ ] Tokens visuais vindos do design system do Stitch (projeto 8904741919458823023), sem cores/fontes avulsas
+
+### Deploy
+
+### Pendências
+
+## 15. Emendas
+| Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
+|---|---|---|---|---|---|
