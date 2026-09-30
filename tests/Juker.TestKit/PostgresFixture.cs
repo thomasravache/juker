@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using Npgsql;
 using Testcontainers.PostgreSql;
@@ -45,8 +46,19 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
+        var start = Stopwatch.GetTimestamp();
         await _container.StartAsync().ConfigureAwait(false);
+        var containerReady = Stopwatch.GetElapsedTime(start);
         await TemplateDatabase.CreateAsync(_container.GetConnectionString()).ConfigureAwait(false);
+        var templateReady = Stopwatch.GetElapsedTime(start);
+
+        // Evidência do requisito de subida < 10 s com a imagem em cache (SPEC-0003, seção 5), na saída do dotnet test.
+        TestContext.Current.SendDiagnosticMessage(
+            "PostgresFixture: container {0} pronto em {1:F0} ms; {2} (migrations e extensões) pronto em {3:F0} ms.",
+            Image,
+            containerReady.TotalMilliseconds,
+            TemplateDatabase.Name,
+            templateReady.TotalMilliseconds);
     }
 
     public async ValueTask DisposeAsync()
