@@ -1,0 +1,25 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>7b4d2c1e-5f3a-4e8b-9c6d-2a1f0e9b8c7d</UserSecretsId>
+    <!--
+      ASPIRE010: o SDK 13.6 avisa quando o AppHost não usa o bundle da Aspire CLI.
+      Mantemos o padrão (AspireUseCliBundle=false): DCP e painel vêm dos pacotes NuGet fixados por versão,
+      então `dotnet run`, `dotnet test` (Aspire.Hosting.Testing) e o CI funcionam só com o .NET SDK,
+      sem exigir a instalação da Aspire CLI. Nenhum recurso usado aqui depende do bundle.
+      Reavaliar se passarmos a usar a Aspire CLI (`aspire run`/`aspire publish`) — SPEC-0005/0006.
+    -->
+    <AspireUseCliBundle>false</AspireUseCliBundle>
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Juker.Host\Juker.Host.csproj" />
+  </ItemGroup>
+
+</Project>

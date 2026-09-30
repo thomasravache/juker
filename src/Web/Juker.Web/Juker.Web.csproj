@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    Frontend servido pelo Juker.Host na mesma origem (ADR-0001, ADR-0003): componentes, páginas e
+    render modes por área. Casca vazia nesta spec; o Blazor Web App e o Tailwind entram na SPEC-0007.
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Juker.Web.Client\Juker.Web.Client.csproj" />
+  </ItemGroup>
+
+</Project>
