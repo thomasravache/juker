@@ -25,6 +25,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Juker.Host\Juker.Host.csproj" />
+    <!-- IOutboxDrainer, usado pelo DrainOutboxAsync interno (SPEC-0004, ADR-0012 regra 6) -->
+    <ProjectReference Include="..\..\src\BuildingBlocks\Juker.Infrastructure\Juker.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

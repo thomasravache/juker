@@ -1,27 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Testes de unidade dos building blocks (src/BuildingBlocks/*).
-    Sem testes nesta spec: cada spec traz os seus (SPEC-0003, ADR-0011). Enquanto estiver vazio, o projeto aceita
-    zero testes (JukerAllowZeroTests, ver tests/Directory.Build.targets). A spec que acrescentar os primeiros testes
-    remove a propriedade, para que um projeto que perca seus testes volte a falhar.
+    Testes de unidade dos building blocks (src/BuildingBlocks/*), SPEC-0004: Result, pipeline de decorators,
+    mapeamento para ProblemDetails e filtro de tenant (sem I/O: Npgsql com connection string de placeholder).
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!--
+      Tem testes (SPEC-0004), mas só Category=Unit: o filtro Category=Integration (test_integration) o esvazia de
+      propósito, como no Juker.ArchitectureTests (docs/testing.md). Sem a propriedade, a listagem do test_integration
+      termina com o código 8 e o SPEC-0003:CT-01 falha.
+    -->
     <JukerAllowZeroTests>true</JukerAllowZeroTests>
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BuildingBlocks\Juker.SharedKernel\Juker.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\src\BuildingBlocks\Juker.Infrastructure\Juker.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Módulo de teste do kit (SPEC-0004, seção 6): fora da Juker.slnx e referenciado só pelo Juker.IntegrationTests.
+    O assembly NÃO começa com "Juker." de propósito: o DbContextDiscovery/MigrationsGuard do TestKit não o descobre,
+    e o juker_template continua só com os módulos reais. Os IT aplicam a migration dele no banco da classe.
+    Schema outbox_test; migration real gerada com a ferramenta local dotnet-ef (.config/dotnet-tools.json):
+      dotnet ef migrations add (Nome), com a opção project apontando para tests/fixtures/TestModules.Outbox
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\BuildingBlocks\Juker.Infrastructure\Juker.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,59 @@
+namespace Juker.SharedKernel
+{
+    public abstract class Entity<TId>
+        where TId :  notnull
+    {
+        protected Entity() { }
+        protected Entity(TId id) { }
+        public TId Id { get; protected init; }
+        public System.Collections.Generic.IReadOnlyCollection<Juker.SharedKernel.IIntegrationEvent> IntegrationEvents { get; }
+        public void ClearIntegrationEvents() { }
+        protected void Raise(Juker.SharedKernel.IIntegrationEvent integrationEvent) { }
+    }
+    public sealed class Error : System.IEquatable<Juker.SharedKernel.Error>
+    {
+        public Error(string Code, string Message, Juker.SharedKernel.ErrorType Type) { }
+        public string Code { get; init; }
+        public System.Collections.Generic.IReadOnlyDictionary<string, string[]>? Details { get; init; }
+        public string Message { get; init; }
+        public Juker.SharedKernel.ErrorType Type { get; init; }
+    }
+    public enum ErrorType
+    {
+        Validation = 0,
+        NotFound = 1,
+        Conflict = 2,
+        Forbidden = 3,
+        BusinessRule = 4,
+        Unauthorized = 5,
+    }
+    public interface IIntegrationEvent
+    {
+        System.Guid Id { get; }
+        System.DateTimeOffset OccurredAt { get; }
+    }
+    public interface ITenantScoped
+    {
+        Juker.SharedKernel.VenueId VenueId { get; }
+    }
+    public class Result
+    {
+        protected Result(bool isSuccess, Juker.SharedKernel.Error? error) { }
+        public Juker.SharedKernel.Error? Error { get; }
+        public bool IsFailure { get; }
+        public bool IsSuccess { get; }
+        public static Juker.SharedKernel.Result Failure(Juker.SharedKernel.Error error) { }
+        public static Juker.SharedKernel.Result Success() { }
+    }
+    public sealed class Result<T> : Juker.SharedKernel.Result
+    {
+        public T Value { get; }
+        public new static Juker.SharedKernel.Result<T> Failure(Juker.SharedKernel.Error error) { }
+        public static Juker.SharedKernel.Result<T> Success(T value) { }
+    }
+    public readonly struct VenueId : System.IEquatable<Juker.SharedKernel.VenueId>
+    {
+        public VenueId(System.Guid Value) { }
+        public System.Guid Value { get; init; }
+    }
+}
