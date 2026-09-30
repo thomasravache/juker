@@ -1,0 +1,16 @@
+<Project>
+  <!--
+    Propriedades comuns aos projetos em tests/ (SPEC-0003). Importa o Directory.Build.props da raiz, que o MSBuild
+    deixaria de importar por encontrar este arquivo primeiro.
+  -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!--
+      Microsoft.Testing.Platform termina com o código 8 quando nenhum teste é executado num projeto: acontece com
+      filtros (test_integration sobre o Juker.ArchitectureTests) e nos projetos de UT ainda sem testes. Zero testes num
+      projeto não é falha; falhas de teste continuam terminando com código != 0.
+    -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+</Project>

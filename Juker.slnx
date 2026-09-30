@@ -28,7 +28,14 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj" />
+    <Project Path="tests/Juker.BuildingBlocks.UnitTests/Juker.BuildingBlocks.UnitTests.csproj" />
     <Project Path="tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj" />
+    <Project Path="tests/Juker.Modules.Catalog.UnitTests/Juker.Modules.Catalog.UnitTests.csproj" />
+    <Project Path="tests/Juker.Modules.Playback.UnitTests/Juker.Modules.Playback.UnitTests.csproj" />
+    <Project Path="tests/Juker.Modules.Queue.UnitTests/Juker.Modules.Queue.UnitTests.csproj" />
+    <Project Path="tests/Juker.Modules.Sessions.UnitTests/Juker.Modules.Sessions.UnitTests.csproj" />
+    <Project Path="tests/Juker.Modules.Venues.UnitTests/Juker.Modules.Venues.UnitTests.csproj" />
     <Project Path="tests/Juker.TestKit/Juker.TestKit.csproj" />
+    <Project Path="tests/Juker.Web.UnitTests/Juker.Web.UnitTests.csproj" />
   </Folder>
 </Solution>
