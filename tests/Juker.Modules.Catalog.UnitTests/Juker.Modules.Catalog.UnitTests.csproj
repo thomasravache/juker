@@ -2,13 +2,15 @@
 
   <!--
     Testes de unidade do módulo Catalog (handlers, domínio e validação, sem infraestrutura).
-    Sem testes nesta spec: cada spec traz os seus (SPEC-0003, ADR-0011). Um projeto sem testes não falha o
-    `dotnet test` (código de saída 8 ignorado em tests/Directory.Build.props).
+    Sem testes nesta spec: cada spec traz os seus (SPEC-0003, ADR-0011). Enquanto estiver vazio, o projeto aceita
+    zero testes (JukerAllowZeroTests, ver tests/Directory.Build.props). A spec que acrescentar os primeiros testes
+    remove a propriedade, para que um projeto que perca seus testes volte a falhar.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <JukerAllowZeroTests>true</JukerAllowZeroTests>
   </PropertyGroup>
 
   <ItemGroup>
