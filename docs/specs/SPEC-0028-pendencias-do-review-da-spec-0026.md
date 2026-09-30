@@ -54,10 +54,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 7. Checklist de Implementação
 
 **Fase 1: Regressão**
-- [ ] Red: escrever IT-01, IT-02 com a tag `SPEC-0028:<ID>`; confirmar que as regressões falham pelo motivo certo (guardas marcadas passam antes da mudança)
-- [ ] Green: implementar a mudança proposta
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + suíte completa + arquitetura + lint (G2/G3)
+- [x] Red: escrever IT-01, IT-02 com a tag `SPEC-0028:<ID>`; confirmar que as regressões falham pelo motivo certo (guardas marcadas passam antes da mudança)
+- [x] Green: implementar a mudança proposta
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + suíte completa + arquitetura + lint (G2/G3)
 
 **Fase final: Integração, entrega e documentação**
 - [ ] Review independente (G4)
@@ -70,8 +70,8 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0028` → 0 erros; aguardando H1 do fundador | 2026-10-01 |
 | G1 Red | PASS | `verify SPEC-0028 --base sdd/SPEC-0001` no worktree (HEAD bc010b7): red antes do green PASS, commits red só alteram testes PASS, rastreabilidade 2/2 PASS; `dotnet test --solution` → 39 total, 1 falha (IT-01, fixture dos awaiters configurados compila hoje); IT-02 verde como guarda | 2026-10-01 |
-| G2 Green | PENDING | | |
-| G3 Arquitetura | PENDING | | |
+| G2 Green | PASS | Re-executado pelo Architect (HEAD 2605283): build 0/0; `dotnet test --solution` 39/39 (Implementer: 2 execuções 39/39 após `dotnet clean`); lint ok | 2026-10-01 |
+| G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → sem falhas | 2026-10-01 |
 | G4 Review | PENDING | | |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
