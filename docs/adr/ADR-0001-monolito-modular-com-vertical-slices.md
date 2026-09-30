@@ -39,10 +39,10 @@ Estrutura:
 
 Regras (G3):
 - **ARQ-01** — um módulo só referencia o `.Contracts` de outro módulo, nunca o projeto interno.
-- **ARQ-02** — `.Contracts` não referencia nenhum projeto interno de módulo.
+- **ARQ-02** — `.Contracts` só referencia o `Juker.SharedKernel` e outros `.Contracts` (nada de projeto interno de módulo, `Juker.Infrastructure` ou `Juker.Host`). Por isso as abstrações que os contratos usam, como `IIntegrationEvent`, ficam no SharedKernel.
 - **ARQ-03** — cada módulo tem o próprio `DbContext` e schema; nenhum `DbContext` de um módulo é usado por outro.
 - **ARQ-04** — `Domain/` de um módulo não depende de `Infrastructure/`, EF Core nem ASP.NET Core.
-- **ARQ-05** — `src/Web/*` não referencia projetos internos de módulos (só `.Contracts`).
+- **ARQ-05** — `src/Web/*` só referencia `.Contracts` e o `Juker.SharedKernel` (nada de projeto interno de módulo, `Juker.Infrastructure` ou `Juker.Host`; é o Host que referencia o Web).
 
 ### Consequências
 - **Boa**, porque um único container, uma única origem (sem CORS) e um pipeline simples.
@@ -51,7 +51,7 @@ Regras (G3):
 - **Ruim**, porque escalar um módulo isolado exige extraí-lo; aceitável para a carga prevista.
 
 ### Confirmação (G3)
-Suíte `tests/Juker.ArchitectureTests` com ArchUnitNET (ADR-0011), uma regra por item ARQ-01..ARQ-05, rodando no `arch_test` e no CI (SPEC-0003, SPEC-0005).
+Suíte `tests/Juker.ArchitectureTests` com ArchUnitNET (ADR-0011), uma regra por item ARQ-01..ARQ-05 (as regras ARQ-06..ARQ-08 vêm dos ADRs 0002, 0007 e 0012), rodando no `arch_test` e no CI (SPEC-0003, SPEC-0005).
 
 ## Prós e Contras das Opções
 | Critério (peso) | Monólito modular + slices | Monólito modular + Clean por módulo | Microsserviços |
@@ -64,6 +64,7 @@ Suíte `tests/Juker.ArchitectureTests` com ArchUnitNET (ADR-0011), uma regra por
 | **Total ponderado** | **84** | **78** | **48** |
 
 ## Mais Informações
+- 2026-10-01: redação de ARQ-02 e ARQ-05 esclarecida após o review da SPEC-0003 (a regra implementada é mais precisa que o texto original; a decisão não muda).
 - Guia da skill SDD (references/greenfield.md) — padrão monólito modular com fronteiras testadas.
 - Milan Jovanović, "Architecture Tests in .NET With ArchUnitNET" — https://milanjovanovic.tech/blog/5-architecture-tests-you-should-add-to-your-dotnet-projects (consultado em 2026-09-30).
 - Specs relacionadas: SPEC-0001, SPEC-0003, SPEC-0010.

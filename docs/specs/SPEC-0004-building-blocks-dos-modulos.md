@@ -9,7 +9,7 @@ created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002]
 consumes_contract: [SPEC-0003@2]
-contract_version: 1
+contract_version: 2
 touches: [src/BuildingBlocks/**, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.IntegrationTests/BuildingBlocks/**, tests/Juker.ArchitectureTests/PublicApi/**, tests/Juker.TestKit/Outbox/**]
 adrs: [ADR-0002, ADR-0004, ADR-0006, ADR-0008, ADR-0012]
 external: []
@@ -79,6 +79,7 @@ public class Result { bool IsSuccess; Error? Error; static Result Success(); sta
 public class Result<T> : Result { T Value; }
 public interface ITenantScoped { VenueId VenueId { get; } }
 public readonly record struct VenueId(Guid Value);
+public interface IIntegrationEvent { Guid Id { get; } DateTimeOffset OccurredAt { get; } }   // no SharedKernel: os eventos vivem nos .Contracts (ARQ-02)
 
 // Infrastructure
 public interface ICommand<TResult>; public interface IQuery<TResult>;
@@ -87,7 +88,6 @@ public interface ICommandHandler<TCommand, TResult> where TCommand : ICommand<TR
 public interface IQueryHandler<TQuery, TResult>  (idem)
 public interface ITenantContext { VenueId? VenueId { get; } }
 public abstract class ModuleDbContext(DbContextOptions o, ITenantContext t, string schema) : DbContext
-public interface IIntegrationEvent { Guid Id { get; } DateTimeOffset OccurredAt { get; } }
 public interface IIntegrationEventHandler<TEvent> where TEvent : IIntegrationEvent
     { Task Handle(TEvent e, CancellationToken ct); }
 public static class ModuleRegistration { IServiceCollection AddModuleHandlers(this IServiceCollection s, Assembly a); }
@@ -238,3 +238,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 2 | 2026-10-01 | `IIntegrationEvent` passa do `Juker.Infrastructure` para o `Juker.SharedKernel`; `IIntegrationEventHandler<T>` continua no Infrastructure | Review da SPEC-0003: ARQ-02 só permite que `.Contracts` referencie `SharedKernel` e outros `.Contracts`; eventos de integração vivem nos `.Contracts` e implementam `IIntegrationEvent` | Consumidores futuros do evento (SPECs 0011+) — nenhum implementado ainda | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
