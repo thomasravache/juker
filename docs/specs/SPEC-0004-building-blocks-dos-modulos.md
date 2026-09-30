@@ -4,13 +4,13 @@ title: Building blocks dos módulos
 tier: full
 type: foundation
 user_facing: false
-status: in-progress
+status: approved
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002]
 consumes_contract: [SPEC-0003@2]
-contract_version: 3
-touches: [src/BuildingBlocks/**, Juker.slnx, Directory.Packages.props, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.IntegrationTests/BuildingBlocks/**, tests/Juker.ArchitectureTests/PublicApi/**, tests/Juker.TestKit/Outbox/**]
+contract_version: 4
+touches: [src/BuildingBlocks/**, src/Juker.Host/Program.cs, src/Juker.Host/Juker.Host.csproj, Juker.slnx, Directory.Packages.props, .config/dotnet-tools.json, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.IntegrationTests/BuildingBlocks/**, tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj, tests/Juker.ArchitectureTests/PublicApi/**, tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, tests/Juker.TestKit/Outbox/**, tests/Juker.TestKit/Juker.TestKit.csproj, tests/fixtures/TestModules.Outbox/**]
 adrs: [ADR-0002, ADR-0004, ADR-0006, ADR-0008, ADR-0012]
 external: []
 size: M
@@ -27,15 +27,15 @@ Fornece aos módulos o "kit" comum: tipo `Result`/`Error`, handlers de comando e
 **Motivação:** sem um kit comum, cada módulo resolveria de um jeito o tratamento de erro, a validação, o isolamento entre bares e a entrega de eventos, que são justamente as partes críticas para a justiça da fila e para o bloqueio de comanda.
 
 **Objetivos (dentro do escopo):**
-- `Juker.SharedKernel`: `Result`, `Result<T>`, `Error(Code, Message, Type)` com `ErrorType` = Validation | NotFound | Conflict | Forbidden | BusinessRule | Unauthorized; `Entity<TId>`, `IDomainEvent`, `VenueId`.
-- `Juker.Infrastructure`: `ICommandHandler<TCommand, TResult>`, `IQueryHandler<TQuery, TResult>`; decorators `ValidationDecorator` (FluentValidation), `LoggingDecorator` e `UnitOfWorkDecorator` (somente comandos); registro por scan do assembly do módulo.
-- `ResultExtensions.ToHttpResult()` → `ProblemDetails` (RFC 9457) com `code` e, em validação, `errors` por campo.
-- `ModuleDbContext` base: schema do módulo, convenção de nomes snake_case, filtro global `VenueId == ITenantContext.VenueId` para entidades `ITenantScoped`, falhando fechado sem tenant.
-- `ITenantContext` (implementação resolvida por SPEC-0009 a partir do principal; nesta spec, uma implementação explícita para jobs e testes).
-- Outbox por módulo (`<schema>.outbox_messages`), gravado por interceptor do EF na mesma transação; `OutboxDispatcher` (`BackgroundService`, intervalo de 500 ms configurável) com retry exponencial até 5 tentativas; inbox por consumidor (`<schema>.inbox_messages`) para idempotência; `IIntegrationEventHandler<TEvent>`.
-- `IdGenerator` (Guid v7) e uso de `TimeProvider` em todo o kit.
-- Dispatcher desligável por configuração (`Outbox:DispatcherEnabled`, padrão verdadeiro) e `IOutboxDrainer.DrainAsync()`, que entrega de forma síncrona tudo o que está pendente em todos os módulos; no `Juker.TestKit`, a extensão `JukerApiFactory.DrainOutboxAsync()` usada pelos IT (ADR-0012).
-- Snapshot da API pública do `SharedKernel` e do `Infrastructure` (PublicApiGenerator) para que mudanças exijam emenda.
+- `Juker.SharedKernel` (namespace `Juker.SharedKernel`): `Result`, `Result<T>`, `Error`, `ErrorType`, `VenueId`, `ITenantScoped`, `IIntegrationEvent` e `Entity<TId>`, que acumula os eventos de integração levantados pela entidade (`Raise`). Não existe `IDomainEvent` no MVP: todo evento levantado por uma entidade é um evento de integração publicado pelo outbox.
+- `Juker.Infrastructure` (namespace `Juker.Infrastructure`): `ICommand<T>`/`IQuery<T>` e seus handlers; decorators de validação (FluentValidation), logging e unidade de trabalho (**internos**); `ResultHttpExtensions` → `ProblemDetails` (RFC 9457) com `code` e, em validação, `errors` por campo.
+- `ModuleDbContext`: schema do módulo, snake_case, tabela de histórico de migrations no schema do módulo, filtro global de tenant para `ITenantScoped` falhando fechado (`TenantNotResolvedException`) e as entidades de outbox/inbox do módulo.
+- Montagem do kit: `AddJukerInfrastructure(IConfiguration)` (chamado pelo `Juker.Host`), `AddModuleDbContext<TContext>()` (registra o contexto do módulo com Npgsql e o inclui como fonte do outbox) e `AddModuleHandlers(Assembly)` (handlers, validators e consumidores de eventos).
+- Outbox: um interceptor de `SaveChanges` grava, na mesma transação, os eventos levantados pelas entidades rastreadas em `<schema>.outbox_messages` (`type` = nome do tipo com o assembly; `payload` = JSON do System.Text.Json com as opções web). O `OutboxDispatcher` (`BackgroundService`, só registrado se `Outbox:DispatcherEnabled=true`) entrega aos consumidores com retry exponencial até `Outbox:MaxAttempts` (5); inbox por consumidor para idempotência.
+- `IOutboxDrainer.DrainAsync()` entrega de forma síncrona tudo o que está pendente em todos os módulos; no TestKit, a extensão **interna** `DrainOutboxAsync()` para os IT (ADR-0012).
+- `IIdGenerator` com Guid v7 a partir do `TimeProvider`, e `TimeProvider.System` como padrão (substituível nos testes).
+- Um módulo de teste fora da convenção `Juker.*` (`tests/fixtures/TestModules.Outbox`, com migration real), para exercitar o kit sem ser descoberto pelo `DbContextDiscovery` do TestKit.
+- Snapshot da API pública do `Juker.SharedKernel` e do `Juker.Infrastructure` (PublicApiGenerator 11.5.x): mudanças exigem emenda.
 
 **Não-objetivos (fora do escopo):**
 - Autenticação e resolução de tenant a partir de cookies ou tokens (SPEC-0009).
@@ -45,7 +45,7 @@ Fornece aos módulos o "kit" comum: tipo `Result`/`Error`, handlers de comando e
 ## 3. Dependências
 - **Implementações necessárias:** SPEC-0002 — projetos `BuildingBlocks` e `Directory.Packages.props`.
 - **Contratos consumidos:** SPEC-0003@2 — `PostgresFixture`, `JukerApiFactory` e convenções de tag para os testes desta spec (enquanto a SPEC-0003 não estiver implementada, os testes usam dublês conforme o contrato do TestKit).
-- **Pré-requisitos externos:** FluentValidation (Apache-2.0), PublicApiGenerator (MIT).
+- **Pré-requisitos externos:** FluentValidation (Apache-2.0), PublicApiGenerator 11.5.4 (MIT), `dotnet-ef` como ferramenta local em `.config/dotnet-tools.json` (gerar a migration do módulo de teste).
 
 ## 4. Decisão Arquitetural
 **Contexto:** projeto novo; ADR-0002 (handlers próprios), ADR-0004 (schema por módulo), ADR-0006 (outbox/inbox), ADR-0008 (tenancy) e ADR-0012 (outbox determinístico nos IT).
@@ -61,7 +61,7 @@ Fornece aos módulos o "kit" comum: tipo `Result`/`Error`, handlers de comando e
 **ADRs:** ADR-0002, ADR-0004, ADR-0006, ADR-0008, ADR-0012.
 
 ## 5. Requisitos Não-Funcionais
-- **Desempenho e escala:** latência do dispatcher (gravação → entrega) p95 < 1 s com 100 mensagens pendentes — medida no IT-02.
+- **Desempenho e escala:** latência do dispatcher (gravação → entrega) p95 < 1 s com 100 mensagens pendentes — medida no IT-06.
 - **Segurança:** consulta de entidade `ITenantScoped` sem tenant resolvido lança `TenantNotResolvedException` (fail closed) — UT-04.
 - **Privacidade e dados pessoais:** payload do outbox não contém IP nem token; somente IDs e números de comanda — revisão G4.
 - **Disponibilidade e resiliência:** consumidor que falha não bloqueia os demais; após 5 falhas, a mensagem fica `failed` com o erro registrado — IT-03.
@@ -69,60 +69,99 @@ Fornece aos módulos o "kit" comum: tipo `Result`/`Error`, handlers de comando e
 - **Custo:** N/A.
 
 ## 6. Artefato A — Contrato
-**Interface:** API pública de `Juker.SharedKernel` e `Juker.Infrastructure`.
+**Interface:** API pública de `Juker.SharedKernel` e `Juker.Infrastructure`, registro no host e esquema do outbox. Tudo o que não aparece aqui é `internal`.
 
 ```text
-// SharedKernel
+// ── Juker.SharedKernel (namespace Juker.SharedKernel) — sem dependências de outros projetos Juker ──
 public enum ErrorType { Validation, NotFound, Conflict, Forbidden, BusinessRule, Unauthorized }
-public sealed record Error(string Code, string Message, ErrorType Type);
-public class Result { bool IsSuccess; Error? Error; static Result Success(); static Result Failure(Error e); }
-public class Result<T> : Result { T Value; }
-public interface ITenantScoped { VenueId VenueId { get; } }
+public sealed record Error(string Code, string Message, ErrorType Type)
+  { public IReadOnlyDictionary<string, string[]>? Details { get; init; } }   // erros por campo (validação)
+public class Result
+  { protected Result(bool isSuccess, Error? error);
+    public bool IsSuccess { get; } public bool IsFailure { get; } public Error? Error { get; }
+    public static Result Success(); public static Result Failure(Error error); }
+public sealed class Result<T> : Result
+  { public T Value { get; }                          // InvalidOperationException se IsFailure
+    public static Result<T> Success(T value); public static new Result<T> Failure(Error error); }
 public readonly record struct VenueId(Guid Value);
-public interface IIntegrationEvent { Guid Id { get; } DateTimeOffset OccurredAt { get; } }   // no SharedKernel: os eventos vivem nos .Contracts (ARQ-02)
+public interface ITenantScoped { VenueId VenueId { get; } }
+public interface IIntegrationEvent { Guid Id { get; } DateTimeOffset OccurredAt { get; } }
+public abstract class Entity<TId> where TId : notnull
+  { protected Entity(); protected Entity(TId id);
+    public TId Id { get; protected init; }
+    public IReadOnlyCollection<IIntegrationEvent> IntegrationEvents { get; }
+    protected void Raise(IIntegrationEvent integrationEvent);
+    public void ClearIntegrationEvents(); }
 
-// Infrastructure
+// ── Juker.Infrastructure (namespace Juker.Infrastructure) ──
 public interface ICommand<TResult>; public interface IQuery<TResult>;
-public interface ICommandHandler<TCommand, TResult> where TCommand : ICommand<TResult>
-    { Task<Result<TResult>> Handle(TCommand command, CancellationToken ct); }
-public interface IQueryHandler<TQuery, TResult>  (idem)
+public interface ICommandHandler<in TCommand, TResult> where TCommand : ICommand<TResult>
+  { Task<Result<TResult>> Handle(TCommand command, CancellationToken ct); }
+public interface IQueryHandler<in TQuery, TResult> where TQuery : IQuery<TResult>
+  { Task<Result<TResult>> Handle(TQuery query, CancellationToken ct); }
 public interface ITenantContext { VenueId? VenueId { get; } }
-public abstract class ModuleDbContext(DbContextOptions o, ITenantContext t, string schema) : DbContext
-public interface IIntegrationEventHandler<TEvent> where TEvent : IIntegrationEvent
-    { Task Handle(TEvent e, CancellationToken ct); }
-public static class ModuleRegistration { IServiceCollection AddModuleHandlers(this IServiceCollection s, Assembly a); }
-public interface IOutboxDrainer { Task<int> DrainAsync(CancellationToken ct); }   // retorna quantas mensagens entregou
-Configuração: Outbox:DispatcherEnabled (bool, padrão true) · Outbox:IntervalMs (padrão 500)
-TestKit: internal static Task DrainOutboxAsync(this JukerApiFactory f)   // resolve IOutboxDrainer e drena até vazio;
-         // internal (InternalsVisibleTo Juker.IntegrationTests) para não alterar a API pública congelada do TestKit (SPEC-0003 CT-01)
-public static class ResultHttpExtensions { IResult ToHttpResult<T>(this Result<T> r, Func<T, IResult> onSuccess); }
+public sealed class FixedTenantContext(VenueId? venueId) : ITenantContext      // jobs e testes
+public sealed class TenantNotResolvedException : InvalidOperationException     // (), (string), (string, Exception)
+public abstract class ModuleDbContext : DbContext
+  { protected ModuleDbContext(DbContextOptions options, ITenantContext tenant, string schema);
+    protected string Schema { get; }
+    protected override void OnModelCreating(ModelBuilder modelBuilder);          // derivados chamam base
+    protected override void ConfigureConventions(ModelConfigurationBuilder b); } // snake_case
+public interface IIntegrationEventHandler<in TEvent> where TEvent : IIntegrationEvent
+  { Task Handle(TEvent integrationEvent, CancellationToken ct); }
+public interface IOutboxDrainer { Task<int> DrainAsync(CancellationToken ct); } // quantas entregou
+public interface IIdGenerator { Guid NewId(); }
+public sealed class OutboxOptions
+  { public bool DispatcherEnabled { get; set; } = true; public int IntervalMs { get; set; } = 500;
+    public int MaxAttempts { get; set; } = 5; }                                   // seção "Outbox"
+public static class InfrastructureRegistration
+  { IServiceCollection AddJukerInfrastructure(this IServiceCollection s, IConfiguration c);
+      // TryAdd TimeProvider.System; IIdGenerator (Guid v7); OutboxOptions; IOutboxDrainer;
+      // OutboxDispatcher como hosted service só se DispatcherEnabled; decorators
+    IServiceCollection AddModuleDbContext<TContext>(this IServiceCollection s, string connectionName = "juker")
+      where TContext : ModuleDbContext;   // Npgsql + interceptor do outbox + histórico de migrations no schema
+    IServiceCollection AddModuleHandlers(this IServiceCollection s, Assembly moduleAssembly); }
+      // command/query handlers (com decorators), validators e IIntegrationEventHandler<T>
+public static class ResultHttpExtensions
+  { IResult ToHttpResult(this Result r);                              // sucesso → 204
+    IResult ToHttpResult<T>(this Result<T> r, Func<T, IResult> onSuccess); }
+
+// ── Juker.Host ── Program.cs chama builder.Services.AddJukerInfrastructure(builder.Configuration)
+// ── TestKit (interno, InternalsVisibleTo Juker.IntegrationTests) ──
+internal static Task DrainOutboxAsync(this JukerApiFactory f)   // resolve IOutboxDrainer e drena até vazio
 
 Mapeamento ErrorType → HTTP (ProblemDetails, application/problem+json, com "code"):
-  Validation → 400 (+ "errors": { campo: [mensagens] })
-  Unauthorized → 401 · Forbidden → 403 · NotFound → 404 · Conflict → 409 · BusinessRule → 422
+  Validation → 400 (+ "errors": Error.Details) · Unauthorized → 401 · Forbidden → 403
+  NotFound → 404 · Conflict → 409 · BusinessRule → 422
 
 Tabelas por módulo (<schema>):
   outbox_messages(id uuid pk, type text, payload jsonb, occurred_at timestamptz,
-                  processed_at timestamptz null, attempts int, last_error text null, status text)
+                  status text check in ('pending','processed','failed'), attempts int,
+                  next_attempt_at timestamptz, processed_at timestamptz null, last_error text null)
+    type = TypeName + ", " + AssemblyName do evento · payload = System.Text.Json (JsonSerializerDefaults.Web)
   inbox_messages(message_id uuid, consumer text, processed_at timestamptz, pk(message_id, consumer))
+    consumer = nome completo do tipo do IIntegrationEventHandler
+Retry: next_attempt_at = agora + 2^(attempts-1) s (1, 2, 4, 8 s); attempts = MaxAttempts → status 'failed'
 ```
 
-**Arquivos/módulos afetados:** ver `touches` no frontmatter.
+**Arquivos/módulos afetados:** ver `touches` no frontmatter. O módulo de teste `tests/fixtures/TestModules.Outbox` (assembly `TestModules.Outbox`, schema `outbox_test`, com `IDesignTimeDbContextFactory` e migration real) fica fora da solução e é referenciado só pelo `Juker.IntegrationTests`. Por não começar com `Juker.`, não é descoberto pelo `DbContextDiscovery`/`MigrationsGuard` do TestKit.
 
 ### 6.1 Mapa de Comportamentos
 | Cenário | Condição / Entrada | Resultado esperado | Testes |
 |---|---|---|---|
-| Comando válido | validator sem erros | handler executa; `UnitOfWork` confirma a transação | UT-02, IT-01 |
-| Comando inválido | validator com erros | handler **não** executa; `Result` com `ErrorType.Validation` e erros por campo | UT-02 |
-| Erro de negócio vira HTTP | `Result` com cada `ErrorType` | status 400/401/403/404/409/422 com `ProblemDetails.code` | UT-03 |
-| Sem tenant | consulta a entidade `ITenantScoped` sem `VenueId` | `TenantNotResolvedException` | UT-04 |
-| Isolamento entre bares | linhas do bar A e do bar B; contexto do bar A | só as linhas do A retornam | IT-04 |
-| Evento na mesma transação | transação com evento é revertida | nenhuma linha no outbox | IT-01 |
-| Entrega única por consumidor | mensagem reprocessada após falha do dispatcher | cada consumidor executa exatamente 1 vez (inbox) | IT-02 |
-| Consumidor com falha | consumidor lança exceção sempre | retry até 5 tentativas; status `failed`; outros consumidores e mensagens seguem | IT-03 |
+| Resultado | `Result<int>.Success(1)` / `Result<int>.Failure(e)` | `IsSuccess`/`IsFailure` coerentes; `Value` de falha lança `InvalidOperationException` | UT-01 |
+| Comando inválido | validator com erro no campo `name` | handler **não** executa; `ErrorType.Validation` com `Details["name"]` | UT-02 |
+| Comando válido | validator sem erros | handler executa; unidade de trabalho confirma | UT-02, IT-01 |
+| Erro vira HTTP | `Result` com cada `ErrorType` | 400/401/403/404/409/422 com `code`; validação com `errors` | UT-03 |
+| Sem tenant | consulta a `ITenantScoped` com `FixedTenantContext(null)` | `TenantNotResolvedException` antes de abrir conexão | UT-04 |
+| Evento na mesma transação | entidade levanta evento; commit / rollback | linha + mensagem `pending` no outbox / nenhuma das duas | IT-01 |
+| Exatamente uma vez por consumidor | consumidor A falha uma vez; mensagem reprocessada; host parado e religado no meio | A e B executam exatamente 1 vez cada (inbox) | IT-02 |
+| Consumidor sempre falha | 5 tentativas com backoff (FakeTimeProvider) | status `failed` com `last_error`; outra mensagem entregue normalmente | IT-03 |
+| Isolamento entre bares | linhas do bar A e B; contexto do bar A | só as do A | IT-04 |
+| Entrega sob comando | `DispatcherEnabled=false`, 3 pendentes | nada entregue sozinho; `DrainOutboxAsync` entrega 3; depois retorna 0 | IT-05 |
+| Latência do dispatcher | 100 pendentes, dispatcher ligado | p95 gravação → entrega < 1 s | IT-06 |
+| Kit montado no host | `AddJukerInfrastructure` no host real | `IOutboxDrainer`, `IIdGenerator` e `TimeProvider` resolvem; dispatcher registrado só com a opção ligada | IT-05 |
 | API pública estável | alteração em tipo público do kit | snapshot diverge e o teste falha | CT-01 |
-| Entrega sob comando | dispatcher desligado, 3 mensagens pendentes | nada é entregue sozinho; `DrainOutboxAsync` entrega as 3 na hora e retorna 3; chamada seguinte retorna 0 | IT-05 |
-| Resultado | `Result.Success`/`Failure` | `IsSuccess` coerente; acessar `Value` de falha lança `InvalidOperationException` | UT-01 |
 
 ## 7. Artefato B — Plano de Testes (TDD)
 
@@ -130,20 +169,22 @@ Tabelas por módulo (<schema>):
 - N/A — projeto novo.
 
 ### 7.2 Testes Unitários
-- **UT-01** — Dado `Result<int>.Failure(error)`, quando `Value` é acessado, então lança `InvalidOperationException`; e `Result<int>.Success(1).IsSuccess` é verdadeiro.
-- **UT-02** — Dado um comando cujo validator falha no campo `Name`, quando despachado pelo pipeline de decorators, então o handler não é chamado e o resultado é `ErrorType.Validation` com `errors["name"]`.
-- **UT-03** — Dado um `Result` com cada `ErrorType`, quando `ToHttpResult` é chamado, então o status e o `code` do `ProblemDetails` seguem a tabela do contrato.
-- **UT-04** — Dado um `ModuleDbContext` com `ITenantContext.VenueId == null`, quando uma entidade `ITenantScoped` é consultada, então lança `TenantNotResolvedException`.
+- **UT-01** — Dado `Result<int>.Failure(error)`, quando `Value` é acessado, então lança `InvalidOperationException`; `Result<int>.Success(1)` tem `IsSuccess` verdadeiro e `IsFailure` falso; `Result.Failure(e).Error` é `e`.
+- **UT-02** — Dado um comando cujo validator falha no campo `Name`, quando despachado pelo pipeline de decorators montado por `AddModuleHandlers`, então o handler não é chamado e o resultado é `ErrorType.Validation` com `Details["name"]`; com validator sem erros, o handler é chamado uma vez.
+- **UT-03** — Dado um `Result` com cada `ErrorType`, quando `ToHttpResult` é chamado, então o status e o `code` do `ProblemDetails` seguem a tabela do contrato, e a validação traz `errors`; `Result.Success().ToHttpResult()` é 204.
+- **UT-04** — Dado um `ModuleDbContext` de teste configurado com Npgsql e uma connection string de placeholder, com `FixedTenantContext(null)`, quando uma entidade `ITenantScoped` é consultada, então lança `TenantNotResolvedException` antes de qualquer conexão ser aberta.
 
 ### 7.3 Testes de Integração
-- **IT-01** — Com Postgres real, um handler de comando grava uma entidade e levanta um evento; com commit, a linha e a mensagem do outbox existem; com a transação revertida, nenhuma das duas existe.
-- **IT-02** — Com 100 mensagens pendentes e dois consumidores, o dispatcher é interrompido no meio e reiniciado; cada consumidor processa cada mensagem exatamente uma vez, e o p95 gravação → entrega fica abaixo de 1 s.
-- **IT-03** — Um consumidor que sempre lança exceção leva a mensagem a `failed` após 5 tentativas com backoff (tempo via `FakeTimeProvider`), enquanto outra mensagem é entregue normalmente.
+<!-- Todos usam o módulo de teste TestModules.Outbox (migration aplicada no banco da classe) e o JukerApiFactory/PostgresFixture. -->
+- **IT-01** — Com Postgres real: um handler de comando grava uma entidade que levanta um evento; com commit, a linha e uma mensagem `pending` no outbox existem (com `type` e `payload` do contrato); com a transação revertida, nenhuma das duas existe.
+- **IT-02** — Com dois consumidores do mesmo evento, o consumidor A falha na primeira entrega: após o reprocessamento, A executa 1 vez com sucesso e B continua com exatamente 1 execução (inbox); com o host parado e religado entre as entregas, nenhuma execução se repete.
+- **IT-03** — Um consumidor que sempre lança exceção leva a mensagem a `failed` após 5 tentativas, respeitando o backoff (1, 2, 4, 8 s via `FakeTimeProvider`), com `last_error` preenchido; outra mensagem pendente é entregue normalmente.
 - **IT-04** — Com linhas de dois `VenueId` numa tabela `ITenantScoped`, o contexto do bar A retorna somente as linhas do A.
-- **IT-05** — Com `Outbox:DispatcherEnabled=false`, 3 mensagens pendentes não são entregues após 2 s de relógio avançado; `DrainOutboxAsync()` entrega as 3 aos consumidores e retorna 3; uma segunda chamada retorna 0.
+- **IT-05** — Com o host real montado por `AddJukerInfrastructure` e `Outbox:DispatcherEnabled=false`: `IOutboxDrainer`, `IIdGenerator` e `TimeProvider` resolvem e o `OutboxDispatcher` não está entre os hosted services; 3 mensagens pendentes não são entregues após 2 s de relógio avançado; `DrainOutboxAsync()` entrega as 3 e retorna 3; a chamada seguinte retorna 0.
+- **IT-06** — Com 100 mensagens pendentes e o dispatcher ligado (intervalo de 500 ms), o p95 entre a gravação e a entrega ao consumidor fica abaixo de 1 s (medido com relógio real, sem `sleep`: espera por condição).
 
 ### 7.4 Testes de Contrato
-- **CT-01** — O snapshot da API pública (PublicApiGenerator) de `Juker.SharedKernel` e `Juker.Infrastructure` é igual ao aprovado em `tests/Juker.ArchitectureTests/PublicApi/*.approved.txt`; as specs do MVP consomem esse contrato.
+- **CT-01** — O snapshot da API pública (PublicApiGenerator, `IncludeAssemblyAttributes=false`) de `Juker.SharedKernel` e `Juker.Infrastructure` é igual ao aprovado em `tests/Juker.ArchitectureTests/PublicApi/*.approved.txt`, escrito a partir deste contrato; as specs do MVP consomem esse contrato.
 
 ### 7.5 Testes E2E
 - N/A — user_facing: false.
@@ -151,7 +192,7 @@ Tabelas por módulo (<schema>):
 ### 7.6 Outros
 - N/A.
 
-**Dublês e dados de teste:** `TestModuleDbContext` com entidade `ITenantScoped` de teste; consumidores de teste configuráveis para falhar.
+**Dublês e dados de teste:** módulo de teste `TestModules.Outbox` (entidade `ITenantScoped` que levanta eventos, dois consumidores configuráveis para falhar, migration real no schema `outbox_test`); `FixedTenantContext`; `FakeTimeProvider`.
 
 **Ambiente de execução:** Testcontainers (Postgres 18) local e no CI.
 
@@ -178,10 +219,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 - [ ] Validar: build + lint + suíte de UT (G2)
 
 **Fase 2: Integração e contrato**
-- [ ] Red: escrever IT-01, IT-02, IT-03, IT-04, IT-05, CT-01 com a tag `SPEC-0004:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
-- [ ] Green: implementar endpoints, persistência, migrations e integrações até passar
+- [ ] Red: escrever CT-01, IT-01, IT-02, IT-03, IT-04, IT-05, IT-06 com a tag `SPEC-0004:<ID>` (Postgres real, módulo de teste TestModules.Outbox, `DrainOutboxAsync` — ADR-0012) e confirmar que falham pelo motivo certo
+- [ ] Green: implementar persistência, outbox/inbox, dispatcher, registro no host e o módulo de teste até passar
 - [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
+- [ ] Validar: build + suíte completa + arquitetura (G2/G3)
 
 **Fase final: Integração, entrega e documentação**
 - [ ] Review independente (G4)
@@ -192,7 +233,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 12. Registro de Gates
 | Gate | Status | Evidência | Data |
 |---|---|---|---|
-| G0 Spec | PASS | `spec_graph.py validate SPEC-0004` → G0 [SPEC-0004]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0012/0013) | 2026-09-30 |
+| G0 Spec | PASS | `spec_graph.py validate SPEC-0004` → 0 erros após a emenda v4 (contrato completo); checklist de julgamento do G0 revisado pelo Architect | 2026-10-01 |
 | G1 Red | PENDING | | |
 | G2 Green | PENDING | | |
 | G3 Arquitetura | PENDING | | |
@@ -205,6 +246,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 13. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
 |---|---|---|---|---|---|---|---|---|
+| IMP-01 | 2026-09-30 | G1 | spec | Contrato sem: mecanismo de levantar evento para o outbox (tipo/payload), montagem do kit (AddJukerInfrastructure/registro do ModuleDbContext como fonte do outbox, host fora do touches), forma exata da API pública para o snapshot CT-01 (exceção de tenant, ITenantContext explícito, Entity, IdGenerator, Result, membros protegidos do ModuleDbContext, visibilidade de decorators/opções); touches sem TestKit.csproj/ArchitectureTests.csproj; DbContext de teste conflita com a descoberta do TestKit; IT-02 mistura exatamente-uma-vez com latência | Test-writer leu spec (v2/v3), testing.md, ADRs, TestKit e specs consumidoras; nenhum teste escrito | Architect (emenda v4) + thomas (aprovação, sob autorização prévia) | Emenda v4 — contrato completo da API pública, montagem do kit, esquema do outbox, módulo de teste fora de Juker.*, IT-02/IT-06 separados (autorização prévia de thomas, a confirmar no overview) | 2026-09-30 |
 
 ## 14. Relatório de Entrega
 
@@ -239,5 +281,6 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 4 | 2026-10-01 | Contrato completo da API pública (SharedKernel e Infrastructure) com `Entity<TId>.Raise` e sem `IDomainEvent`; montagem do kit (`AddJukerInfrastructure`, `AddModuleDbContext<T>`, `AddModuleHandlers`) com o host no `touches`; esquema e formato do outbox (`type`, `payload`, `status`, backoff); módulo de teste `TestModules.Outbox` fora da convenção `Juker.*`; IT-02 dividido em exatamente-uma-vez (IT-02) e latência (IT-06); `touches` com TestKit, ArchitectureTests, IntegrationTests csproj, fixture e `dotnet-ef` | IMP-01 (SPEC_DEFECT do Test-writer: contrato vago demais para o snapshot CT-01 e para os IT) | Nenhuma implementada (os consumidores do kit são as specs do MVP) | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | 3 | 2026-10-01 | `DrainOutboxAsync` passa a `internal` (visível ao Juker.IntegrationTests); `touches` inclui `Juker.slnx` e `Directory.Packages.props` (novo projeto Juker.Infrastructure e pacotes) | Evitar mudar o snapshot público do TestKit aprovado na SPEC-0003 e permitir registrar o projeto novo | Nenhuma (nenhuma spec consome o contrato da SPEC-0004) | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | 2 | 2026-10-01 | `IIntegrationEvent` passa do `Juker.Infrastructure` para o `Juker.SharedKernel`; `IIntegrationEventHandler<T>` continua no Infrastructure | Review da SPEC-0003: ARQ-02 só permite que `.Contracts` referencie `SharedKernel` e outros `.Contracts`; eventos de integração vivem nos `.Contracts` e implementam `IIntegrationEvent` | Consumidores futuros do evento (SPECs 0011+) — nenhum implementado ainda | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |

@@ -74,7 +74,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | Gate | Status | Evidência | Data |
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0026` → G0 [SPEC-0026]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect | 2026-09-30 |
-| G1 Red | PENDING | | |
+| G1 Red | PASS | `verify SPEC-0026 --base sdd/SPEC-0001` no worktree (HEAD 9a49e15): red antes do green PASS, commits red só alteram testes PASS, rastreabilidade 3/3 PASS; `dotnet test --solution` → IT-01 e IT-02 vermelhos pelo motivo certo, IT-03 verde (guarda) | 2026-10-01 |
 | G2 Green | PENDING | | |
 | G3 Arquitetura | PENDING | | |
 | G4 Review | PENDING | | |
