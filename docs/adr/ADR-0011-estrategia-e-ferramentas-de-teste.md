@@ -41,7 +41,7 @@ A SDD exige UT, IT com dependências reais, CT, E2E e testes de arquitetura, tod
 - **Ruim**, porque os E2E com Playwright exigem os navegadores instalados no CI (cache no workflow).
 
 ### Confirmação (G3)
-ARQ-06 impede FluentAssertions ≥ 8, MediatR e MassTransit. SPEC-0003 entrega um exemplo de cada nível rodando no CI.
+ARQ-06 impede FluentAssertions (qualquer versão), MediatR e MassTransit. SPEC-0003 entrega um exemplo de cada nível rodando no CI.
 
 ## Prós e Contras das Opções
 | Critério (peso) | xUnit v3 + Awesome + Playwright | NUnit + Shouldly + Cypress | MSTest + Selenium |

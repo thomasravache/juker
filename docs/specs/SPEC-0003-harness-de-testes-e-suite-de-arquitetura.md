@@ -135,7 +135,7 @@ Comandos (sdd-config.yml):
 - N/A — user_facing: false.
 
 ### 7.6 Outros
-- Acessibilidade: o helper axe-core é validado dentro do IT-03 (a página de teste não tem violações).
+- N/A — o helper axe-core e sua validação pertencem à SPEC-0025 (E2E).
 
 **Dublês e dados de teste:** assembly `Violations` apenas para o IT-02; `DbContext` de fixture para o IT-05; nenhum dublê de banco.
 
@@ -169,9 +169,6 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 - [ ] Refactor mantendo tudo verde
 - [ ] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
 
-**Fase 3: Verificações adicionais (seção 7.6)**
-- [ ] Executar as verificações da seção 7.6 e anexar a evidência ao Relatório de Entrega
-
 **Fase final: Integração, entrega e documentação**
 - [ ] Review independente (G4)
 - [ ] Integração + CI verde (G5) e aprovação (H2)
@@ -182,7 +179,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | Gate | Status | Evidência | Data |
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0003` → G0 [SPEC-0003]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0014) | 2026-09-30 |
-| G1 Red | PENDING | | |
+| G1 Red | PASS | `verify SPEC-0003 --base sdd/SPEC-0001` no worktree (HEAD fb6237f): red antes do green PASS, commits red só alteram testes PASS, rastreabilidade 8/8 PASS; `dotnet test --solution Juker.slnx -c Release` → total 34, failed 27 (NotImplementedException/asserção), succeeded 7 (6 da SPEC-0002 + guarda CT-01 do snapshot da API pública) | 2026-09-30 |
 | G2 Green | PENDING | | |
 | G3 Arquitetura | PENDING | | |
 | G4 Review | PENDING | | |
@@ -228,4 +225,5 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-09-30 | Seção 7.6 sem o helper axe (pertence à SPEC-0025); ARQ-06 proíbe FluentAssertions em qualquer versão (a verificação por namespace não distingue versões; usamos AwesomeAssertions) | Apontado pelo Test-writer no G1 | Nenhuma | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | SPEC-0004, SPEC-0005, SPEC-0025 (consomem SPEC-0003@1 → revisar e fixar @2) | thomas, 2026-09-30 |

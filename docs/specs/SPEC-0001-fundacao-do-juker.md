@@ -73,7 +73,7 @@ Fluxo de entrega: PR → CI (build, lint, UT, IT, arquitetura, E2E, scan, SDD) �
 - ARQ-03 um `DbContext` por módulo, não compartilhado — `ArchitectureTests.DbContextOwnership`
 - ARQ-04 `Domain/` sem EF Core/ASP.NET/Infrastructure — `ArchitectureTests.DomainPurity`
 - ARQ-05 `Web` só referencia `.Contracts` — `ArchitectureTests.WebBoundaries`
-- ARQ-06 sem MediatR, MassTransit e FluentAssertions ≥ 8 — `ArchitectureTests.ForbiddenDependencies`
+- ARQ-06 sem MediatR, MassTransit e FluentAssertions (qualquer versão) — `ArchitectureTests.ForbiddenDependencies`
 - ARQ-07 tipos YouTube só em `Catalog.Infrastructure` e `Web.Client.Tv` — `ArchitectureTests.MediaProviderIsolation`
 - ARQ-08 testes sem EF Core InMemory/Sqlite nem mocks de `HttpMessageHandler` — `ArchitectureTests.TestingPolicy`
 
