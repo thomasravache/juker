@@ -28,6 +28,11 @@ M:System.Runtime.CompilerServices.TaskAwaiter.GetResult;Use await
 M:System.Runtime.CompilerServices.TaskAwaiter`1.GetResult;Use await
 M:System.Runtime.CompilerServices.ValueTaskAwaiter.GetResult;Use await
 M:System.Runtime.CompilerServices.ValueTaskAwaiter`1.GetResult;Use await
+# Mesma regra para os awaiters configurados (ConfigureAwait(...).GetAwaiter().GetResult()) (SPEC-0028).
+M:System.Runtime.CompilerServices.ConfiguredTaskAwaitable.ConfiguredTaskAwaiter.GetResult;Use await
+M:System.Runtime.CompilerServices.ConfiguredTaskAwaitable`1.ConfiguredTaskAwaiter.GetResult;Use await
+M:System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable.ConfiguredValueTaskAwaiter.GetResult;Use await
+M:System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable`1.ConfiguredValueTaskAwaiter.GetResult;Use await
 
 # Console → ILogger. Exceção: a CLI administrativa em src/Juker.Host/Cli/**, com supressão
 # de RS0030 no nível do arquivo e comentário do motivo (ADR-0014, regra 3).
