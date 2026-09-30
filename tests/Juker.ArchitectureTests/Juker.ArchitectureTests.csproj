@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Suíte de arquitetura (SPEC-0003, ADR-0001/0002/0004/0007/0012/0014): regras ARQ-01..ARQ-08 com ArchUnitNET,
+    convenções de rastreabilidade dos testes e a política de tokens do design system.
+    Comando do G3: arch_test no docs/specs/sdd-config.yml
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- O filtro Category=Integration (test_integration) não seleciona nenhum teste aqui, de propósito -->
+    <JukerAllowZeroTests>true</JukerAllowZeroTests>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Fixtures (projetos próprios e arquivos de UI) não fazem parte deste assembly -->
+    <Compile Remove="Fixtures/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="TngTech.ArchUnitNET" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Juker.Host\Juker.Host.csproj" />
+    <ProjectReference Include="..\..\src\Web\Juker.Web\Juker.Web.csproj" />
+    <!-- Fixtures compilados só para estes testes (UT-01 e IT-02) -->
+    <ProjectReference Include="Fixtures\ConventionViolations\Juker.ArchitectureTests.ConventionViolations.csproj" />
+    <ProjectReference Include="Fixtures\Violations\Juker.ArchitectureTests.Violations.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="Projetos de teste avaliados pelas regras (ARQ-06, ARQ-08) e pela convenção de traits (UT-01)">
+    <!--
+      Só garantem o build pelo arch_test: os assemblies são lidos da saída de cada projeto (Rules/SolutionAssemblies).
+      Todo projeto de tests/ na Juker.slnx precisa estar aqui.
+    -->
+    <ProjectReference Include="..\Juker.BuildingBlocks.UnitTests\Juker.BuildingBlocks.UnitTests.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.IntegrationTests\Juker.IntegrationTests.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.Modules.Catalog.UnitTests\Juker.Modules.Catalog.UnitTests.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.Modules.Playback.UnitTests\Juker.Modules.Playback.UnitTests.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.Modules.Queue.UnitTests\Juker.Modules.Queue.UnitTests.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.Modules.Sessions.UnitTests\Juker.Modules.Sessions.UnitTests.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.Modules.Venues.UnitTests\Juker.Modules.Venues.UnitTests.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.TestKit\Juker.TestKit.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.Web.UnitTests\Juker.Web.UnitTests.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

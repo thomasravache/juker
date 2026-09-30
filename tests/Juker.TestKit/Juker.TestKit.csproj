@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Fixtures compartilhadas de integração (SPEC-0003, ADR-0012): Postgres real por Testcontainers,
+    banco por classe clonado do juker_template, WebApplicationFactory com FakeTimeProvider e WireMock.Net.
+    Biblioteca (não é projeto de teste): consumida por tests/Juker.IntegrationTests.
+    A API pública é contrato (snapshot em tests/Juker.IntegrationTests/Harness/Juker.TestKit.approved.txt).
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="WireMock.Net" />
+    <PackageReference Include="xunit.v3.extensibility.core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Juker.Host\Juker.Host.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Builders base (internos, fora do contrato público) -->
+    <InternalsVisibleTo Include="Juker.IntegrationTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Respostas gravadas (mapeamentos do WireMock) lidas pelo FakeHttpServer; regravadas por tools/recordings -->
+    <None Include="Recordings\*.json" CopyToOutputDirectory="PreserveNewest" LinkBase="Recordings" />
+  </ItemGroup>
+
+</Project>

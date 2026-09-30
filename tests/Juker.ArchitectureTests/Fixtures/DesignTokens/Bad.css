@@ -1,0 +1,5 @@
+/* Fixture: folha de estilo comum (não é o arquivo de tokens); violações nas linhas 3 e 4. */
+.banner {
+  color: #ff007a;
+  font-family: Georgia, serif;
+}

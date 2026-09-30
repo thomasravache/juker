@@ -1,0 +1,12 @@
+/* Fixture: faz o papel do arquivo de tokens do Tailwind, que pode ter cores e fontes. */
+@theme {
+  --color-primary: #ff007a;
+  --color-surface: rgb(18 18 18);
+  --color-accent: hsl(320 100% 50%);
+  --font-display: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+  font-family: var(--font-display);
+  background: #121212;
+}

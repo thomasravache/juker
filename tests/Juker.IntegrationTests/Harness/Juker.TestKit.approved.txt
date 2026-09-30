@@ -1,0 +1,15 @@
+sealed class Juker.TestKit.FakeHttpServer : System.IDisposable
+  ctor()
+  method System.Void Dispose()
+  property System.Uri BaseUrl { get; }
+sealed class Juker.TestKit.JukerApiFactory : Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program>
+  ctor(Juker.TestKit.PostgresFixture)
+  method System.Void UseTestIssuers(System.Action<Microsoft.Extensions.DependencyInjection.IServiceCollection>)
+  property Microsoft.Extensions.Time.Testing.FakeTimeProvider Time { get; }
+static class Juker.TestKit.MigrationsGuard
+  method static System.Void AssertNoPendingModelChanges()
+sealed class Juker.TestKit.PostgresFixture : System.IAsyncDisposable, Xunit.IAsyncLifetime
+  ctor()
+  method System.Threading.Tasks.Task<System.String> CreateDatabaseAsync()
+  method System.Threading.Tasks.ValueTask DisposeAsync()
+  method System.Threading.Tasks.ValueTask InitializeAsync()

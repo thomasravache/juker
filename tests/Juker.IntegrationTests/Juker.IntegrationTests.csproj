@@ -7,13 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Fixtures são projetos próprios, compilados pelos testes num diretório temporário (SPEC-0003:IT-05) -->
+    <Compile Remove="Fixtures/**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Mensagens de diagnóstico ligadas: a PostgresFixture informa o tempo de subida (SPEC-0003, seção 5) -->
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Testing" />
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Npgsql" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
@@ -21,6 +32,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Aspire\Juker.AppHost\Juker.AppHost.csproj" />
     <ProjectReference Include="..\..\src\Juker.Host\Juker.Host.csproj" />
+    <ProjectReference Include="..\Juker.TestKit\Juker.TestKit.csproj" />
   </ItemGroup>
 
 </Project>

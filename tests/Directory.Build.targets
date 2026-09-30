@@ -1,0 +1,21 @@
+<Project>
+  <!--
+    Alvos comuns aos projetos em tests/ (SPEC-0003). Avaliado depois do .csproj, então enxerga as propriedades do projeto.
+    Encadeia o Directory.Build.targets da raiz, se existir, que o MSBuild deixaria de importar por encontrar este primeiro.
+  -->
+  <PropertyGroup>
+    <_JukerParentBuildTargets>$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))</_JukerParentBuildTargets>
+  </PropertyGroup>
+  <Import Project="$(_JukerParentBuildTargets)" Condition="'$(_JukerParentBuildTargets)' != ''" />
+
+  <PropertyGroup Condition="'$(JukerAllowZeroTests)' == 'true'">
+    <!--
+      Microsoft.Testing.Platform termina com o código 8 quando nenhum teste é executado num projeto. Por padrão isso
+      é falha: um projeto de teste que perdeu seus testes precisa quebrar o build. Um projeto opta por aceitar zero
+      testes definindo JukerAllowZeroTests como true no próprio .csproj. Isso vale para os projetos de UT ainda vazios
+      (cada spec remove a propriedade ao acrescentar testes) e para o Juker.ArchitectureTests, que o filtro
+      Category=Integration esvazia de propósito.
+    -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+</Project>
