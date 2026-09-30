@@ -4,12 +4,12 @@ title: Repositório, solução e tooling
 tier: full
 type: foundation
 user_facing: false
-status: approved
+status: in-progress
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: []
 consumes_contract: []
-contract_version: 1
+contract_version: 2
 touches: [global.json, Directory.Build.props, Directory.Packages.props, .editorconfig, BannedSymbols.txt, tests/fixtures/**, .gitignore, .gitattributes, Juker.slnx, .config/**, src/Aspire/**, src/Juker.Host/**, src/BuildingBlocks/Juker.SharedKernel/**, src/Modules/**, src/Web/**, tests/Juker.IntegrationTests/Tooling/**, README.md, CLAUDE.md, AGENTS.md, CHANGELOG.md, tools/sdd/**, .githooks/**, .github/pull_request_template.md]
 adrs: [ADR-0001, ADR-0002, ADR-0003, ADR-0009, ADR-0014]
 external: []
@@ -29,11 +29,12 @@ Cria a solução `Juker.slnx` com o AppHost do Aspire, o host único, os cinco m
 **Objetivos (dentro do escopo):**
 - `global.json` fixando o SDK .NET 10 (feature band estável mais recente no momento da implementação, `rollForward: latestFeature`).
 - `Directory.Build.props`: `Nullable=enable`, `ImplicitUsings=enable`, `TreatWarningsAsErrors=true`, `AnalysisLevel=latest-recommended`, `EnforceCodeStyleInBuild=true`, `InvariantGlobalization=false` (pt-BR), `LangVersion=latest`.
-- Qualidade de código (ADR-0014): **Meziantou.Analyzer** e **Microsoft.CodeAnalysis.BannedApiAnalyzers** em todos os projetos via `Directory.Build.props`; `BannedSymbols.txt` na raiz com as APIs proibidas do ADR-0014 (relógio do sistema, `Thread.Sleep`/`Task.Delay` em testes, `new HttpClient()`, bloqueio síncrono de `Task`, `Console.*` fora de `src/Juker.Host/Cli/**`); `.editorconfig` com as severidades revisadas e cada regra desligada comentada com o motivo; `tests/fixtures/QualityViolations` (projeto fora da solução) usado pelo IT-03.
+- Qualidade de código (ADR-0014): **Meziantou.Analyzer** e **Microsoft.CodeAnalysis.BannedApiAnalyzers** em todos os projetos via `Directory.Build.props`; `BannedSymbols.txt` na raiz com as APIs proibidas do ADR-0014 (relógio do sistema, `Thread.Sleep`/`Task.Delay` em testes, `new HttpClient()`, bloqueio síncrono de `Task`, `Console.*` fora de `src/Juker.Host/Cli/**`); `.editorconfig` com as severidades revisadas, cada regra desligada comentada com o motivo e `dotnet_diagnostic.MA0001.severity = error` (comparação de texto sem `StringComparison`, que é Info por padrão no Meziantou); `tests/fixtures/QualityViolations` (projeto fora da solução) usado pelo IT-03.
 - `Directory.Packages.props` com gerenciamento central de versões (Aspire 13.x estável, EF Core 10, Npgsql, FluentValidation).
 - `.editorconfig` com as convenções de estilo; `dotnet format --verify-no-changes` como lint.
 - Projetos: `Juker.AppHost`, `Juker.ServiceDefaults`, `Juker.Host`, `Juker.SharedKernel` (vazio além de `AssemblyMarker`), `Juker.Modules.{Venues,Sessions,Catalog,Queue,Playback}` + `.Contracts`, `Juker.Web`, `Juker.Web.Client`.
-- Cada módulo expõe `Add<Módulo>Module(IServiceCollection, IConfiguration)` e `Map<Módulo>Endpoints(IEndpointRouteBuilder)`, chamados pelo `Juker.Host`.
+- Cada módulo expõe `Add<Módulo>Module(IServiceCollection, IConfiguration)` e `Map<Módulo>Endpoints(IEndpointRouteBuilder)`, chamados pelo `Juker.Host` a partir do `ModuleCatalog` (forma no contrato).
+- Endpoint de diagnóstico `/_diag/modules`, registrado só nos ambientes `Development` e `Testing`.
 - AppHost: recurso `postgres` (imagem `postgres:18`) com um banco `juker`, host com `WithReference` e `WaitFor`.
 - Health checks `/health/live` (processo) e `/health/ready` (inclui o Postgres) via ServiceDefaults.
 - `spec_graph.py vendor --agents --pr-template github --hooks --changelog` (CI fica para SPEC-0005); `README.md` com o comando de execução local; `CLAUDE.md`/`AGENTS.md` com o bloco SDD e as convenções (Conventional Commits com `Refs: SPEC-NNNN`, Keep a Changelog, SemVer).
@@ -77,7 +78,7 @@ Comandos (raiz do repositório):
   dotnet build Juker.slnx -c Release -warnaserror          → exit 0
   dotnet format Juker.slnx --verify-no-changes              → exit 0 (≠0 se houver desvio de estilo)
   dotnet run --project src/Aspire/Juker.AppHost             → sobe postgres:18 + juker-host
-  dotnet build tests/fixtures/QualityViolations             → exit ≠ 0 com RS0030 (API proibida) e MA0006 (comparação sem StringComparison)
+  dotnet build tests/fixtures/QualityViolations             → exit ≠ 0 com RS0030 (DateTime.Now) e MA0001 (string.Equals(a, b) sem StringComparison)
 
 BannedSymbols.txt (ADR-0014), aplicado a src/ e tests/:
   P:System.DateTime.Now · P:System.DateTime.UtcNow · P:System.DateTime.Today
@@ -91,10 +92,20 @@ Registro de módulo (cada Juker.Modules.X):
   public static IServiceCollection AddXModule(this IServiceCollection s, IConfiguration c)
   public static IEndpointRouteBuilder MapXEndpoints(this IEndpointRouteBuilder e)
 
+Catálogo (Juker.Host):
+  public sealed record ModuleDescriptor(string Name,
+    Func<IServiceCollection, IConfiguration, IServiceCollection> Add,
+    Func<IEndpointRouteBuilder, IEndpointRouteBuilder> Map);
+  public static class ModuleCatalog { public static IReadOnlyList<ModuleDescriptor> All { get; } }
+    // exatamente 5 itens, nesta ordem: Venues, Sessions, Catalog, Queue, Playback;
+    // Add/Map apontam para os métodos AddXModule/MapXEndpoints do módulo
+
 HTTP (Juker.Host):
   GET /health/live   → 200 "Healthy"   (sempre que o processo está de pé)
   GET /health/ready  → 200 "Healthy"   (Postgres acessível)
                      → 503 "Unhealthy" (Postgres inacessível)
+  GET /_diag/modules → 200 application/json ["Venues","Sessions","Catalog","Queue","Playback"]
+                       (somente Development e Testing; nos demais ambientes → 404)
 ```
 
 **Arquivos/módulos afetados:** ver `touches` no frontmatter.
@@ -105,9 +116,9 @@ HTTP (Juker.Host):
 | Solução sobe pelo Aspire | AppHost iniciado com Docker disponível | host em execução, `/health/ready` = 200 | IT-01 |
 | Banco indisponível | Postgres parado depois da subida | `/health/ready` = 503, `/health/live` = 200 | IT-02 |
 | Todos os módulos registrados | host iniciado | os cinco `Add*Module` executados e a rota de diagnóstico lista os cinco módulos | UT-01, IT-01 |
-| Versões centralizadas | projeto declara `Version` em `PackageReference` | build falha (central package management com `CentralPackageVersionOverrideEnabled=false`) | UT-02 |
+| Versões centralizadas | projeto declara `Version` em `PackageReference`; `Directory.Packages.props` sem o gerenciamento central estrito | nenhum `Version` nos projetos; `ManagePackageVersionsCentrally=true` e `CentralPackageVersionOverrideEnabled=false` | UT-02 |
 | API proibida | código usa `DateTime.Now` | build falha com RS0030 | IT-03 |
-| Regra de cultura | `string.Equals(a, b)` sem `StringComparison` | build falha com a regra do Meziantou | IT-03 |
+| Regra de cultura | `string.Equals(a, b)` sem `StringComparison` | build falha com MA0001 (elevada a erro no `.editorconfig`) | IT-03 |
 | Analisadores ativos na solução | build da solução real | nenhum aviso suprimido fora do `.editorconfig` (sem `#pragma warning disable` sem justificativa) | UT-03 |
 
 ## 7. Artefato B — Plano de Testes (TDD)
@@ -116,14 +127,14 @@ HTTP (Juker.Host):
 - N/A — projeto novo.
 
 ### 7.2 Testes Unitários
-- **UT-01** — Dado o catálogo de módulos do host (`ModuleCatalog.All`), quando consultado, então contém exatamente Venues, Sessions, Catalog, Queue e Playback, cada um com `Add` e `Map` resolvidos.
-- **UT-02** — Dado qualquer `.csproj` sob `src/` e `tests/`, quando lido como XML, então nenhum `PackageReference` declara o atributo `Version` (as versões vêm do `Directory.Packages.props`).
+- **UT-01** — Dado o catálogo de módulos do host (`ModuleCatalog.All`), quando consultado, então contém exatamente 5 `ModuleDescriptor` com os nomes Venues, Sessions, Catalog, Queue e Playback, nessa ordem, e cada `Add`/`Map` não é nulo e, ao ser invocado num `ServiceCollection`/`WebApplication` de teste, executa sem exceção.
+- **UT-02** — Dado qualquer `.csproj` sob `src/` e `tests/`, quando lido como XML, então nenhum `PackageReference` declara o atributo `Version`; e o `Directory.Packages.props` define `ManagePackageVersionsCentrally=true` e `CentralPackageVersionOverrideEnabled=false`.
 - **UT-03** — Dado todos os arquivos `.cs` sob `src/` e `tests/`, quando lidos, então todo `#pragma warning disable` vem acompanhado de um comentário de justificativa na mesma linha ou na anterior; e o `Directory.Build.props` referencia o Meziantou e o BannedApiAnalyzers.
 
 ### 7.3 Testes de Integração
 - **IT-01** — Com `Aspire.Hosting.Testing`, subir o AppHost (Postgres real em container), aguardar o host e chamar `/health/ready` → 200, e `/_diag/modules` (apenas em Development) → os cinco módulos.
 - **IT-02** — Com o AppHost em execução, parar o recurso `postgres` e chamar `/health/ready` → 503 e `/health/live` → 200.
-- **IT-03** — `dotnet build tests/fixtures/QualityViolations` (projeto que importa o `Directory.Build.props` e contém `DateTime.Now` e `string.Equals(a, b)`) termina com código ≠ 0 e a saída contém `RS0030` e o ID da regra do Meziantou; removidas as duas linhas, o build passa.
+- **IT-03** — `dotnet build tests/fixtures/QualityViolations` (projeto que importa o `Directory.Build.props` e contém `DateTime.Now` e `string.Equals(a, b)`) termina com código ≠ 0 e a saída contém `RS0030` e `MA0001`; uma cópia do fixture sem essas duas linhas, construída a partir da raiz do repositório (para valer o `global.json`) com `-p:DirectoryBuildPropsPath` e `-p:DirectoryPackagesPropsPath` apontando para os arquivos da raiz e `--artifacts-path` num diretório temporário, compila com sucesso.
 
 ### 7.4 Testes de Contrato
 - N/A — não há contrato entre specs fornecido ou consumido nesta spec; os métodos de registro são verificados por UT-01.
@@ -191,6 +202,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 13. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
 |---|---|---|---|---|---|---|---|---|
+| IMP-01 | 2026-09-30 | G1 | spec | IT-03 e o contrato (seção 6) divergem: string.Equals(a, b) não dispara MA0006 (dispara MA0001, que é Info por padrão; MA0006 é para a == b). Também faltam no contrato: resposta de /_diag/modules, forma de ModuleCatalog; UT-02 não bate com a linha do Mapa; IT-03 precisa definir como construir a cópia limpa sem perder o Directory.Build.props | Test-writer leu spec, ADRs e referência de testes e verificou empiricamente com Meziantou 3.0.290 no SDK 10.0.101; nenhum teste escrito | Architect + thomas (aprovação da emenda) | Emenda v2 — MA0001 elevada a erro no IT-03, ModuleCatalog e /_diag/modules no contrato, UT-02 e IT-03 ajustados (aprovada por thomas, 2026-09-30) | 2026-09-30 |
 
 ## 14. Relatório de Entrega
 
@@ -225,3 +237,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 2 | 2026-09-30 | IT-03 verifica MA0001 (elevada a erro no `.editorconfig`) em vez de MA0006; forma do `ModuleCatalog`/`ModuleDescriptor` e de `/_diag/modules` definidas no contrato; UT-02 passa a verificar também o gerenciamento central estrito; IT-03 define como construir a cópia limpa | IMP-01 (SPEC_DEFECT do Test-writer): `string.Equals(a, b)` dispara MA0001 (Info por padrão), não MA0006; lacunas no contrato | Nenhuma (nenhuma spec consome o contrato da SPEC-0002) | thomas, 2026-09-30 |

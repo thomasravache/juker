@@ -5,18 +5,18 @@
 ## Saúde
 
 - Validação (G0): **0 erro(s), 3 aviso(s)** — rode `spec_graph.py validate`
-- Specs: approved 23
-- Impedimentos: **0 aberto(s)**, 0 resolvido(s)
+- Specs: approved 22, in-progress 1
+- Impedimentos: **0 aberto(s)**, 1 resolvido(s)
 
 ## Plano de Execução
 
-**Em andamento:** —  
+**Em andamento:** SPEC-0002  
 **Paradas por impedimento:** —  
-**Próximo lote:** SPEC-0002
+**Próximo lote:** —
 
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
-| 1 | SPEC-0002 | Repositório, solução e tooling | full/M | approved | ✅ pronta |  |
+| 1 | SPEC-0002 | Repositório, solução e tooling | full/M | in-progress | 🔄 em andamento |  |
 | 2 | SPEC-0003 | Harness de testes de integração e suíte de arquitetura | full/M | approved | ⛔ aguarda implementação de SPEC-0002 |  |
 | 2 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0002 |
 | 3 | SPEC-0004 | Building blocks dos módulos | full/M | approved | ⛔ aguarda implementação de SPEC-0002 | saiu da onda 2: arquivos em comum com SPEC-0003 |
@@ -54,7 +54,7 @@ Seta contínua: depende da implementação. Seta tracejada: consome contrato.
 ```mermaid
 flowchart LR
   subgraph E0001["SPEC-0001 · Fundação do Juker"]
-    S0002["SPEC-0002<br/>Repositório, solução e tooling"]:::approved
+    S0002["SPEC-0002<br/>Repositório, solução e tooling"]:::inprogress
     S0003["SPEC-0003<br/>Harness de testes de integração e suíte…"]:::approved
     S0004["SPEC-0004<br/>Building blocks dos módulos"]:::approved
     S0005["SPEC-0005<br/>Pipeline de CI"]:::approved
@@ -156,7 +156,7 @@ flowchart LR
 | ID | Título | Tier | Tipo | Status | Criada | Épico | Depende de | Consome contrato |
 |---|---|---|---|---|---|---|---|---|
 | [SPEC-0001](SPEC-0001-fundacao-do-juker.md) | Fundação do Juker | epic | foundation | approved | 2026-09-30 | — | — | — |
-| [SPEC-0002](SPEC-0002-repositorio-solucao-e-tooling.md) | Repositório, solução e tooling | full | foundation | approved | 2026-09-30 | SPEC-0001 | — | — |
+| [SPEC-0002](SPEC-0002-repositorio-solucao-e-tooling.md) | Repositório, solução e tooling | full | foundation | in-progress | 2026-09-30 | SPEC-0001 | — | — |
 | [SPEC-0003](SPEC-0003-harness-de-testes-e-suite-de-arquitetura.md) | Harness de testes de integração e suíte de arquitetura | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | — |
 | [SPEC-0004](SPEC-0004-building-blocks-dos-modulos.md) | Building blocks dos módulos | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@1 |
 | [SPEC-0005](SPEC-0005-pipeline-de-ci.md) | Pipeline de CI | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@1, SPEC-0025@1 |

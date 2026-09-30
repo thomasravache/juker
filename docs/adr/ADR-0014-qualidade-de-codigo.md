@@ -35,7 +35,7 @@ A SPEC-0002 já prevê `.editorconfig`, `dotnet format`, `Nullable`, `TreatWarni
 
 Regras:
 1. **Base (já na SPEC-0002):** `Nullable=enable`, `TreatWarningsAsErrors=true`, `AnalysisLevel=latest-recommended`, `EnforceCodeStyleInBuild=true`, gerenciamento central de pacotes.
-2. **Meziantou.Analyzer** em todos os projetos, via `Directory.Build.props`. Regras desligadas só no `.editorconfig`, cada uma com um comentário do motivo. Roslynator e StyleCop ficam de fora (sobreposição e ruído).
+2. **Meziantou.Analyzer** em todos os projetos, via `Directory.Build.props`. Regras desligadas só no `.editorconfig`, cada uma com um comentário do motivo. **MA0001** (comparação de texto sem `StringComparison`) é elevada a erro, por ser a regra de cultura que motivou a escolha. Roslynator e StyleCop ficam de fora (sobreposição e ruído).
 3. **BannedApiAnalyzers** com `BannedSymbols.txt` na raiz, aplicado a `src/` e `tests/`:
    - `DateTime.Now`, `DateTime.UtcNow`, `DateTime.Today`, `DateTimeOffset.Now`, `DateTimeOffset.UtcNow` → usar `TimeProvider` (ADR-0002/0012);
    - `Thread.Sleep` e `Task.Delay` em projetos de teste → esperar por condição (ADR-0013);
@@ -57,7 +57,7 @@ Regras:
 - **Ruim**, porque o Stryker é lento; por isso roda fora do caminho do PR.
 
 ### Confirmação (G3)
-- SPEC-0002:IT-03 — um projeto de fixture fora da solução, que importa o `Directory.Build.props`, **falha no build** com `DateTime.Now` (RS0030) e com `string.Equals(a, b)` sem `StringComparison` (Meziantou).
+- SPEC-0002:IT-03 — um projeto de fixture fora da solução, que importa o `Directory.Build.props`, **falha no build** com `DateTime.Now` (RS0030) e com `string.Equals(a, b)` sem `StringComparison` (Meziantou **MA0001**, que é Info por padrão e fica elevada a erro no `.editorconfig`).
 - SPEC-0003:UT-02 — o teste de tokens do design falha com uma cor literal num `.razor` de fixture.
 - SPEC-0005:IT-06 — um PR com código novo sem teste falha no job `coverage`.
 

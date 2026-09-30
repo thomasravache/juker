@@ -56,4 +56,5 @@ N/A por teste de arquitetura; garantido pelo workflow: nenhum deploy sem imagem 
 
 ## Mais Informações
 - Aspire 13.5 (18/08/2026) é a versão estável mais recente; publicação Docker Compose estável desde 13.2 (23/03/2026) — https://aspire.dev/whats-new/aspire-13-2/ e https://devblogs.microsoft.com/aspire/whats-new-aspire-13-5/ (consultado em 2026-09-30).
+- Atualização em 2026-09-30 (verificação do Test-writer da SPEC-0002 no índice do nuget.org): a versão estável mais recente dos pacotes Aspire é **13.6.0**; a decisão não muda, e a SPEC-0002 fixa a estável vigente.
 - Domínio: **a definir** pelo fundador antes do primeiro deploy (pré-requisito externo de SPEC-0006).
