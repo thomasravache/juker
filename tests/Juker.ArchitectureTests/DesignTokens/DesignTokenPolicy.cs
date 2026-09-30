@@ -55,12 +55,19 @@ public static partial class DesignTokenPolicy
 
     /// <summary>
     /// Em ordem de preferência (a primeira alternativa que casa vence, então <c>bg-[#fff]</c> sai inteiro):
-    /// valor arbitrário do Tailwind com cor; cor hexadecimal (depois de espaço, <c>:</c>, <c>[</c>, <c>(</c>, <c>,</c>
-    /// ou <c>=</c>, para não confundir com âncoras como <c>href="#topo"</c>); funções de cor; <c>font-family</c>.
+    /// <list type="number">
+    /// <item>valor arbitrário do Tailwind com cor;</item>
+    /// <item>cor hexadecimal depois de espaço, <c>:</c>, <c>[</c>, <c>(</c>, <c>,</c>, <c>=</c> ou aspas
+    /// (<c>fill="#ff007a"</c>, <c>stroke='#fff'</c>, <c>Color="#ff007a"</c>). O que decide é o contexto, porque
+    /// <c>#add</c> também é hexadecimal válido: o valor de atributos de URL ou fragmento (<c>href</c>,
+    /// <c>xlink:href</c>, <c>src</c>, <c>action</c>, <c>formaction</c>) é âncora, não cor;</item>
+    /// <item>funções de cor;</item>
+    /// <item><c>font-family</c>.</item>
+    /// </list>
     /// </summary>
     [GeneratedRegex(
         @"[\w-]+-\[(?:#[0-9a-f]{3,8}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\([^\]]*\))\]" +
-        @"|(?<=[\s:\[(,=]|^)#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b" +
+        @"|(?<=[\s:\[(,=""']|^)(?<!\b(?:href|xlink:href|src|action|formaction)\s*=\s*[""']?)#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b" +
         @"|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(" +
         @"|font-family",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture,
