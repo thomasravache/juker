@@ -78,7 +78,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G1 Red | PASS | `verify SPEC-0026 --base sdd/SPEC-0001` no worktree (HEAD 9a49e15): red antes do green PASS, commits red só alteram testes PASS, rastreabilidade 3/3 PASS; `dotnet test --solution` → IT-01 e IT-02 vermelhos pelo motivo certo, IT-03 verde (guarda) | 2026-10-01 |
 | G2 Green | PASS | Re-executado pelo Architect no worktree (HEAD 182e5de): build `-warnaserror` 0/0; `dotnet test --solution` → 37/37 (Implementer: 2 execuções completas 37/37 após `dotnet clean`); lint ok | 2026-10-01 |
 | G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → 20/20 | 2026-10-01 |
-| G4 Review | PENDING | | |
+| G4 Review | PASS | Reviewer independente: APPROVED em 182e5de (verify PASS 0/0; build 0/0; 37/37; arquitetura 20/20; lint ok; red de 56eacd9 confirmado pelo motivo certo). 2 minor + 1 nit → SPEC-0028 (proposta): variantes `ConfigureAwait(...).GetAwaiter().GetResult()` não banidas; IT-02 prova a fonte do endpoint mas não o preenchimento por `AddJukerModules`; doc do `ComposedModules` | 2026-10-01 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
