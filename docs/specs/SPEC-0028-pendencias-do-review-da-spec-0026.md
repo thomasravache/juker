@@ -43,7 +43,7 @@ Lista banida da SPEC-0026 cobria só os awaiters simples; plano de testes da SPE
 ## 4. Plano de Testes (TDD)
 - Caracterização: N/A — área já coberta pelos testes de integração da SPEC-0026, que continuam valendo.
 - **IT-01** — Dado o fixture `SyncOverAsyncViolation` com `Task.CompletedTask.ConfigureAwait(false).GetAwaiter().GetResult()` (e a forma genérica e as de `ValueTask`), quando `dotnet build` roda, então termina com código ≠ 0 e RS0030 para cada forma; hoje compila (regressão).
-- **IT-02** — Dado o host de teste sem substituir o registro, quando o `ComposedModules` é resolvido do DI, então contém exatamente os nomes dos módulos adicionados por `AddJukerModules`, na ordem do `ModuleCatalog`.
+- **IT-02** — (guarda: passa antes da mudança) Dado o host de teste sem substituir o registro, quando o `ComposedModules` é resolvido do DI, então contém exatamente os nomes dos módulos adicionados por `AddJukerModules`, na ordem do `ModuleCatalog`.
 
 ## 5. Questões em Aberto
 Nenhuma.
@@ -72,7 +72,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G1 Red | PASS | `verify SPEC-0028 --base sdd/SPEC-0001` no worktree (HEAD bc010b7): red antes do green PASS, commits red só alteram testes PASS, rastreabilidade 2/2 PASS; `dotnet test --solution` → 39 total, 1 falha (IT-01, fixture dos awaiters configurados compila hoje); IT-02 verde como guarda | 2026-10-01 |
 | G2 Green | PASS | Re-executado pelo Architect (HEAD 2605283): build 0/0; `dotnet test --solution` 39/39 (Implementer: 2 execuções 39/39 após `dotnet clean`); lint ok | 2026-10-01 |
 | G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → sem falhas | 2026-10-01 |
-| G4 Review | PENDING | | |
+| G4 Review | PASS | Reviewer independente: APPROVED em 2605283 (verify PASS 0/0; build 0/0; 39/39; arquitetura 20/20; lint ok; IT-01 vermelho em bc010b7 pelo motivo certo). 2 minor: IT-02 é guarda (rotulado); risco residual aceito — o nome composto não é amarrado a um serviço registrado porque os `Add*Module` ainda estão vazios (revisitar quando o primeiro módulo registrar serviços, a partir da SPEC-0007) | 2026-10-01 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
