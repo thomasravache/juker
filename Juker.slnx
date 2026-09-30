@@ -22,6 +22,10 @@
     <Project Path="src/Modules/Venues/Juker.Modules.Venues/Juker.Modules.Venues.csproj" />
     <Project Path="src/Modules/Venues/Juker.Modules.Venues.Contracts/Juker.Modules.Venues.Contracts.csproj" />
   </Folder>
+  <Folder Name="/src/Web/">
+    <Project Path="src/Web/Juker.Web/Juker.Web.csproj" />
+    <Project Path="src/Web/Juker.Web.Client/Juker.Web.Client.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj" />
   </Folder>
