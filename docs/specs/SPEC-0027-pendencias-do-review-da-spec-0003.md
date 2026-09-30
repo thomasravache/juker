@@ -25,7 +25,8 @@ O review independente da SPEC-0003 (G4 aprovado em ef40d71) deixou quatro lacuna
 2. Um projeto de teste novo que não seja referenciado pelo `Juker.ArchitectureTests.csproj` (com `ReferenceOutputAssembly=false`) só é percebido num `arch_test` a partir de um build limpo.
 3. O caminho do banco-modelo que aplica as migrations reais (`TemplateDatabase`) ainda não é exercitado, porque não existe nenhum `DbContext` na solução.
 4. **Teste instável:** o CT-01 da SPEC-0003 (`Comando_test_integration_lista_somente_os_testes_Integration`) roda um `dotnet test --solution` aninhado dentro da suíte e falhou de forma intermitente em execuções completas (visto duas vezes em 2026-10-01), provavelmente por disputa de `bin`/`obj` com outros builds aninhados.
-5. A política de tokens do design aponta como cor qualquer trecho hexadecimal em string C# ou em atributo fora da lista de âncoras (ex.: `NavigateTo("#add")`, `id="#abc"`): é um falso positivo seguro, mas não documentado.
+5. **Opt-in de zero testes com filtro:** projetos de teste só com testes `Unit` (ex.: `Juker.BuildingBlocks.UnitTests`) ficam vazios sob o filtro `Category=Integration` e precisam manter `JukerAllowZeroTests=true` mesmo tendo testes, o que enfraquece a proteção contra projeto que perde todos os testes (apontado na SPEC-0004).
+6. A política de tokens do design aponta como cor qualquer trecho hexadecimal em string C# ou em atributo fora da lista de âncoras (ex.: `NavigateTo("#add")`, `id="#abc"`): é um falso positivo seguro, mas não documentado.
 
 ## 2. Causa Raiz
 Casos não cobertos pelo plano de testes original da SPEC-0003 (achados minor do G4, aceitos como pendência).
@@ -35,6 +36,7 @@ Casos não cobertos pelo plano de testes original da SPEC-0003 (achados minor do
 - Teste de convenção: todo projeto `tests/**` do `Juker.slnx` (exceto fixtures) é `ProjectReference` do `Juker.ArchitectureTests.csproj`.
 - Fixture de `DbContext` "limpo" (com migration) aplicado pelo `TemplateDatabase`: o banco da classe tem a tabela dessa migration.
 - CT-01 da SPEC-0003 isolado: o `dotnet test` aninhado usa `--no-build` sobre artefatos próprios (`--artifacts-path` temporário) ou a coleção do teste é serializada em relação aos outros builds aninhados; aceitar a correção só com 10 execuções completas seguidas sem falha.
+- Regra de zero testes que distingue "projeto vazio sob filtro" de "projeto sem testes": o `JukerAllowZeroTests` só é aceito em execuções filtradas, ou uma verificação de contagem mínima por projeto na execução sem filtro.
 - `docs/testing.md`: como escrever navegação por fragmento em `.razor` sem acionar a política de tokens.
 - **Não muda:** contrato do `Juker.TestKit` (snapshot), regras ARQ-01..ARQ-08 em produção.
 

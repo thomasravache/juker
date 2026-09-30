@@ -128,7 +128,7 @@ public static class ResultHttpExtensions
 
 // ── Juker.Host ── Program.cs chama builder.Services.AddJukerInfrastructure(builder.Configuration)
 // ── TestKit (interno, InternalsVisibleTo Juker.IntegrationTests) ──
-internal static Task DrainOutboxAsync(this JukerApiFactory f)   // resolve IOutboxDrainer e drena até vazio
+internal static Task<int> DrainOutboxAsync(this JukerApiFactory f)   // resolve IOutboxDrainer, drena até vazio e retorna o total entregue
 
 Mapeamento ErrorType → HTTP (ProblemDetails, application/problem+json, com "code"):
   Validation → 400 (+ "errors": Error.Details) · Unauthorized → 401 · Forbidden → 403
@@ -281,6 +281,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-10-01 | `DrainOutboxAsync` (interno) retorna `Task<int>` com o total entregue | O IT-05 exige "retorna 3" e depois 0; é interno, o snapshot público não muda (apontado pelo Test-writer) | Nenhuma | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | 4 | 2026-10-01 | Contrato completo da API pública (SharedKernel e Infrastructure) com `Entity<TId>.Raise` e sem `IDomainEvent`; montagem do kit (`AddJukerInfrastructure`, `AddModuleDbContext<T>`, `AddModuleHandlers`) com o host no `touches`; esquema e formato do outbox (`type`, `payload`, `status`, backoff); módulo de teste `TestModules.Outbox` fora da convenção `Juker.*`; IT-02 dividido em exatamente-uma-vez (IT-02) e latência (IT-06); `touches` com TestKit, ArchitectureTests, IntegrationTests csproj, fixture e `dotnet-ef` | IMP-01 (SPEC_DEFECT do Test-writer: contrato vago demais para o snapshot CT-01 e para os IT) | Nenhuma implementada (os consumidores do kit são as specs do MVP) | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | 3 | 2026-10-01 | `DrainOutboxAsync` passa a `internal` (visível ao Juker.IntegrationTests); `touches` inclui `Juker.slnx` e `Directory.Packages.props` (novo projeto Juker.Infrastructure e pacotes) | Evitar mudar o snapshot público do TestKit aprovado na SPEC-0003 e permitir registrar o projeto novo | Nenhuma (nenhuma spec consome o contrato da SPEC-0004) | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
 | 2 | 2026-10-01 | `IIntegrationEvent` passa do `Juker.Infrastructure` para o `Juker.SharedKernel`; `IIntegrationEventHandler<T>` continua no Infrastructure | Review da SPEC-0003: ARQ-02 só permite que `.Contracts` referencie `SharedKernel` e outros `.Contracts`; eventos de integração vivem nos `.Contracts` e implementam `IIntegrationEvent` | Consumidores futuros do evento (SPECs 0011+) — nenhum implementado ainda | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
