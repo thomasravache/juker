@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Fixture do IT-02 (SPEC-0003): uma violação de cada regra ARQ-01..ARQ-08, em namespaces que imitam os
+    módulos, o Web e um projeto de teste. Compilado só para os testes de arquitetura (referenciado apenas por
+    tests/Juker.ArchitectureTests), fora da Juker.slnx e de qualquer código de produção.
+    ARQ-06: MediatR, MassTransit e FluentAssertions NÃO são referenciados (licença); os tipos proibidos são
+    simulados por tipos declarados nesses namespaces dentro deste assembly (pasta Forbidden/).
+    ARQ-08: referencia de verdade o EF Core InMemory (MIT), como faria um projeto de teste fora da política.
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+  </ItemGroup>
+
+</Project>

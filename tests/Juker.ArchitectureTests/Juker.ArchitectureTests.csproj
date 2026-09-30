@@ -27,6 +27,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Juker.Host\Juker.Host.csproj" />
     <ProjectReference Include="..\..\src\Web\Juker.Web\Juker.Web.csproj" />
+    <!-- Fixtures compilados só para estes testes (UT-01 e IT-02) -->
+    <ProjectReference Include="Fixtures\ConventionViolations\Juker.ArchitectureTests.ConventionViolations.csproj" />
+    <ProjectReference Include="Fixtures\Violations\Juker.ArchitectureTests.Violations.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Fixture do UT-01 (SPEC-0003): métodos [Fact]/[Theory] dentro e fora da convenção de traits.
+    Biblioteca comum (não é projeto de teste): o xUnit nunca executa estes métodos; só o teste de convenção
+    os reflete. Referenciado apenas por tests/Juker.ArchitectureTests, fora da Juker.slnx.
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.extensibility.core" />
+  </ItemGroup>
+
+</Project>

@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Fixtures são projetos próprios, compilados pelos testes num diretório temporário (SPEC-0003:IT-05) -->
+    <Compile Remove="Fixtures/**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
@@ -14,6 +19,7 @@
     <PackageReference Include="Aspire.Hosting.Testing" />
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Npgsql" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
