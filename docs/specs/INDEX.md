@@ -1,6 +1,6 @@
 # Índice de Specs
 
-> Gerado por `spec_graph.py index` em 2026-09-30 — não edite manualmente.
+> Gerado por `spec_graph.py index` em 2026-10-06 — não edite manualmente.
 
 ## Saúde
 
@@ -12,7 +12,7 @@
 
 | Spec | ID | Tipo | Fase/Gate | Responsável | Aberto em | Idade | Descrição |
 |---|---|---|---|---|---|---|---|
-| SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 0d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
+| SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 6d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
 
 ## Plano de Execução
 
@@ -23,7 +23,7 @@
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
 | 1 | SPEC-0004 | Building blocks dos módulos | full/M | in-progress | 🔄 em andamento |  |
-| 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 0d) |  |
+| 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 6d) |  |
 | 2 | SPEC-0005 | Pipeline de CI | full/M | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0004 |
 | 3 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0004; saiu da onda 2: arquivos em comum com SPEC-0005 |
 | 4 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ⛔ aguarda implementação de SPEC-0004; aguarda implementação de SPEC-0005; aguarda implementação de SPEC-0025 |  |

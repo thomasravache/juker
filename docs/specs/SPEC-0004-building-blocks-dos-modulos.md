@@ -213,19 +213,19 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 11. Checklist de Implementação
 
 **Fase 1: Regras e componentes (unitário)**
-- [ ] Red: escrever UT-01, UT-02, UT-03, UT-04 com a tag `SPEC-0004:<ID>` e confirmar que falham pelo motivo certo
-- [ ] Green: implementar o mínimo para passar, seguindo os ADRs de fundação e o padrão de slices
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + lint + suíte de UT (G2)
+- [x] Red: escrever UT-01, UT-02, UT-03, UT-04 com a tag `SPEC-0004:<ID>` e confirmar que falham pelo motivo certo
+- [x] Green: implementar o mínimo para passar, seguindo os ADRs de fundação e o padrão de slices
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + lint + suíte de UT (G2)
 
 **Fase 2: Integração e contrato**
-- [ ] Red: escrever CT-01, IT-01, IT-02, IT-03, IT-04, IT-05, IT-06 com a tag `SPEC-0004:<ID>` (Postgres real, módulo de teste TestModules.Outbox, `DrainOutboxAsync` — ADR-0012) e confirmar que falham pelo motivo certo
-- [ ] Green: implementar persistência, outbox/inbox, dispatcher, registro no host e o módulo de teste até passar
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + suíte completa + arquitetura (G2/G3)
+- [x] Red: escrever CT-01, IT-01, IT-02, IT-03, IT-04, IT-05, IT-06 com a tag `SPEC-0004:<ID>` (Postgres real, módulo de teste TestModules.Outbox, `DrainOutboxAsync` — ADR-0012) e confirmar que falham pelo motivo certo
+- [x] Green: implementar persistência, outbox/inbox, dispatcher, registro no host e o módulo de teste até passar
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + suíte completa + arquitetura (G2/G3)
 
 **Fase final: Integração, entrega e documentação**
-- [ ] Review independente (G4)
+- [x] Review independente (G4)
 - [ ] Integração + CI verde (G5) e aprovação (H2)
 - [ ] Deploy via pipeline com smoke/E2E no ambiente (G6)
 - [ ] Relatório de Entrega, docs raiz e CHANGELOG (G7)
@@ -235,9 +235,9 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0004` → 0 erros após a emenda v4 (contrato completo); checklist de julgamento do G0 revisado pelo Architect | 2026-10-01 |
 | G1 Red | PASS | `verify SPEC-0004 --base sdd/SPEC-0001` no worktree (HEAD 7f28318): red antes do green PASS, commits red só alteram testes PASS, rastreabilidade 11/11 PASS; `dotnet test --solution` → total 65, failed 24 (NotImplementedException do scaffold / host sem `AddJukerInfrastructure`), succeeded 41 (inclui a guarda CT-01, snapshot escrito a partir do contrato) | 2026-10-01 |
-| G2 Green | PENDING | | |
-| G3 Arquitetura | PENDING | | |
-| G4 Review | PENDING | | |
+| G2 Green | PASS | Executado no worktree (HEAD 4d450a0): build `-warnaserror` 0/0; `dotnet test --solution Juker.slnx -c Release` → 65/65; `--filter-trait "Category=Integration"` → 24/24; `dotnet test --project tests/Juker.BuildingBlocks.UnitTests -c Release` → 16/16; `dotnet format Juker.slnx --verify-no-changes` e fixture exit 0. | 2026-10-06 |
+| G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → 22/22 (CT-01 e ARQ-01..ARQ-08 passando, nenhuma violação); `verify SPEC-0004` no worktree com 102/102 arquivos em touches. | 2026-10-06 |
+| G4 Review | PASS | Reviewer independente: APPROVED em 4d450a0 (verify PASS com 0 falhas; build Release -warnaserror 0/0; 65/65 testes na solução; integração 24/24; arquitetura 22/22; lint ok; snapshot de API pública CT-01 100% aderente; justificadas alterações em OutboxDrainExtensions e migrations do fixture de teste). | 2026-10-06 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
