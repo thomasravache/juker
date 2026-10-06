@@ -238,7 +238,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G2 Green | PASS | Executado no worktree (HEAD 4d450a0): build `-warnaserror` 0/0; `dotnet test --solution Juker.slnx -c Release` → 65/65; `--filter-trait "Category=Integration"` → 24/24; `dotnet test --project tests/Juker.BuildingBlocks.UnitTests -c Release` → 16/16; `dotnet format Juker.slnx --verify-no-changes` e fixture exit 0. | 2026-10-06 |
 | G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → 22/22 (CT-01 e ARQ-01..ARQ-08 passando, nenhuma violação); `verify SPEC-0004` no worktree com 102/102 arquivos em touches. | 2026-10-06 |
 | G4 Review | PASS | Reviewer independente: APPROVED em 4d450a0 (verify PASS com 0 falhas; build Release -warnaserror 0/0; 65/65 testes na solução; integração 24/24; arquitetura 22/22; lint ok; snapshot de API pública CT-01 100% aderente; justificadas alterações em OutboxDrainExtensions e migrations do fixture de teste). | 2026-10-06 |
-| G5 Integração & CI | PENDING | | |
+| G5 Integração & CI | PASS | Merge --no-ff em sdd/SPEC-0001 (475d61f). No resultado integrado: build -warnaserror 0/0; dotnet test --solution 65/65; integração 24/24; arch_test 22/22; lint ok; nenhum pacote vulnerável; validate --exclude-drafts PASS. CI: N/A até a SPEC-0005 | 2026-10-06 |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
 | G7 Pronto & Docs | PENDING | | |
