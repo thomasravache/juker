@@ -33,6 +33,8 @@
     <ProjectReference Include="..\..\src\Aspire\Juker.AppHost\Juker.AppHost.csproj" />
     <ProjectReference Include="..\..\src\Juker.Host\Juker.Host.csproj" />
     <ProjectReference Include="..\Juker.TestKit\Juker.TestKit.csproj" />
+    <!-- Módulo de teste do kit (SPEC-0004), fora da solução e fora da convenção Juker.* -->
+    <ProjectReference Include="..\fixtures\TestModules.Outbox\TestModules.Outbox.csproj" />
   </ItemGroup>
 
 </Project>

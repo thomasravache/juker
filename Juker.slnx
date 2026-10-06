@@ -5,6 +5,7 @@
     <Project Path="src/Aspire/Juker.ServiceDefaults/Juker.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Juker.Infrastructure/Juker.Infrastructure.csproj" />
     <Project Path="src/BuildingBlocks/Juker.SharedKernel/Juker.SharedKernel.csproj" />
   </Folder>
   <Folder Name="/src/Host/">

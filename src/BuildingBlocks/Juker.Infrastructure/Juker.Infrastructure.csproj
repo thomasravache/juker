@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kit dos módulos (SPEC-0004, ADR-0002/0004/0006/0008/0012): handlers e decorators, ModuleDbContext com schema e
+    filtro de tenant, outbox/inbox com dispatcher e mapeamento de Result para ProblemDetails.
+    A API pública é contrato (snapshot em tests/Juker.ArchitectureTests/PublicApi/Juker.Infrastructure.approved.txt).
+  -->
+  <PropertyGroup>
+    <!-- Scaffold da SPEC-0004 (stubs do contrato com NotImplementedException): remover junto com os stubs no Green -->
+    <NoWarn>$(NoWarn);MA0025</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Juker.SharedKernel\Juker.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

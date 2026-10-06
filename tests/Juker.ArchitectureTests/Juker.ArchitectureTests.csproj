@@ -21,6 +21,7 @@
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="PublicApiGenerator" />
     <PackageReference Include="TngTech.ArchUnitNET" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
@@ -28,6 +29,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Juker.Host\Juker.Host.csproj" />
+    <!-- Snapshot da API pública do kit (SPEC-0004:CT-01) -->
+    <ProjectReference Include="..\..\src\BuildingBlocks\Juker.Infrastructure\Juker.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Web\Juker.Web\Juker.Web.csproj" />
     <!-- Fixtures compilados só para estes testes (UT-01 e IT-02) -->
     <ProjectReference Include="Fixtures\ConventionViolations\Juker.ArchitectureTests.ConventionViolations.csproj" />

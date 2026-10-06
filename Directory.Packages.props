@@ -18,9 +18,13 @@
   </ItemGroup>
   <ItemGroup Label="Dados e validação (ADR-0002, ADR-0004)">
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <!-- Eleva o EF Core trazido pelo Npgsql (10.0.4) ao patch fixado acima, alinhado com o Design (SPEC-0004) -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
     <PackageVersion Include="Npgsql" Version="10.0.3" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
+    <!-- Só no módulo de teste TestModules.Outbox (dotnet ef migrations add, SPEC-0004) -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
   </ItemGroup>
   <ItemGroup Label="Web (ADR-0003)">
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
@@ -39,6 +43,8 @@
     <PackageVersion Include="WireMock.Net" Version="2.18.0" />
     <PackageVersion Include="bunit" Version="2.11.3" />
     <PackageVersion Include="TngTech.ArchUnitNET" Version="0.13.4" />
+    <!-- Snapshot da API pública do SharedKernel e do Infrastructure (SPEC-0004:CT-01) -->
+    <PackageVersion Include="PublicApiGenerator" Version="11.5.4" />
     <!-- Só no fixture de violações do IT-02 (ARQ-08): nunca em projeto de teste real -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
   </ItemGroup>
