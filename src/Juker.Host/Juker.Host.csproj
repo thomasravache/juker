@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Aspire\Juker.ServiceDefaults\Juker.ServiceDefaults.csproj" />
     <ProjectReference Include="..\BuildingBlocks\Juker.SharedKernel\Juker.SharedKernel.csproj" />
+    <ProjectReference Include="..\BuildingBlocks\Juker.Infrastructure\Juker.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Venues\Juker.Modules.Venues\Juker.Modules.Venues.csproj" />
     <ProjectReference Include="..\Modules\Sessions\Juker.Modules.Sessions\Juker.Modules.Sessions.csproj" />
     <ProjectReference Include="..\Modules\Catalog\Juker.Modules.Catalog\Juker.Modules.Catalog.csproj" />

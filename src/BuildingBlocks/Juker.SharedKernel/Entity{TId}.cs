@@ -5,19 +5,28 @@ namespace Juker.SharedKernel;
 public abstract class Entity<TId>
     where TId : notnull
 {
-    protected Entity() => throw new NotImplementedException();
+    private readonly List<IIntegrationEvent> _integrationEvents = [];
 
-    protected Entity(TId id) => throw new NotImplementedException();
-
-    public TId Id
+    protected Entity()
     {
-        get => throw new NotImplementedException();
-        protected init => throw new NotImplementedException();
+        Id = default!;
     }
 
-    public IReadOnlyCollection<IIntegrationEvent> IntegrationEvents => throw new NotImplementedException();
+    protected Entity(TId id)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        Id = id;
+    }
 
-    public void ClearIntegrationEvents() => throw new NotImplementedException();
+    public TId Id { get; protected init; }
 
-    protected void Raise(IIntegrationEvent integrationEvent) => throw new NotImplementedException();
+    public IReadOnlyCollection<IIntegrationEvent> IntegrationEvents => _integrationEvents.AsReadOnly();
+
+    public void ClearIntegrationEvents() => _integrationEvents.Clear();
+
+    protected void Raise(IIntegrationEvent integrationEvent)
+    {
+        ArgumentNullException.ThrowIfNull(integrationEvent);
+        _integrationEvents.Add(integrationEvent);
+    }
 }

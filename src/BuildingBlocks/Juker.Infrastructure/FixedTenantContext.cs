@@ -6,7 +6,10 @@ namespace Juker.Infrastructure;
 public sealed class FixedTenantContext : ITenantContext
 {
     /// <param name="venueId">O bar do contexto, ou <c>null</c> para nenhum.</param>
-    public FixedTenantContext(VenueId? venueId) => throw new NotImplementedException();
+    public FixedTenantContext(VenueId? venueId)
+    {
+        VenueId = venueId;
+    }
 
-    public VenueId? VenueId => throw new NotImplementedException();
+    public VenueId? VenueId { get; }
 }

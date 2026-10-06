@@ -1,3 +1,6 @@
+using Juker.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace Juker.TestKit.Outbox;
 
 /// <summary>
@@ -8,7 +11,10 @@ namespace Juker.TestKit.Outbox;
 internal static class OutboxDrainExtensions
 {
     /// <summary>Resolve o <c>IOutboxDrainer</c> do host e drena até não sobrar pendente; retorna quantas mensagens entregou.</summary>
-#pragma warning disable MA0025 // Scaffold da SPEC-0004: o Implementer implementa no Green
-    public static Task<int> DrainOutboxAsync(this JukerApiFactory factory) => throw new NotImplementedException();
-#pragma warning restore MA0025
+    public static Task<int> DrainOutboxAsync(this JukerApiFactory factory)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+        var drainer = factory.Services.GetRequiredService<IOutboxDrainer>();
+        return drainer.DrainAsync(CancellationToken.None);
+    }
 }
