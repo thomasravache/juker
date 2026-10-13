@@ -9,7 +9,7 @@ consulted: [claude]
 informed: []
 supersedes:
 superseded_by:
-enforced_by: pipeline de deploy (SPEC-0005/SPEC-0006) — smoke obrigatório após cada deploy
+enforced_by: SPEC-0005:IT-04 e CT-01 (imagem no GHCR com tag sha), SPEC-0006:IT-01..IT-04 (deploy, rollback, backup e restauração)
 pillars: [entrega]
 ---
 

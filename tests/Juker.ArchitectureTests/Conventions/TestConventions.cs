@@ -49,6 +49,13 @@ public static partial class TestConventions
         return violations;
     }
 
+    /// <summary>Quantos métodos de teste (<c>[Fact]</c>/<c>[Theory]</c>) o assembly declara.</summary>
+    public static int CountTests(Assembly testAssembly)
+    {
+        ArgumentNullException.ThrowIfNull(testAssembly);
+        return ArchitectureSubject.ReflectedTypes([testAssembly]).Sum(type => type.GetMethods(DeclaredMethods).Count(IsTest));
+    }
+
     private static IEnumerable<ConventionViolation> Check(
         string method,
         string trait,

@@ -6,7 +6,11 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
   <PropertyGroup>
-    <!-- Projetos sem testes: opt-in por projeto, aplicado em tests/Directory.Build.targets -->
+    <!--
+      Projetos ainda vazios declaram JukerAllowZeroTests=true no próprio .csproj. A propriedade não muda o dotnet test
+      (toda execução aceita zero testes, tests/Directory.Build.targets): só diz ao teste de convenção SPEC-0027:UT-03
+      que o projeto está vazio de propósito, e sai do .csproj junto com os primeiros testes.
+    -->
     <JukerAllowZeroTests Condition="'$(JukerAllowZeroTests)' == ''">false</JukerAllowZeroTests>
   </PropertyGroup>
 </Project>

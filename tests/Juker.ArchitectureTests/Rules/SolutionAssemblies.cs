@@ -39,7 +39,8 @@ internal static class SolutionAssemblies
             .ToList();
     }
 
-    private static Assembly LoadProject(string projectFile)
+    /// <summary>O assembly compilado de um projeto da solução (caminho absoluto do <c>.csproj</c>).</summary>
+    internal static Assembly LoadProject(string projectFile)
     {
         var name = AssemblyName(projectFile);
         if (File.Exists(Path.Combine(AppContext.BaseDirectory, name + ".dll")))

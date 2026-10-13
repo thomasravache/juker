@@ -9,8 +9,6 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <!-- O filtro Category=Integration (test_integration) não seleciona nenhum teste aqui, de propósito -->
-    <JukerAllowZeroTests>true</JukerAllowZeroTests>
   </PropertyGroup>
 
   <ItemGroup>
