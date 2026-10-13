@@ -7,6 +7,7 @@ using Xunit;
 namespace Juker.IntegrationTests.Harness;
 
 [Trait("Category", "Integration")]
+[Collection(NestedTestRun.Name)]
 public sealed class TestKitContractTests
 {
     private const string IntegrationCategory = "Integration";

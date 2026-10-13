@@ -8,14 +8,30 @@
   </PropertyGroup>
   <Import Project="$(_JukerParentBuildTargets)" Condition="'$(_JukerParentBuildTargets)' != ''" />
 
-  <PropertyGroup Condition="'$(JukerAllowZeroTests)' == 'true'">
-    <!--
-      Microsoft.Testing.Platform termina com o código 8 quando nenhum teste é executado num projeto. Por padrão isso
-      é falha: um projeto de teste que perdeu seus testes precisa quebrar o build. Um projeto opta por aceitar zero
-      testes definindo JukerAllowZeroTests como true no próprio .csproj. Isso vale para os projetos de UT ainda vazios
-      (cada spec remove a propriedade ao acrescentar testes) e para o Juker.ArchitectureTests, que o filtro
-      Category=Integration esvazia de propósito.
-    -->
+  <!--
+    Microsoft.Testing.Platform termina com o código 8 quando nenhum teste é executado num projeto. Toda execução
+    aceita zero testes (SPEC-0027): os filtros por categoria (test_integration, Category=Unit) esvaziam de propósito
+    os projetos que só têm testes de outra categoria. A proteção contra um projeto que perdeu seus testes é estática:
+    o teste de convenção do Juker.ArchitectureTests (SPEC-0027:UT-03) exige pelo menos um teste em todo projeto sem
+    JukerAllowZeroTests e nenhum teste em quem declara JukerAllowZeroTests=true (só os projetos ainda vazios).
+
+    A opção ignore-exit-code aparece uma única vez: repetida, a plataforma rejeita a linha de comando com o código 5.
+    Ela aceita uma lista separada por ponto e vírgula (2;8). Então:
+    - se o projeto já ignora o código 8, nada muda;
+    - se o projeto já ignora outros códigos, o 8 entra na mesma lista (2 vira 2;8);
+    - senão, a opção é acrescentada com o 8.
+    Os projetos escrevem a opção separada dos códigos por espaço (ignore-exit-code 2): as formas com = ou : não são
+    reconhecidas, recebem uma segunda opção com o 8 e a execução termina com o código 5.
+  -->
+  <PropertyGroup>
+    <_JukerIgnoreExitCodeOption>--ignore-exit-code\s+"?[0-9;]*[0-9]</_JukerIgnoreExitCodeOption>
+    <_JukerIgnoresAnyExitCode>$([System.Text.RegularExpressions.Regex]::IsMatch('$(TestingPlatformCommandLineArguments)', '$(_JukerIgnoreExitCodeOption)'))</_JukerIgnoresAnyExitCode>
+    <_JukerIgnoresExitCode8>$([System.Text.RegularExpressions.Regex]::IsMatch('$(TestingPlatformCommandLineArguments)', '--ignore-exit-code\s+"?[0-9;]*\b8\b'))</_JukerIgnoresExitCode8>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(_JukerIgnoresAnyExitCode)' == 'True' And '$(_JukerIgnoresExitCode8)' != 'True'">
+    <TestingPlatformCommandLineArguments>$([System.Text.RegularExpressions.Regex]::Replace('$(TestingPlatformCommandLineArguments)', '($(_JukerIgnoreExitCodeOption))', '$1;8'))</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(_JukerIgnoresAnyExitCode)' != 'True'">
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 </Project>

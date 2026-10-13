@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Fixture do SPEC-0027:IT-01 — fora da Juker.slnx e excluído do build do Juker.IntegrationTests.
+    GadgetsDbContext é um DbContext "limpo": o modelo bate com a única migration (CreateGadgets).
+    O teste compila e executa este projeto num diretório temporário (artifacts-path), como no SPEC-0003:IT-05.
+    O assembly começa com "Juker." de propósito, para o DbContextDiscovery do TestKit encontrar o contexto, mas só
+    no processo do fixture: o juker_template da suíte (SPEC-0003:IT-04) continua só com os módulos reais.
+    No processo do fixture, a PostgresFixture sobe um Postgres próprio, prepara o juker_template e clona o banco da
+    "classe"; o fixture grava as tabelas desse banco no arquivo recebido como primeiro argumento.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Juker.IntegrationTests.CleanMigration</AssemblyName>
+    <RootNamespace>Juker.IntegrationTests.CleanMigration</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Juker.TestKit\Juker.TestKit.csproj" />
+  </ItemGroup>
+
+</Project>

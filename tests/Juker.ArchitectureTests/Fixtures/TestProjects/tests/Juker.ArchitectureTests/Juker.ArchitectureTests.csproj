@@ -1,0 +1,14 @@
+<!--
+  Fixture do SPEC-0027:UT-02: o projeto de arquitetura da solução de exemplo (só lido como XML, nunca compilado).
+  Referencia todos os projetos de tests/ da MissingReference.slnx, menos o Juker.Missing.UnitTests.
+-->
+<Project>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Juker.Sample\Juker.Sample.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Juker.Referenced.UnitTests\Juker.Referenced.UnitTests.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../Juker.Sample.TestKit/Juker.Sample.TestKit.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,17 @@
+<!--
+  Fixture do SPEC-0027:UT-02: uma solução de exemplo (só lida como XML, nunca compilada). Os projetos não existem.
+  tests/Juker.Missing.UnitTests não é referenciado pelo projeto de arquitetura e deve ser listado;
+  tests/fixtures/** fica fora da convenção; src/** não é projeto de teste.
+-->
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Juker.Sample/Juker.Sample.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj" />
+    <Project Path="tests/Juker.Referenced.UnitTests/Juker.Referenced.UnitTests.csproj" />
+    <Project Path="tests/Juker.Missing.UnitTests/Juker.Missing.UnitTests.csproj" />
+    <Project Path="tests/Juker.Sample.TestKit/Juker.Sample.TestKit.csproj" />
+    <Project Path="tests/fixtures/Sample.Fixture/Sample.Fixture.csproj" />
+  </Folder>
+</Solution>

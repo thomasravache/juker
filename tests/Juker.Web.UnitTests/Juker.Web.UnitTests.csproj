@@ -2,9 +2,10 @@
 
   <!--
     Testes de componentes Blazor com bUnit (ADR-0011, ADR-0013).
-    Sem testes nesta spec: cada spec traz os seus (SPEC-0003, ADR-0011). Enquanto estiver vazio, o projeto aceita
-    zero testes (JukerAllowZeroTests, ver tests/Directory.Build.targets). A spec que acrescentar os primeiros testes
-    remove a propriedade, para que um projeto que perca seus testes volte a falhar.
+    Sem testes nesta spec: cada spec traz os seus (SPEC-0003, ADR-0011). Toda execução aceita zero testes
+    (tests/Directory.Build.targets, SPEC-0027); JukerAllowZeroTests só diz ao teste de convenção SPEC-0027:UT-03 que
+    o projeto está vazio de propósito. A spec que acrescentar os primeiros testes remove a propriedade (o arch_test
+    falha enquanto ela continuar num projeto com testes), para que um projeto que perca seus testes volte a falhar.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>

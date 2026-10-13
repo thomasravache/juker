@@ -18,20 +18,38 @@ Rode na raiz do repositório. O runner é o Microsoft.Testing.Platform (`global.
 
 Os testes de integração precisam do Docker (a imagem `postgres:18` é baixada na primeira execução).
 
-O Microsoft.Testing.Platform termina com o código 8 quando nenhum teste roda num projeto. **Por padrão isso é
-falha**: um projeto de teste que perdeu seus testes quebra o `dotnet test`. Um projeto só aceita zero testes com
-`<JukerAllowZeroTests>true</JukerAllowZeroTests>` no próprio `.csproj`. Nesse caso, o `tests/Directory.Build.targets`
-acrescenta `--ignore-exit-code 8` a `TestingPlatformCommandLineArguments`. Hoje usam a propriedade:
+O Microsoft.Testing.Platform termina com o código 8 quando nenhum teste roda num projeto. **Toda execução aceita
+zero testes** (SPEC-0027): o `tests/Directory.Build.targets` acrescenta `--ignore-exit-code 8` a
+`TestingPlatformCommandLineArguments` em todos os projetos de `tests/`. Assim, os filtros por categoria
+(`test_integration`, `--filter-trait "Category=Unit"`) podem esvaziar os projetos que só têm testes de outra
+categoria. Falhas de teste continuam terminando com código diferente de zero.
 
-- os projetos de UT ainda vazios. A spec que acrescentar os primeiros testes num deles remove a propriedade;
-- o `Juker.ArchitectureTests`, que o filtro `Category=Integration` esvazia de propósito.
+A opção `--ignore-exit-code` aparece uma única vez: repetida, a plataforma rejeita a execução com o código 5. Ela
+aceita uma lista separada por ponto e vírgula (`--ignore-exit-code 2;8`), e o `tests/Directory.Build.targets`
+garante o 8 sem repetir a opção:
 
-O `tests/Directory.Build.props` só define o padrão (`false`). A decisão fica no `tests/Directory.Build.targets`,
-que o MSBuild avalia depois do `.csproj` e que, portanto, enxerga o valor definido pelo projeto. O `dotnet test`
-lê os argumentos no resultado final da avaliação. Para conferir, rode
+- se o projeto já ignora o código 8 em `TestingPlatformCommandLineArguments`, nada muda;
+- se o projeto já ignora outros códigos, o 8 entra na mesma lista (`--ignore-exit-code 2` vira `2;8`);
+- senão, a opção é acrescentada com o 8.
+
+No `.csproj`, escreva a opção separada dos códigos por espaço (`--ignore-exit-code <códigos>`). As formas
+`--ignore-exit-code=2` e `--ignore-exit-code:2` não são reconhecidas: recebem uma segunda opção com o 8 e a execução
+termina com o código 5.
+
+Não passe `--ignore-exit-code` na linha de comando do `dotnet test`: somada à do projeto, ela fica repetida.
+
+A proteção contra um projeto de teste que perdeu seus testes é estática. O teste de convenção
+`TestProjectsConventionsTests` (SPEC-0027:UT-03, no `arch_test`) conta os `[Fact]`/`[Theory]` de cada projeto
+`tests/**` da `Juker.slnx` e falha listando:
+
+- o projeto **sem** `JukerAllowZeroTests` que não tem nenhum teste;
+- o projeto com `<JukerAllowZeroTests>true</JukerAllowZeroTests>` que tem testes.
+
+Ou seja, `JukerAllowZeroTests` só serve para os projetos de UT ainda vazios. A spec que acrescentar os primeiros
+testes num deles remove a propriedade no mesmo commit. A propriedade não muda mais os argumentos do
+`dotnet test`; o `tests/Directory.Build.props` só define o padrão (`false`). Para conferir os argumentos, rode
 `dotnet msbuild <projeto> -getProperty:TestingPlatformCommandLineArguments`. O `tests/Directory.Build.targets`
-também importa um `Directory.Build.targets` da raiz, se um dia existir. Falhas de teste continuam terminando com
-código diferente de zero.
+também importa um `Directory.Build.targets` da raiz, se um dia existir.
 
 ## Projetos
 
@@ -53,7 +71,7 @@ Ao criar um projeto de teste novo:
 2. Adicione um `ProjectReference` com `ReferenceOutputAssembly="false"` no `tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj`.
    Sem isso, o `arch_test` não compila o projeto e a suíte de arquitetura falha dizendo qual referência falta.
 3. Não use `JukerAllowZeroTests`, a menos que o projeto nasça sem testes. Nesse caso, remova a propriedade junto
-   com os primeiros testes.
+   com os primeiros testes (o `arch_test` falha enquanto as duas coisas não baterem).
 
 ## Convenções obrigatórias
 
@@ -229,3 +247,20 @@ com arquivo e linha, quando encontra:
 
 A exceção é o arquivo de tokens `src/Web/Juker.Web/Styles/theme.css`. Cores e fontes vêm dos tokens do design
 system do Stitch.
+
+#### Navegação por fragmento em `.razor`
+
+A política lê o arquivo como texto e não sabe se um trecho é C# ou marcação. Fora dos atributos de âncora, um
+`#` depois de aspas, espaço, `(`, `=`, `:`, `[` ou `,` é tratado como cor quando o nome que vem a seguir (até o
+primeiro caractere que não seja letra, dígito ou `_`) tem 3, 4, 6 ou 8 caracteres, todos hexadecimais, sem importar
+maiúsculas (`#add`, `#ABC`, `#cafe-menu`). Por exemplo, `Navigation.NavigateTo("#add")` num bloco `@code` e `id="#abc"` falham. Para
+navegar por fragmento sem acionar a política:
+
+- prefira um link: `<a href="#add">` é âncora e passa;
+- num bloco `@code`, monte o fragmento a partir de uma constante com o id, sem `#` seguido de letras no literal:
+  `Navigation.NavigateTo($"#{AddSectionId}")`, com `private const string AddSectionId = "add";`;
+- ou mova a lógica para o code-behind (`.razor.cs`), que a política não varre;
+- ou escolha ids cujo começo não seja hexadecimal (`#adicionar`, `#secao-add`), lembrando que `#cafe-menu` ainda
+  casa porque `cafe` é hexadecimal e o hífen fecha a palavra.
+
+O `id` de um elemento não leva `#` (`id="add"`): o `#` só entra na referência ao fragmento.
