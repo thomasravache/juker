@@ -64,16 +64,16 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 7. Checklist de Implementação
 
 **Fase 1: Regressão**
-- [ ] Red: escrever UT-01, UT-02, UT-03, IT-01, IT-02, IT-03 com a tag `SPEC-0027:<ID>`; confirmar que as regressões falham pelo motivo certo (guardas marcadas passam antes da mudança)
-- [ ] Green: implementar a mudança proposta
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + suíte completa + arquitetura + lint (G2/G3)
+- [x] Red: escrever UT-01, UT-02, UT-03, IT-01, IT-02, IT-03 com a tag `SPEC-0027:<ID>`; confirmar que as regressões falham pelo motivo certo (guardas marcadas passam antes da mudança)
+- [x] Green: implementar a mudança proposta
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + suíte completa + arquitetura + lint (G2/G3)
 
 **Fase final: Integração, entrega e documentação**
-- [ ] Review independente (G4)
-- [ ] Integração (G5) e aprovação (H2)
-- [ ] Deploy via pipeline (G6) — N/A enquanto o CD estiver adiado
-- [ ] Relatório de Entrega e CHANGELOG (G7)
+- [x] Review independente (G4)
+- [x] Integração (G5) e aprovação (H2)
+- [x] Deploy via pipeline (G6) — N/A enquanto o CD estiver adiado
+- [x] Relatório de Entrega e CHANGELOG (G7)
 
 ## 8. Registro de Gates
 | Gate | Status | Evidência | Data |
@@ -83,9 +83,9 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.32); test exit 0 (duration: 1m 08s 146ms); lint exit 0 () — 5fab990 | 2026-10-13 |
 | G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 964ms) — 5fab990 | 2026-10-13 |
 | G4 Review | PASS | verify G1+G4: PASS; revisão: Reviewer independente: APPROVED em 837813d (após CHANGES_REQUESTED em c9b658b; 4 achados e 1 minor final resolvidos) — acda2c2 | 2026-10-13 |
-| G5 Integração & CI | PENDING | | |
-| H2 Integração aprovada | PENDING | | |
-| G6 Deploy | PENDING | | |
+| G5 Integração & CI | PASS | build exit 0 (Time Elapsed 00:00:18.10); test exit 0 (duration: 1m 19s 968ms); test_integration exit 0 (duration: 1m 33s 353ms); arch_test exit 0 (duration: 1s 352ms) — 4d6a34e | 2026-10-13 |
+| H2 Integração aprovada | PASS | política auto-on-green (aprovada por thomas em 2026-10-13); G5 PASS | 2026-10-13 |
+| G6 Deploy | N/A | CD adiado por decisão do fundador; publicação na VPS fica para o fim (SPEC-0006, IMP-01); entrega = PR da sdd/SPEC-0001 na main | 2026-10-13 |
 | G7 Pronto & Docs | PENDING | | |
 
 ## 9. Registro de Impedimentos
@@ -95,27 +95,43 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 10. Relatório de Entrega
 
 ### O que foi entregue
+As seis pendências do review da SPEC-0003. (1) O ARQ-08 tem casos no fixture `Violations` para mocks de `HttpMessageHandler` via NSubstitute e Moq, com um controle que mocka outro tipo. (2) Um teste de convenção exige que todo projeto `tests/**` da solução seja referenciado pelo `Juker.ArchitectureTests`. (3) O caminho do `TemplateDatabase` com migrations reais é exercitado por um `DbContext` de fixture (`CleanMigration`) num processo próprio. (4) Os testes que rodam `dotnet test` aninhado (o teste de contrato do TestKit da SPEC-0003 e o IT-03) ficam numa coleção xUnit serializada (`NestedTestRun`), isolados dos builds de fixture e da carga da suíte. (5) Toda execução de teste aceita zero testes (`--ignore-exit-code 8` mesclado sem repetir a opção, em `tests/Directory.Build.targets`), e a proteção contra projeto que perdeu os testes passou a ser estática (UT-03); `Juker.ArchitectureTests` e `Juker.BuildingBlocks.UnitTests` deixaram o `JukerAllowZeroTests`, que agora só marca os 6 projetos de UT intencionalmente vazios. (6) `docs/testing.md` documenta a regra de zero testes, a forma da opção e a navegação por fragmento em `.razor` sem acionar a política de tokens.
 
 ### Como foi feito
+- Commits: red bf8325b, 13426e8; green 3c9ca96, 4246ca3, c9b658b; correções do review a329e9f, 7d351b7, 5fab990, 837813d; merge em `sdd/SPEC-0001` 4d6a34e.
+- Emendas (todas aprovadas por thomas no chat em 2026-10-13): escopo do item 5 (desenho e testes UT-03/IT-03), IT-01 como guarda e IT-02 por repetição, e `touches` com os comentários do opt-in.
+- Review: CHANGES_REQUESTED em c9b658b (1 major — IT-03 fora da coleção serializada; 3 minors) e APPROVED em 837813d.
+- A causa da instabilidade de 2026-10-01 não foi reproduzida nesta máquina: a correção isola os `dotnet test` aninhados e a prova é a repetição (IT-02).
 
 ### Prova de Correção
+- UT-03 falhou antes (13426e8: `Juker.ArchitectureTests` e `Juker.BuildingBlocks.UnitTests` com testes e opt-in) e passa depois (5fab990).
+- IT-03 falhou antes (13426e8: comandos filtrados com o opt-in desligado terminavam com o código 8) e passa depois.
+- IT-02: 10 execuções completas seguidas sem falha, duas vezes (após c9b658b pelo Implementer e após 5fab990 pelo Architect), 75/75 em cada.
 
 ### Verificação
 | Teste | Comportamento | Resultado | Evidência |
 |---|---|---|---|
+| UT-01 | ARQ-08 aponta mocks de `HttpMessageHandler` via NSubstitute e Moq; o controle não é apontado | PASS | `TestingPolicy.cs` + `Fixtures/Violations/Mocking/**`; `dotnet test --project tests/Juker.ArchitectureTests -c Release` em 4d6a34e (27/27) |
+| UT-02 | Projeto `tests/**` fora das referências do `Juker.ArchitectureTests` é listado | PASS | `Conventions/TestProjectsConventionsTests.cs`; `dotnet test --project tests/Juker.ArchitectureTests -c Release` em 4d6a34e (27/27) |
+| UT-03 | Projeto sem opt-in precisa ter testes; projeto com opt-in não pode ter | PASS | `Conventions/TestProjectsConventionsTests.cs`; vermelho em 13426e8, verde em 5fab990; `dotnet test --project tests/Juker.ArchitectureTests -c Release` em 4d6a34e (27/27) |
+| IT-01 | `TemplateDatabase` aplica a migration real do fixture no banco clonado | PASS | `Harness/TemplateDatabaseMigrationTests.cs` + `Fixtures/CleanMigration/**` (guarda); `dotnet test --solution Juker.slnx -c Release` no resultado integrado 4d6a34e (75/75) |
+| IT-02 | 10 execuções completas seguidas sem falha do teste de contrato do TestKit | PASS | `Harness/repeat-test-suite.sh 10` em 5fab990 → 10/10, 75/75 cada, exit 0 (2026-10-13) |
+| IT-03 | Comandos filtrados por `Integration` e `Unit` terminam com sucesso sem o opt-in | PASS | `Harness/FilteredTestCommandsTests.cs`; vermelho em 13426e8; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 4d6a34e (75/75); filtros 29/29 cada em 5fab990 |
 
 ### Definição de Pronto
-- [ ] Teste de regressão falhou antes e passa depois da correção
-- [ ] Suíte completa, arquitetura e CI verdes (G2, G3, G5)
-- [ ] Review independente sem achados blocker/major (G4)
-- [ ] Padrão existente mantido
-- [ ] Disponível no ambiente-alvo via pipeline (G6)
-- [ ] Documentação/CHANGELOG atualizados quando aplicável (G7)
-- [ ] Outras ocorrências registradas como novas specs (ou nenhuma)
+- [x] Teste de regressão falhou antes e passa depois da correção (UT-03 e IT-03; IT-02 por repetição, conforme emenda)
+- [x] Suíte completa, arquitetura e CI verdes (G2, G3, G5) — CI: N/A até a SPEC-0005
+- [x] Review independente sem achados blocker/major (G4)
+- [x] Padrão existente mantido
+- [x] Disponível no ambiente-alvo via pipeline (G6) — N/A: CD adiado (SPEC-0006); entrega pelo PR da `sdd/SPEC-0001` na `main`
+- [x] Documentação/CHANGELOG atualizados quando aplicável (G7)
+- [x] Outras ocorrências registradas como novas specs (ou nenhuma)
 
 ### Deploy
+N/A — CD adiado (SPEC-0006). Integrado em `sdd/SPEC-0001`; entra na `main` pelo PR da onda.
 
 ### Pendências
+Nenhuma. Limitação conhecida e documentada: a opção `--ignore-exit-code` precisa ser escrita com espaço nos `.csproj`.
 
 ## 11. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
