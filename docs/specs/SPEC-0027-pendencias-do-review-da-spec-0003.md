@@ -9,7 +9,7 @@ created: 2026-10-01
 parent: SPEC-0001
 depends_on: [SPEC-0003]
 consumes_contract: []
-touches: [tests/Juker.ArchitectureTests/**, tests/Juker.TestKit/**, tests/Juker.IntegrationTests/Harness/**, tests/Juker.IntegrationTests/Fixtures/**, docs/testing.md]
+touches: [tests/Juker.ArchitectureTests/**, tests/Juker.TestKit/**, tests/Juker.IntegrationTests/Harness/**, tests/Juker.IntegrationTests/Fixtures/**, tests/Directory.Build.targets, tests/Juker.BuildingBlocks.UnitTests/Juker.BuildingBlocks.UnitTests.csproj, docs/testing.md]
 adrs: [ADR-0012, ADR-0014]
 external: []
 size: S
@@ -36,7 +36,7 @@ Casos não cobertos pelo plano de testes original da SPEC-0003 (achados minor do
 - Teste de convenção: todo projeto `tests/**` do `Juker.slnx` (exceto fixtures) é `ProjectReference` do `Juker.ArchitectureTests.csproj`.
 - Fixture de `DbContext` "limpo" (com migration) aplicado pelo `TemplateDatabase`: o banco da classe tem a tabela dessa migration.
 - CT-01 da SPEC-0003 isolado: o `dotnet test` aninhado usa `--no-build` sobre artefatos próprios (`--artifacts-path` temporário) ou a coleção do teste é serializada em relação aos outros builds aninhados; aceitar a correção só com 10 execuções completas seguidas sem falha.
-- Regra de zero testes que distingue "projeto vazio sob filtro" de "projeto sem testes": o `JukerAllowZeroTests` só é aceito em execuções filtradas, ou uma verificação de contagem mínima por projeto na execução sem filtro.
+- Regra de zero testes que distingue "projeto vazio sob filtro" de "projeto sem testes" (emenda de 2026-10-13): toda execução aceita zero testes (`--ignore-exit-code 8` para todos os projetos de `tests/`, no `tests/Directory.Build.targets`, sem duplicar a opção — duplicada, a plataforma termina com o código 5), e a proteção contra projeto que perdeu os testes passa a ser estática: um teste de convenção exige pelo menos um teste em todo projeto de teste sem `JukerAllowZeroTests`, e zero testes em quem tem o opt-in. `Juker.BuildingBlocks.UnitTests` e `Juker.ArchitectureTests` deixam o opt-in. Os comandos `test`, `test_integration` e `arch_test` (contrato da SPEC-0003) não mudam.
 - `docs/testing.md`: como escrever navegação por fragmento em `.razor` sem acionar a política de tokens.
 - **Não muda:** contrato do `Juker.TestKit` (snapshot), regras ARQ-01..ARQ-08 em produção.
 
@@ -51,6 +51,8 @@ Casos não cobertos pelo plano de testes original da SPEC-0003 (achados minor do
 - **UT-01** — (guarda: passa antes da mudança) Dado o fixture com `Substitute.For<HttpMessageHandler>()` e `new Mock<HttpMessageHandler>()`, quando o ARQ-08 avalia, então os dois são apontados e o controle `Substitute.For<IDisposable>()` não é.
 - **UT-02** — Dado o `Juker.slnx`, quando o teste de convenção compara os projetos `tests/**` com as `ProjectReference` do `Juker.ArchitectureTests.csproj`, então falha listando qualquer projeto ausente (hoje passa; com um projeto de exemplo ausente num fixture de solução, falha).
 - **IT-02** — (regressão do teste instável) 10 execuções seguidas de `dotnet test --solution Juker.slnx -c Release` terminam sem nenhuma falha do CT-01 da SPEC-0003 (evidência: script de repetição e saídas).
+- **UT-03** — Dado o `Juker.slnx`, quando o teste de convenção conta os métodos de teste (`[Fact]`/`[Theory]`) de cada projeto `tests/**` (exceto fixtures), então falha listando o projeto sem `JukerAllowZeroTests` que tem zero testes e o projeto com `JukerAllowZeroTests=true` que tem testes (hoje falha para `Juker.BuildingBlocks.UnitTests` e `Juker.ArchitectureTests`).
+- **IT-03** — Com o opt-in removido dos projetos que têm testes, `dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Integration"` e `... --filter-trait "Category=Unit"` (comando do job `unit` da SPEC-0005) terminam com sucesso (evidência: saídas dos comandos).
 - **IT-01** — Dado um `DbContext` de fixture com uma migration, quando o `TemplateDatabase` prepara o modelo, então o banco clonado da classe contém a tabela criada pela migration.
 
 ## 5. Questões em Aberto
@@ -62,7 +64,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 7. Checklist de Implementação
 
 **Fase 1: Regressão**
-- [ ] Red: escrever UT-01, UT-02, IT-01, IT-02 com a tag `SPEC-0027:<ID>`; confirmar que as regressões falham pelo motivo certo (guardas marcadas passam antes da mudança)
+- [ ] Red: escrever UT-01, UT-02, UT-03, IT-01, IT-02, IT-03 com a tag `SPEC-0027:<ID>`; confirmar que as regressões falham pelo motivo certo (guardas marcadas passam antes da mudança)
 - [ ] Green: implementar a mudança proposta
 - [ ] Refactor mantendo tudo verde
 - [ ] Validar: build + suíte completa + arquitetura + lint (G2/G3)
@@ -118,3 +120,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 11. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-10-13 | Item 5 (zero testes com filtro) ganha desenho e testes: toda execução aceita zero testes e a proteção vira o teste de convenção UT-03; IT-03 prova os comandos filtrados; `touches` inclui `tests/Directory.Build.targets` e o `.csproj` do `Juker.BuildingBlocks.UnitTests` | Revisão do Architect antes do despacho: o item 5 não tinha teste no plano e os arquivos que ele muda estavam fora do `touches`; o job `unit` da SPEC-0005 (`Category=Unit`) esvazia o `Juker.IntegrationTests` e o `Juker.ArchitectureTests` do mesmo jeito | SPEC-0005 (passa a depender desta spec) | pendente — thomas |

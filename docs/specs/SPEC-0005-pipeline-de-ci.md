@@ -7,7 +7,7 @@ user_facing: false
 status: approved
 created: 2026-09-30
 parent: SPEC-0001
-depends_on: [SPEC-0002]
+depends_on: [SPEC-0002, SPEC-0027]
 consumes_contract: [SPEC-0003@2, SPEC-0025@2]
 contract_version: 2
 touches: [.github/workflows/ci.yml, .github/workflows/mutation.yml, .github/dependabot.yml, .gitleaks.toml, .config/dotnet-tools.json, tools/sdd/**, tools/ci/**, tests/Juker.CiTests/**, tests/**/stryker-config.json, docs/ci.md]

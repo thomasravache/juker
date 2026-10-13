@@ -37,6 +37,16 @@ A SDD exige UT, IT com dependências reais, CT, E2E e testes de arquitetura, tod
 - YouTube nos IT: servidor HTTP fake (WireMock.Net) com respostas gravadas do contrato da Data API. Nos E2E: provedor fake de mídia com vídeos curtos locais atrás da mesma interface (o IFrame real só no teste manual de Premium, SPEC-0007).
 - **Como** cada nível é usado está nos ADRs de estratégia: testes de integração no **ADR-0012** e E2E/testes de interface no **ADR-0013**. Este ADR fica só com a escolha das ferramentas.
 
+**Ferramenta por nível** (resumo das escolhas acima e dos ADR-0012/ADR-0013):
+
+| Nível | Ferramenta | Por quê | Onde roda |
+|---|---|---|---|
+| Unitário | xUnit v3 + AwesomeAssertions + NSubstitute; bUnit para componentes Blazor; CsCheck para propriedades | Padrão do .NET 10 no Microsoft.Testing.Platform, licenças MIT | Local e CI (job `unit`) |
+| Integração | xUnit v3 + WebApplicationFactory + Testcontainers (Postgres 18 real) + WireMock.Net | Dependências reais, sem banco em memória (ADR-0012) | Local com Docker e CI (job `integration`) |
+| Contrato | Snapshot de API pública (PublicApiGenerator) e testes sobre YAML/HTTP | Congela contratos aprovados | Local e CI |
+| E2E | Playwright .NET (Chromium e WebKit) com o app iniciado pelo `Aspire.Hosting.Testing` | Mesma linguagem, cobre celular (WebKit) e TV/painel (ADR-0013) | Local e CI (job `e2e`); smoke contra o ambiente no deploy |
+| Arquitetura | ArchUnitNET | Regras ARQ-01..ARQ-08 como testes (G3) | Local e CI (job `architecture`) |
+
 ### Consequências
 - **Boa**, porque tudo em C#, com licenças permissivas e suporte ativo.
 - **Ruim**, porque os E2E com Playwright exigem os navegadores instalados no CI (cache no workflow).
