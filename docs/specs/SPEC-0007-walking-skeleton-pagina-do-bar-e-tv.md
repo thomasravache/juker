@@ -238,5 +238,5 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
-| escopo | 2026-10-13 | Implementa o endpoint de teste `POST /_test/venues` (bar com slug e nome) e o IT-05 | A SPEC-0025 (emenda v3) deixou o endpoint para a spec que cria a entidade `Venue`; os E2E desta spec já criam bares pela API de teste | Nenhuma | pendente — thomas |
+| escopo | 2026-10-13 | Implementa o endpoint de teste `POST /_test/venues` (bar com slug e nome) e o IT-05 | A SPEC-0025 (emenda v3) deixou o endpoint para a spec que cria a entidade `Venue`; os E2E desta spec já criam bares pela API de teste | Nenhuma | thomas — no chat em 2026-10-13 ("Aprovado") |
 | 2 | 2026-09-30 | E2E-03 (smoke) passa a rodar contra o host local via `JUKER_E2E_BASE_URL`; dependência da SPEC-0006 removida; Lighthouse local em Release; rollout sem deploy nesta fase | Fundador decidiu deixar a infraestrutura/CD de fora por enquanto: testar localmente até o fim, com o CI do GitHub antes do CD | SPEC-0006 (recebe a execução pós-deploy do smoke e do Lighthouse) | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), confirmada por thomas no chat em 2026-10-13 |

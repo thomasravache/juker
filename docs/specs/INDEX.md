@@ -4,8 +4,8 @@
 
 ## Saúde
 
-- Validação (G0): **0 erro(s), 5 aviso(s)** — rode `spec_graph.py validate`
-- Specs: approved 20, implemented 6
+- Validação (G0): **0 erro(s), 4 aviso(s)** — rode `spec_graph.py validate`
+- Specs: approved 19, in-progress 1, implemented 6
 - Impedimentos: **1 aberto(s)**, 4 resolvido(s)
 
 ## Impedimentos Abertos
@@ -35,15 +35,15 @@ Perfil: **padrao**
 
 ## Plano de Execução
 
-**Em andamento:** —  
+**Em andamento:** SPEC-0025  
 **Paradas por impedimento:** —  
-**Próximo lote:** SPEC-0025
+**Próximo lote:** —
 
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
+| 1 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | in-progress | 🔄 em andamento |  |
 | 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 13d) |  |
-| 1 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | approved | ✅ pronta |  |
-| 2 | SPEC-0005 | Pipeline de CI | full/M | approved | ⛔ aguarda implementação de SPEC-0025; contrato de SPEC-0025 mudou (v2 → v3): revisar spec |  |
+| 2 | SPEC-0005 | Pipeline de CI | full/M | approved | ⛔ aguarda implementação de SPEC-0025 |  |
 | 3 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ⛔ aguarda implementação de SPEC-0005; aguarda implementação de SPEC-0025 |  |
 | 4 | SPEC-0008 | Observabilidade básica | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
 | 4 | SPEC-0009 | Segurança básica e autorização | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
@@ -84,7 +84,7 @@ flowchart LR
     S0007["SPEC-0007<br/>Walking skeleton: página do bar e TV to…"]:::approved
     S0008["SPEC-0008<br/>Observabilidade básica"]:::approved
     S0009["SPEC-0009<br/>Segurança básica e autorização"]:::approved
-    S0025["SPEC-0025<br/>Harness de E2E e ambiente de teste cont…"]:::approved
+    S0025["SPEC-0025<br/>Harness de E2E e ambiente de teste cont…"]:::inprogress
     S0027["SPEC-0027<br/>Pendências do review da SPEC-0003"]:::implemented
   end
   subgraph E0010["SPEC-0010 · MVP Jukebox colaborativa"]
@@ -110,7 +110,7 @@ flowchart LR
   S0027 --> S0005
   S0025 --> S0005
   S0003 -. contrato v2 .-> S0005
-  S0025 -. contrato v2 .-> S0005
+  S0025 -. contrato v3 .-> S0005
   S0005 -. contrato v2 .-> S0006
   S0003 --> S0007
   S0004 --> S0007
@@ -184,7 +184,7 @@ flowchart LR
 | [SPEC-0002](SPEC-0002-repositorio-solucao-e-tooling.md) | Repositório, solução e tooling | full | foundation | implemented | 2026-09-30 | SPEC-0001 | — | — |
 | [SPEC-0003](SPEC-0003-harness-de-testes-e-suite-de-arquitetura.md) | Harness de testes de integração e suíte de arquitetura | full | foundation | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002 | — |
 | [SPEC-0004](SPEC-0004-building-blocks-dos-modulos.md) | Building blocks dos módulos | full | foundation | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@2 |
-| [SPEC-0005](SPEC-0005-pipeline-de-ci.md) | Pipeline de CI | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002, SPEC-0027, SPEC-0025 | SPEC-0003@2, SPEC-0025@2 |
+| [SPEC-0005](SPEC-0005-pipeline-de-ci.md) | Pipeline de CI | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0002, SPEC-0027, SPEC-0025 | SPEC-0003@2, SPEC-0025@3 |
 | [SPEC-0006](SPEC-0006-ambientes-iac-segredos-migrations-e-backup.md) | Ambientes, IaC, segredos, migrations e backup | full | foundation | approved | 2026-09-30 | SPEC-0001 | — | SPEC-0005@2 |
 | [SPEC-0007](SPEC-0007-walking-skeleton-pagina-do-bar-e-tv.md) | Walking skeleton: página do bar e TV tocando | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0003, SPEC-0004, SPEC-0005, SPEC-0025 | — |
 | [SPEC-0008](SPEC-0008-observabilidade-basica.md) | Observabilidade básica | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0007 | — |
@@ -204,7 +204,7 @@ flowchart LR
 | [SPEC-0022](SPEC-0022-bloqueio-de-comanda-e-modo-ouvinte.md) | Bloqueio de comanda e modo ouvinte | full | feature | approved | 2026-09-30 | SPEC-0010 | SPEC-0013, SPEC-0018 | SPEC-0020@1 |
 | [SPEC-0023](SPEC-0023-painel-do-gerente.md) | Painel do gerente | full | feature | approved | 2026-09-30 | SPEC-0010 | SPEC-0021, SPEC-0022 | SPEC-0019@1, SPEC-0011@1 |
 | [SPEC-0024](SPEC-0024-telas-da-fila-minhas-e-pedido.md) | Telas da fila, Minhas e pedido pela busca | full | feature | approved | 2026-09-30 | SPEC-0010 | SPEC-0018 | SPEC-0020@1, SPEC-0012@1 |
-| [SPEC-0025](SPEC-0025-harness-de-e2e-e-ambiente-de-teste-controlavel.md) | Harness de E2E e ambiente de teste controlável | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0003 | — |
+| [SPEC-0025](SPEC-0025-harness-de-e2e-e-ambiente-de-teste-controlavel.md) | Harness de E2E e ambiente de teste controlável | full | foundation | in-progress | 2026-09-30 | SPEC-0001 | SPEC-0003 | — |
 | [SPEC-0026](SPEC-0026-pendencias-do-review-da-spec-0002.md) | Pendências do review da SPEC-0002 | lite | fix | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002 | — |
 | [SPEC-0027](SPEC-0027-pendencias-do-review-da-spec-0003.md) | Pendências do review da SPEC-0003 | lite | refactor | implemented | 2026-10-01 | SPEC-0001 | SPEC-0003 | — |
 | [SPEC-0028](SPEC-0028-pendencias-do-review-da-spec-0026.md) | Pendências do review da SPEC-0026 | lite | fix | implemented | 2026-10-01 | SPEC-0001 | SPEC-0026 | — |
