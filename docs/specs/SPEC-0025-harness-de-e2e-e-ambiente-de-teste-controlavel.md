@@ -9,8 +9,8 @@ created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0003]
 consumes_contract: []
-contract_version: 2
-touches: [tests/Juker.E2ETests/**, tests/Juker.TestKit.E2E/**, tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, src/Juker.Host/Program.cs, src/Juker.Host/Juker.Host.csproj, tests/Juker.IntegrationTests/Testing/**, src/Juker.Host/Testing/**, Directory.Packages.props, Juker.slnx, docs/testing.md]
+contract_version: 3
+touches: [tests/Juker.E2ETests/**, tests/Juker.TestKit.E2E/**, tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, src/Juker.Host/Program.cs, src/Juker.Host/Juker.Host.csproj, tests/Juker.IntegrationTests/Testing/**, src/Juker.Host/Testing/**, tests/fixtures/E2EHarnessSelfTest/**, Directory.Packages.props, Juker.slnx, docs/testing.md]
 adrs: [ADR-0003, ADR-0011, ADR-0013]
 external: []
 size: M
@@ -33,7 +33,7 @@ Implementa a estratégia do ADR-0013: o app sobe inteiro pelo `Aspire.Hosting.Te
 - `PageObject` base e a convenção de pastas `tests/Juker.E2ETests/Pages/<Área>/`.
 - Host (`src/Juker.Host/Testing`), registrado por um único método `AddE2ETestingSupport()` chamado só quando o ambiente é `E2E`:
   - `ControllableTimeProvider` no lugar do `TimeProvider` do sistema;
-  - `POST /_test/clock/advance` e `POST /_test/venues` (bar + gerente + configurações, slug `e2e-<guid>`);
+  - `POST /_test/clock/advance` e a página `/_test/ping`; `POST /_test/venues` fica no contrato do cliente (`CreateVenueAsync`), mas o endpoint do host é implementado pela SPEC-0007, que cria a entidade `Venue` (emenda v3);
   - ponto de extensão `MapTestEndpoints(IEndpointRouteBuilder)` para as specs seguintes acrescentarem atalhos de pré-condição (ex.: sessão de comanda, token de TV, avançar a reprodução).
 - `TestControlClient` no TestKit para chamar a API de teste.
 - Categoria `Smoke` e o parâmetro `JUKER_E2E_BASE_URL`: com ele definido, os testes `Smoke` rodam contra um ambiente implantado (sem AppHost e sem `/_test/*`).
@@ -80,7 +80,9 @@ namespace Juker.TestKit.E2E
     Uri HostUrl ; TestControlClient Control
   sealed class TestControlClient
     Task AdvanceClockAsync(TimeSpan by)                        // POST /_test/clock/advance
-    Task<TestVenue> CreateVenueAsync(VenueSetup? setup = null)  // POST /_test/venues
+    Task<TestVenue> CreateVenueAsync(VenueSetup? setup = null)  // POST /_test/venues (endpoint do host: SPEC-0007)
+  sealed record VenueSetup(string? Slug = null, string? Name = null)
+  sealed record TestVenue(Guid VenueId, string Slug)          // gerente e configurações: emendas das SPECs 0009/0011
   enum BrowserKind { Chromium, WebKit }
   sealed class PlaywrightFixture : IAsyncLifetime
     Task<IPage> NewGuestPageAsync(BrowserKind kind)   // 390x844, pt-BR, America/Sao_Paulo
@@ -92,7 +94,8 @@ namespace Juker.TestKit.E2E
 
 Host — somente ASPNETCORE_ENVIRONMENT=E2E (AddE2ETestingSupport / MapTestEndpoints):
   POST /_test/clock/advance { "seconds": 900 }            → 204
-  POST /_test/venues { "slug"?, "name"?, "settings"? }    → 201 { venueId, slug, managerEmail, managerPassword }
+  GET  /_test/ping                                       → 200 HTML mínimo (página de teste do IT-01)
+  POST /_test/venues { "slug"?, "name"? }                 → 201 { venueId, slug }   (implementado pela SPEC-0007)
   Staging/Production: /_test/* → 404 ; TimeProvider = TimeProvider.System
 
 Smoke: JUKER_E2E_BASE_URL=https://staging.<domínio> → roda só Category=Smoke contra a URL, sem AppHost
@@ -111,7 +114,6 @@ Comandos (sdd-config.yml):
 | Dois navegadores | página de teste aberta em Chromium e WebKit | carrega nos dois, sem violações axe | IT-01 |
 | Diagnóstico de falha | teste de exemplo que falha de propósito (executado isolado) | `trace.zip`, vídeo e screenshot gravados | IT-03 |
 | Relógio do servidor | `AdvanceClockAsync(15 min)` | `TimeProvider` do host 15 min à frente | IT-02 |
-| Bar de teste | `CreateVenueAsync()` | bar `e2e-…` com gerente e configurações; dois testes criam bares distintos | IT-02 |
 | Nada de teste fora do E2E | host em `Staging` e `Production` | `/_test/*` → 404 e `TimeProvider.System` registrado | IT-02 |
 | Smoke contra ambiente | `JUKER_E2E_BASE_URL` definido | só os `Smoke` rodam, sem subir o AppHost e sem chamar `/_test/*` | CT-01 |
 
@@ -125,8 +127,8 @@ Comandos (sdd-config.yml):
 
 ### 7.3 Testes de Integração
 - **IT-01** — `AspireAppFixture` sobe o AppHost no ambiente `E2E` e `/health/ready` responde 200 em menos de 60 s; a `PlaywrightFixture` abre uma página de teste (`/_test/ping`, HTML mínimo) em Chromium e WebKit e o `AssertNoA11yViolationsAsync` não encontra violações.
-- **IT-02** — Com o host em `E2E`: `POST /_test/clock/advance` (900 s) avança o `TimeProvider` do host em 15 min; duas chamadas a `POST /_test/venues` criam bares distintos com slug `e2e-…`. Com o host em `Staging` e em `Production` (WebApplicationFactory com o ambiente trocado): `/_test/*` responde 404 e o `TimeProvider` resolvido é `TimeProvider.System`.
-- **IT-03** — Um teste de exemplo marcado para falhar (executado isolado pelo IT via `dotnet test --project … --filter-trait`) deixa `trace.zip`, `video.webm` e `screenshot.png` em `TestResults/playwright/<teste>/`.
+- **IT-02** — Com o host em `E2E`: `POST /_test/clock/advance` (900 s) avança o `TimeProvider` do host em 15 min; Com o host em `Staging` e em `Production` (WebApplicationFactory com o ambiente trocado): `/_test/*` responde 404 e o `TimeProvider` resolvido é `TimeProvider.System`.
+- **IT-03** — Um teste de exemplo que falha de propósito, num projeto de fixture fora da solução (`tests/fixtures/E2EHarnessSelfTest`, que usa a `PlaywrightFixture`), executado pelo IT via `dotnet test --project …` aninhado (o IT fica em `tests/Juker.IntegrationTests/Testing` na coleção serializada `NestedTestRun` da SPEC-0027), deixa `trace.zip`, `video.webm` e `screenshot.png` em `TestResults/playwright/<teste>/`.
 
 ### 7.4 Testes de Contrato
 - **CT-01** — Com `JUKER_E2E_BASE_URL` apontando para um servidor local de teste, `dotnet test --project tests/Juker.E2ETests --filter-trait "Category=Smoke" --list-tests` lista só os Smoke e a execução não sobe o AppHost nem chama `/_test/*`; e a API pública do `Juker.TestKit.E2E` bate com o snapshot aprovado (consumida pela SPEC-0005 e por todas as specs com E2E).
@@ -137,7 +139,7 @@ Comandos (sdd-config.yml):
 ### 7.6 Outros
 - N/A.
 
-**Dublês e dados de teste:** página `/_test/ping` só no ambiente `E2E`; teste de exemplo que falha de propósito, excluído da execução normal por categoria própria (`Category=HarnessSelfTest`, fora do `test_e2e`).
+**Dublês e dados de teste:** página `/_test/ping` só no ambiente `E2E`; teste de exemplo que falha de propósito no projeto de fixture `tests/fixtures/E2EHarnessSelfTest`, fora da solução, então nunca roda no `test`, no `test_e2e` nem no CI. O IT-01 roda no projeto `Juker.E2ETests` com `Category=E2E` (precisa do AppHost e dos navegadores).
 
 **Ambiente de execução:** local com Docker e navegadores; CI no runner Ubuntu (SPEC-0005).
 
@@ -226,5 +228,6 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 3 | 2026-10-13 | `POST /_test/venues` sai desta spec: o cliente `CreateVenueAsync` continua no contrato com `VenueSetup(Slug?, Name?)` e `TestVenue(VenueId, Slug)`, e o endpoint do host passa à SPEC-0007; gerente e configurações saem do retorno (entram por emenda das SPECs 0009 e 0011 quando precisarem); `/_test/ping` no contrato; o teste que falha de propósito vai para um projeto de fixture fora da solução (`tests/fixtures/E2EHarnessSelfTest`) e o IT-03 entra na coleção serializada `NestedTestRun`; IT-01 com `Category=E2E` | Revisão do Architect antes do despacho: não existe entidade `Venue` (SPEC-0007), nem gerente (SPEC-0009), nem configurações (SPEC-0011); os tipos `TestVenue`/`VenueSetup` não tinham forma para o snapshot do CT-01; a categoria `HarnessSelfTest` não excluía o teste do `test_e2e` nem da suíte completa; o IT-03 repete o `dotnet test` aninhado corrigido na SPEC-0027 | SPEC-0005 (fixar @3), SPEC-0007 (implementa o endpoint, emenda própria) | pendente — thomas |
 | escopo | 2026-10-01 | Tipos de E2E em assembly próprio `Juker.TestKit.E2E` (antes: pasta dentro do Juker.TestKit); `touches` inclui o `Program.cs`/`.csproj` do host (registro condicional) e o `.csproj` da suíte de arquitetura | O snapshot público do Juker.TestKit está congelado (SPEC-0003 CT-01); o host precisa chamar `AddE2ETestingSupport()` | Nenhuma — a API do contrato (namespace e tipos) não muda | thomas — autorização prévia no chat (2026-09-30), confirmada por thomas no chat em 2026-10-13 |
 | 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | SPEC-0005 (consome SPEC-0025@1 → revisar e fixar @2) | thomas, 2026-09-30 |

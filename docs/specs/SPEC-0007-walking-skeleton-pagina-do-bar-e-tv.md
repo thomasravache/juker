@@ -34,6 +34,7 @@ A fatia mais fina do produto passando por todas as camadas e chegando à produç
 - `FakeMediaPlayer` (vídeos locais curtos) selecionado por configuração para os E2E.
 - Tailwind v4 standalone no build do `Juker.Web`, com `@theme` gerado dos tokens do Stitch (cores, Oswald/Inter, raios, espaçamentos).
 - Service worker do cliente cacheando o runtime do WASM.
+- Endpoint de teste `POST /_test/venues { "slug"?, "name"? }` → 201 `{ venueId, slug }` (slug padrão `e2e-<guid>`), registrado pelo `MapTestEndpoints` da SPEC-0025 só no ambiente `E2E`; é o que o `CreateVenueAsync` do `Juker.TestKit.E2E` chama (contrato SPEC-0025@3).
 - Bar fixo **`juker-smoke`** ("Juker Smoke", sem QR público) criado pela CLI (`create-venue`), usado só pelo smoke (ADR-0013).
 - Smoke E2E (`Category=Smoke`) executável contra qualquer host já em execução via `JUKER_E2E_BASE_URL` (SPEC-0025). **Nesta fase (CD adiado), roda contra o host local** (`dotnet run --project src/Aspire/Juker.AppHost -c Release`); a execução pós-deploy em staging/produção entra com a SPEC-0006.
 
@@ -103,6 +104,7 @@ CLI:
 | Bar existe | `GET /api/v1/b/rock` | 200 com slug, nome e status | IT-01, CT-01 |
 | Bar não existe | `GET /api/v1/b/nao-existe` | 404 `VENUE_NOT_FOUND` | IT-02, E2E-02 |
 | Slug inválido | `GET /api/v1/b/AB!` | 400 `VENUE_SLUG_INVALID` | UT-01, IT-02 |
+| Bar de teste | `POST /_test/venues` no ambiente `E2E` | bares distintos `e2e-…`, consultáveis pela API pública | IT-05 |
 | Cadastro de bar | `create-venue` com slug novo | bar criado; slug duplicado → exit 2 "Slug já existe" | UT-02, IT-04 |
 | Página do bar no celular | abrir `/b/rock` em viewport mobile | nome "Bar do Rock" e "Jukebox ativa" visíveis, sem violações de acessibilidade | E2E-01 |
 | Payload do cliente | primeiro acesso a `/b/rock` com `Accept-Encoding: br` | soma dos recursos ≤ 3,0 MB | IT-03 |
@@ -126,6 +128,7 @@ CLI:
 - **IT-02** — `GET /api/v1/b/nao-existe` → 404 `VENUE_NOT_FOUND`; `GET /api/v1/b/AB!` → 400 `VENUE_SLUG_INVALID`.
 - **IT-03** — Com o host publicado em Release, um cliente HTTP percorre o HTML de `/b/rock` e os recursos de `_framework` referenciados, com `Accept-Encoding: br`, e a soma dos bytes transferidos é ≤ 3,0 MB.
 - **IT-04** — O comando `create-venue` executado duas vezes com o mesmo slug cria o bar na primeira e sai com código 2 e "Slug já existe" na segunda.
+- **IT-05** — Com o host no ambiente `E2E`, duas chamadas a `POST /_test/venues` sem corpo criam bares distintos com slug `e2e-…` (201 com `venueId` e `slug`), e `GET /api/v1/b/{slug}` de cada um responde 200; com `slug` e `name` informados, o bar é criado com eles.
 
 ### 7.4 Testes de Contrato
 - **CT-01** — A resposta de `GET /api/v1/b/{slug}` valida contra o schema OpenAPI publicado em `/openapi/v1.json` (consumido pelas SPECs 0013 e 0021).
@@ -167,7 +170,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 - [ ] Validar: build + lint + suíte de UT (G2)
 
 **Fase 2: Integração e contrato**
-- [ ] Red: escrever IT-01, IT-02, IT-03, IT-04, CT-01, CT-02 com a tag `SPEC-0007:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
+- [ ] Red: escrever IT-01, IT-02, IT-03, IT-04, IT-05, CT-01, CT-02 com a tag `SPEC-0007:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
 - [ ] Green: implementar endpoints, persistência, migrations e integrações até passar
 - [ ] Refactor mantendo tudo verde
 - [ ] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
@@ -235,4 +238,5 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-10-13 | Implementa o endpoint de teste `POST /_test/venues` (bar com slug e nome) e o IT-05 | A SPEC-0025 (emenda v3) deixou o endpoint para a spec que cria a entidade `Venue`; os E2E desta spec já criam bares pela API de teste | Nenhuma | pendente — thomas |
 | 2 | 2026-09-30 | E2E-03 (smoke) passa a rodar contra o host local via `JUKER_E2E_BASE_URL`; dependência da SPEC-0006 removida; Lighthouse local em Release; rollout sem deploy nesta fase | Fundador decidiu deixar a infraestrutura/CD de fora por enquanto: testar localmente até o fim, com o CI do GitHub antes do CD | SPEC-0006 (recebe a execução pós-deploy do smoke e do Lighthouse) | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), confirmada por thomas no chat em 2026-10-13 |
