@@ -9,7 +9,7 @@ created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002]
 consumes_contract: [SPEC-0003@2]
-contract_version: 4
+contract_version: 5
 touches: [src/BuildingBlocks/**, src/Juker.Host/Program.cs, src/Juker.Host/Juker.Host.csproj, Juker.slnx, Directory.Packages.props, .config/dotnet-tools.json, tests/Juker.BuildingBlocks.UnitTests/**, tests/Juker.IntegrationTests/BuildingBlocks/**, tests/Juker.IntegrationTests/Juker.IntegrationTests.csproj, tests/Juker.ArchitectureTests/PublicApi/**, tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, tests/Juker.TestKit/Outbox/**, tests/Juker.TestKit/Juker.TestKit.csproj, tests/fixtures/TestModules.Outbox/**]
 adrs: [ADR-0002, ADR-0004, ADR-0006, ADR-0008, ADR-0012]
 external: []
@@ -21,14 +21,14 @@ approved_at: 2026-09-30
 # SPEC-0004 — Building blocks dos módulos
 
 ## 1. Visão Geral
-Fornece aos módulos o "kit" comum: tipo `Result`/`Error`, handlers de comando e consulta com decorators (validação, logging, unidade de trabalho), mapeamento de erros para `ProblemDetails`, `DbContext` base com schema do módulo e filtro de tenant, outbox/inbox para eventos de integração e o dispatcher em segundo plano. Toda funcionalidade do MVP é escrita em cima disso.
+Fornece aos módulos o "kit" comum: tipo `Result`/`Error`, handlers de comando e consulta com decorators (validação e logging; o handler de comando confirma a própria transação), mapeamento de erros para `ProblemDetails`, `DbContext` base com schema do módulo e filtro de tenant, outbox/inbox para eventos de integração e o dispatcher em segundo plano. Toda funcionalidade do MVP é escrita em cima disso.
 
 ## 2. Motivação & Escopo
 **Motivação:** sem um kit comum, cada módulo resolveria de um jeito o tratamento de erro, a validação, o isolamento entre bares e a entrega de eventos, que são justamente as partes críticas para a justiça da fila e para o bloqueio de comanda.
 
 **Objetivos (dentro do escopo):**
 - `Juker.SharedKernel` (namespace `Juker.SharedKernel`): `Result`, `Result<T>`, `Error`, `ErrorType`, `VenueId`, `ITenantScoped`, `IIntegrationEvent` e `Entity<TId>`, que acumula os eventos de integração levantados pela entidade (`Raise`). Não existe `IDomainEvent` no MVP: todo evento levantado por uma entidade é um evento de integração publicado pelo outbox.
-- `Juker.Infrastructure` (namespace `Juker.Infrastructure`): `ICommand<T>`/`IQuery<T>` e seus handlers; decorators de validação (FluentValidation), logging e unidade de trabalho (**internos**); `ResultHttpExtensions` → `ProblemDetails` (RFC 9457) com `code` e, em validação, `errors` por campo.
+- `Juker.Infrastructure` (namespace `Juker.Infrastructure`): `ICommand<T>`/`IQuery<T>` e seus handlers; decorators de validação (FluentValidation) e logging (**internos**); o handler de comando confirma a transação com uma única chamada a `SaveChangesAsync` do `ModuleDbContext` do seu módulo, e o interceptor do outbox grava os eventos levantados nessa mesma transação (emenda v5); `ResultHttpExtensions` → `ProblemDetails` (RFC 9457) com `code` e, em validação, `errors` por campo.
 - `ModuleDbContext`: schema do módulo, snake_case, tabela de histórico de migrations no schema do módulo, filtro global de tenant para `ITenantScoped` falhando fechado (`TenantNotResolvedException`) e as entidades de outbox/inbox do módulo.
 - Montagem do kit: `AddJukerInfrastructure(IConfiguration)` (chamado pelo `Juker.Host`), `AddModuleDbContext<TContext>()` (registra o contexto do módulo com Npgsql e o inclui como fonte do outbox) e `AddModuleHandlers(Assembly)` (handlers, validators e consumidores de eventos).
 - Outbox: um interceptor de `SaveChanges` grava, na mesma transação, os eventos levantados pelas entidades rastreadas em `<schema>.outbox_messages` (`type` = nome do tipo com o assembly; `payload` = JSON do System.Text.Json com as opções web). O `OutboxDispatcher` (`BackgroundService`, só registrado se `Outbox:DispatcherEnabled=true`) entrega aos consumidores com retry exponencial até `Outbox:MaxAttempts` (5); inbox por consumidor para idempotência.
@@ -151,7 +151,7 @@ Retry: next_attempt_at = agora + 2^(attempts-1) s (1, 2, 4, 8 s); attempts = Max
 |---|---|---|---|
 | Resultado | `Result<int>.Success(1)` / `Result<int>.Failure(e)` | `IsSuccess`/`IsFailure` coerentes; `Value` de falha lança `InvalidOperationException` | UT-01 |
 | Comando inválido | validator com erro no campo `name` | handler **não** executa; `ErrorType.Validation` com `Details["name"]` | UT-02 |
-| Comando válido | validator sem erros | handler executa; unidade de trabalho confirma | UT-02, IT-01 |
+| Comando válido | validator sem erros | handler executa e confirma a transação com um único `SaveChangesAsync` | UT-02, IT-01 |
 | Erro vira HTTP | `Result` com cada `ErrorType` | 400/401/403/404/409/422 com `code`; validação com `errors` | UT-03 |
 | Sem tenant | consulta a `ITenantScoped` com `FixedTenantContext(null)` | `TenantNotResolvedException` antes de abrir conexão | UT-04 |
 | Evento na mesma transação | entidade levanta evento; commit / rollback | linha + mensagem `pending` no outbox / nenhuma das duas | IT-01 |
@@ -247,7 +247,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
 |---|---|---|---|---|---|---|---|---|
 | IMP-01 | 2026-09-30 | G1 | spec | Contrato sem: mecanismo de levantar evento para o outbox (tipo/payload), montagem do kit (AddJukerInfrastructure/registro do ModuleDbContext como fonte do outbox, host fora do touches), forma exata da API pública para o snapshot CT-01 (exceção de tenant, ITenantContext explícito, Entity, IdGenerator, Result, membros protegidos do ModuleDbContext, visibilidade de decorators/opções); touches sem TestKit.csproj/ArchitectureTests.csproj; DbContext de teste conflita com a descoberta do TestKit; IT-02 mistura exatamente-uma-vez com latência | Test-writer leu spec (v2/v3), testing.md, ADRs, TestKit e specs consumidoras; nenhum teste escrito | Architect (emenda v4) + thomas (aprovação, sob autorização prévia) | Emenda v4 — contrato completo da API pública, montagem do kit, esquema do outbox, módulo de teste fora de Juker.*, IT-02/IT-06 separados (autorização prévia de thomas, confirmada por thomas no chat em 2026-10-13) | 2026-09-30 |
-| IMP-02 | 2026-10-13 | G7 | spec | O contrato (seção 6, objetivos e Mapa: 'unidade de trabalho confirma') promete um decorator interno de unidade de trabalho no pipeline de comandos, mas ele não foi implementado: só existem os decorators de validação e logging, e os handlers chamam SaveChangesAsync por conta própria (tests/fixtures/TestModules.Outbox/CreateTestItemHandler.cs). Nenhum teste distingue os dois comportamentos, e o G4 não apontou. | Conferência do Relatório de Entrega contra src/BuildingBlocks (Pipeline/ só tem Validation* e Logging*) e o fixture de teste | thomas (decidir: emenda v5 removendo o decorator do contrato, ou spec nova que o implementa) + Architect |  |  |
+| IMP-02 | 2026-10-13 | G7 | spec | O contrato (seção 6, objetivos e Mapa: 'unidade de trabalho confirma') promete um decorator interno de unidade de trabalho no pipeline de comandos, mas ele não foi implementado: só existem os decorators de validação e logging, e os handlers chamam SaveChangesAsync por conta própria (tests/fixtures/TestModules.Outbox/CreateTestItemHandler.cs). Nenhum teste distingue os dois comportamentos, e o G4 não apontou. | Conferência do Relatório de Entrega contra src/BuildingBlocks (Pipeline/ só tem Validation* e Logging*) e o fixture de teste | thomas (decidir: emenda v5 removendo o decorator do contrato, ou spec nova que o implementa) + Architect | Emenda v5 — sem decorator de unidade de trabalho; o handler de comando confirma a própria transação (thomas, 2026-10-13) | 2026-10-13 |
 
 ## 14. Relatório de Entrega
 
@@ -256,7 +256,7 @@ O kit comum dos módulos. `Juker.SharedKernel`: `Result`/`Result<T>`, `Error`/`E
 
 ### Como foi feito
 - Commits: scaffold 14ae37b (chore), red 7f28318, green 4d450a0; merge --no-ff em `sdd/SPEC-0001` 475d61f.
-- Emendas: contrato v2 (`IIntegrationEvent` no SharedKernel, para o ARQ-02 estrito), v3 (`DrainOutboxAsync` interno, projeto `Juker.Infrastructure`), v4 (contrato completo da API pública, montagem do kit, esquema do outbox, IT-02/IT-06 separados — fechou o IMP-01) e escopo (`DrainOutboxAsync` retorna `Task<int>`). Todas confirmadas por thomas no chat em 2026-10-13.
+- Emendas: contrato v5 (sem decorator de unidade de trabalho; o handler confirma a própria transação — fechou o IMP-02, aprovada por thomas em 2026-10-13), v2 (`IIntegrationEvent` no SharedKernel, para o ARQ-02 estrito), v3 (`DrainOutboxAsync` interno, projeto `Juker.Infrastructure`), v4 (contrato completo da API pública, montagem do kit, esquema do outbox, IT-02/IT-06 separados — fechou o IMP-01) e escopo (`DrainOutboxAsync` retorna `Task<int>`). Todas confirmadas por thomas no chat em 2026-10-13.
 - Decisões do Implementer aceitas no review (G4): ajuste em `OutboxDrainExtensions` do TestKit e migrations do fixture de teste geradas pelo `dotnet-ef`.
 - Padrão seguido: ADR-0002 (handlers próprios, sem MediatR), ADR-0004 (schema por módulo), ADR-0006 (outbox/inbox in-process), ADR-0008 (tenant por `VenueId`), ADR-0012 (Postgres real e outbox determinístico nos testes).
 
@@ -280,7 +280,7 @@ N/A — type: foundation.
 
 ### Definição de Pronto
 - [x] Todos os testes do plano passando e listados na Verificação
-- [ ] Todo comportamento do Mapa de Comportamentos coberto e verificado — falta a unidade de trabalho do contrato (IMP-02)
+- [x] Todo comportamento do Mapa de Comportamentos coberto e verificado (contrato v5)
 - [x] Suíte completa, arquitetura e CI verdes no resultado integrado (G5) — CI: N/A até a SPEC-0005
 - [x] Review independente sem achados blocker/major (G4)
 - [x] Padrão arquitetural existente mantido, ou desvio coberto por ADR aprovado
@@ -302,6 +302,7 @@ N/A — CD adiado (SPEC-0006). Integrado em `sdd/SPEC-0001`; entra na `main` pel
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 5 | 2026-10-13 | Sai o decorator de unidade de trabalho: o handler de comando confirma a transação com uma única chamada a `SaveChangesAsync` do `ModuleDbContext` do módulo; o interceptor do outbox continua gravando os eventos na mesma transação | IMP-02: o decorator nunca foi implementado; com um `DbContext` por módulo, um decorator genérico precisaria descobrir qual contexto salvar (a "mágica" que o ADR-0002 evita); handler que esquece de salvar é pego pelos IT de cada spec | Nenhuma muda: nenhuma spec consome o contrato com pin; dependentes (SPEC-0007+) só usam handlers que salvam explicitamente | thomas — no chat em 2026-10-13 ("A") |
 | escopo | 2026-10-01 | `DrainOutboxAsync` (interno) retorna `Task<int>` com o total entregue | O IT-05 exige "retorna 3" e depois 0; é interno, o snapshot público não muda (apontado pelo Test-writer) | Nenhuma | thomas — autorização prévia no chat (2026-09-30), confirmada por thomas no chat em 2026-10-13 |
 | 4 | 2026-10-01 | Contrato completo da API pública (SharedKernel e Infrastructure) com `Entity<TId>.Raise` e sem `IDomainEvent`; montagem do kit (`AddJukerInfrastructure`, `AddModuleDbContext<T>`, `AddModuleHandlers`) com o host no `touches`; esquema e formato do outbox (`type`, `payload`, `status`, backoff); módulo de teste `TestModules.Outbox` fora da convenção `Juker.*`; IT-02 dividido em exatamente-uma-vez (IT-02) e latência (IT-06); `touches` com TestKit, ArchitectureTests, IntegrationTests csproj, fixture e `dotnet-ef` | IMP-01 (SPEC_DEFECT do Test-writer: contrato vago demais para o snapshot CT-01 e para os IT) | Nenhuma implementada (os consumidores do kit são as specs do MVP) | thomas — autorização prévia no chat (2026-09-30), confirmada por thomas no chat em 2026-10-13 |
 | 3 | 2026-10-01 | `DrainOutboxAsync` passa a `internal` (visível ao Juker.IntegrationTests); `touches` inclui `Juker.slnx` e `Directory.Packages.props` (novo projeto Juker.Infrastructure e pacotes) | Evitar mudar o snapshot público do TestKit aprovado na SPEC-0003 e permitir registrar o projeto novo | Nenhuma (nenhuma spec consome o contrato da SPEC-0004) | thomas — autorização prévia no chat (2026-09-30), confirmada por thomas no chat em 2026-10-13 |
