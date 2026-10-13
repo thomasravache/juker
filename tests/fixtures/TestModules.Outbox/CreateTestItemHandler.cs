@@ -3,7 +3,7 @@ using Juker.SharedKernel;
 
 namespace TestModules.Outbox;
 
-/// <summary>Handler do comando de teste; resolvido do DI com os decorators (unidade de trabalho).</summary>
+/// <summary>Handler do comando de teste; resolvido do DI com os decorators (validação e logging); confirma a própria transação.</summary>
 public sealed class CreateTestItemHandler(OutboxTestDbContext db) : ICommandHandler<CreateTestItem, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateTestItem command, CancellationToken ct)
