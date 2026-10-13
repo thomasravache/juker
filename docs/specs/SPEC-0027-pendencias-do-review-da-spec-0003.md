@@ -13,7 +13,7 @@ touches: [tests/Juker.ArchitectureTests/**, tests/Juker.TestKit/**, tests/Juker.
 adrs: [ADR-0012, ADR-0014]
 external: []
 size: S
-approved_by: thomas (autorização prévia de 2026-09-30, a confirmar no overview)
+approved_by: thomas (autorização prévia de 2026-09-30, confirmada por thomas no chat em 2026-10-13)
 approved_at: 2026-09-30
 ---
 

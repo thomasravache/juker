@@ -210,4 +210,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
-| escopo | 2026-09-30 | Alertas e uptime check versionados agora e ativados com a SPEC-0006; conta do backend e segredos OTLP saem dos pré-requisitos; disparo real do alerta transferido para a SPEC-0006 | CD e ambientes adiados por decisão do fundador | SPEC-0006 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), a confirmar no overview |
+| escopo | 2026-09-30 | Alertas e uptime check versionados agora e ativados com a SPEC-0006; conta do backend e segredos OTLP saem dos pré-requisitos; disparo real do alerta transferido para a SPEC-0006 | CD e ambientes adiados por decisão do fundador | SPEC-0006 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), confirmada por thomas no chat em 2026-10-13 |

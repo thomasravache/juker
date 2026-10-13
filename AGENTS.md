@@ -11,7 +11,7 @@ Jukebox colaborativa para bares: monólito modular em .NET 10 com vertical slice
 - `src/Juker.Host` — único ponto de composição: registra os módulos pelo `ModuleCatalog`.
 - `src/Modules/<Módulo>/Juker.Modules.<Módulo>` (interno) e `.Contracts` (público). Módulos: Venues, Sessions, Catalog, Queue, Playback.
   Um módulo só referencia o `.Contracts` de outro (ADR-0001, ARQ-01..05).
-- `src/BuildingBlocks/Juker.SharedKernel`; `src/Web/Juker.Web` e `src/Web/Juker.Web.Client` (frontend).
+- `src/BuildingBlocks/Juker.SharedKernel` (Result, Entity, VenueId) e `src/BuildingBlocks/Juker.Infrastructure` (handlers e decorators, `ModuleDbContext`, outbox/inbox; SPEC-0004); `src/Web/Juker.Web` e `src/Web/Juker.Web.Client` (frontend).
 - `tests/` — testes; `tests/fixtures/` — projetos fora da solução usados pelos testes.
 - `docs/specs/` e `docs/adr/` — specs e decisões (só o Architect edita).
 

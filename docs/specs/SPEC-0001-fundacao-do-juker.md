@@ -140,4 +140,4 @@ Uma aprovação humana cobre o épico e as specs filhas apresentadas junto com e
 ## 12. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
-| escopo | 2026-09-30 | CD adiado: entrega por onda passa a ser merge na main com CI verde; SPEC-0006 estacionada; SPEC-0007 não depende mais dela | Decisão do fundador: infra fora por enquanto, CI antes do CD | SPEC-0006, SPEC-0007, SPEC-0008, SPEC-0009 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), a confirmar no overview |
+| escopo | 2026-09-30 | CD adiado: entrega por onda passa a ser merge na main com CI verde; SPEC-0006 estacionada; SPEC-0007 não depende mais dela | Decisão do fundador: infra fora por enquanto, CI antes do CD | SPEC-0006, SPEC-0007, SPEC-0008, SPEC-0009 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), confirmada por thomas no chat em 2026-10-13 |

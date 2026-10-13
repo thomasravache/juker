@@ -80,7 +80,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → 20/20 | 2026-10-01 |
 | G4 Review | PASS | Reviewer independente: APPROVED em 182e5de (verify PASS 0/0; build 0/0; 37/37; arquitetura 20/20; lint ok; red de 56eacd9 confirmado pelo motivo certo). 2 minor + 1 nit → SPEC-0028 (proposta): variantes `ConfigureAwait(...).GetAwaiter().GetResult()` não banidas; IT-02 prova a fonte do endpoint mas não o preenchimento por `AddJukerModules`; doc do `ComposedModules` | 2026-10-01 |
 | G5 Integração & CI | PASS | Merge --no-ff em `sdd/SPEC-0001` (2492381). No resultado integrado: build 0/0; `dotnet test --solution` 37/37; integração exit 0; arquitetura sem falhas; lint ok; nenhum pacote vulnerável. CI: N/A até a SPEC-0005 | 2026-10-01 |
-| H2 Integração aprovada | PASS | autorização prévia de thomas no chat (2026-09-30: "continue trabalhando… opte pela recomendação"), a confirmar no overview | 2026-10-01 |
+| H2 Integração aprovada | PASS | autorização prévia de thomas no chat (2026-09-30: "continue trabalhando… opte pela recomendação"), confirmada por thomas no chat em 2026-10-13 | 2026-10-01 |
 | G6 Deploy | N/A | CD adiado por decisão do fundador (SPEC-0006 estacionada); entrega = merge na `main` | 2026-10-01 |
 | G7 Pronto & Docs | PASS | Relatório de Entrega com as 3 linhas de Verificação e a prova de correção; DoD marcada; CHANGELOG na branch de integração; pendência SPEC-0028 | 2026-10-01 |
 
@@ -127,5 +127,5 @@ N/A — CD adiado (SPEC-0006). Integrado em `sdd/SPEC-0001` e na `main`.
 ## 11. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
-| escopo | 2026-10-01 | `touches` inclui `Directory.Build.props`; objetivo novo: `XUNIT_GENERATED_DISABLE_WARNINGS` só em projetos de teste | IMP-01: o banimento dos awaiters dispara no ponto de entrada gerado pelo xUnit v3 | Nenhuma | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
-| escopo | 2026-10-01 | Redação da linha de caracterização sem IDs de teste de outra spec | O `verify` lia os IDs da SPEC-0002 como testes planejados da SPEC-0026 (apontado pelo Test-writer) | Nenhuma | thomas — autorização prévia no chat (2026-09-30), a confirmar no overview |
+| escopo | 2026-10-01 | `touches` inclui `Directory.Build.props`; objetivo novo: `XUNIT_GENERATED_DISABLE_WARNINGS` só em projetos de teste | IMP-01: o banimento dos awaiters dispara no ponto de entrada gerado pelo xUnit v3 | Nenhuma | thomas — autorização prévia no chat (2026-09-30), confirmada por thomas no chat em 2026-10-13 |
+| escopo | 2026-10-01 | Redação da linha de caracterização sem IDs de teste de outra spec | O `verify` lia os IDs da SPEC-0002 como testes planejados da SPEC-0026 (apontado pelo Test-writer) | Nenhuma | thomas — autorização prévia no chat (2026-09-30), confirmada por thomas no chat em 2026-10-13 |

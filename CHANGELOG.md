@@ -13,6 +13,7 @@ Cada entrada cita a spec de origem (`SPEC-NNNN`); gere-as com `spec_graph.py rep
 - `GetAwaiter().GetResult()` (Task/ValueTask) passa a ser API proibida no build; `/_diag/modules` lista os módulos que o host de fato compôs; nota sobre o hook de pre-commit no `AGENTS.md` (SPEC-0026)
 
 ### Added
+- Building blocks dos módulos: `Result`/`Error`, handlers com decorators de validação, logging e unidade de trabalho, erros como `ProblemDetails`, `ModuleDbContext` com schema e filtro de tenant, outbox/inbox com entrega exatamente uma vez e dispatcher em segundo plano (`Juker.SharedKernel` e o novo `Juker.Infrastructure`) (SPEC-0004)
 - Harness de testes de integração (`Juker.TestKit`): Postgres real com banco por classe clonado de um modelo migrado, `JukerApiFactory` com relógio controlado e outbox desligado, `MigrationsGuard` e `FakeHttpServer` (SPEC-0003)
 - Suíte de arquitetura com as regras ARQ-01..ARQ-08, teste de convenções de testes e política de tokens do design (SPEC-0003)
 - Solução .NET 10 com AppHost do Aspire, host único e os cinco módulos com seus contratos; `/health/live`, `/health/ready` e `/_diag/modules` (SPEC-0002)
