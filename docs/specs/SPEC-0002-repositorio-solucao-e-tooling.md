@@ -141,7 +141,7 @@ HTTP (Juker.Host):
 - N/A — não há contrato entre specs fornecido ou consumido nesta spec; os métodos de registro são verificados por UT-01.
 
 ### 7.5 Testes E2E
-- N/A — user_facing: false.
+- N/A — solução, tooling e analisadores; nenhuma jornada de usuário (UI ou API pública) é afetada.
 
 ### 7.6 Outros
 - Lint: `dotnet format --verify-no-changes` executado no G2 (evidência: saída do comando).

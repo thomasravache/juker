@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: SPEC-0008:IT-01..IT-03
+pillars: [observabilidade]
 ---
 
 # ADR-0010 — Observabilidade com OpenTelemetry exportando OTLP para backend gerenciado
@@ -46,4 +47,4 @@ SPEC-0008:IT-01 (health checks), IT-02 (métricas de negócio emitidas), IT-03 (
 | **Total ponderado** | **65** | **46** | **43** |
 
 ## Mais Informações
-- Os limites vigentes do plano gratuito do Grafana Cloud **não foram verificados** nesta decisão. A verificação faz parte da SPEC-0008 antes da configuração (registrar a data e a fonte). Alternativas equivalentes via OTLP: Honeycomb, New Relic ou Axiom (planos gratuitos).
+- Os limites vigentes do plano gratuito do Grafana Cloud ficaram **não verificados** nesta decisão. A verificação faz parte da SPEC-0008 antes da configuração (registrar a data e a fonte). Alternativas equivalentes via OTLP: Honeycomb, New Relic ou Axiom (planos gratuitos).

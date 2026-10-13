@@ -114,7 +114,7 @@ deploy/observability/alerts.yaml
 - **CT-01** — `alerts.yaml` valida contra o schema de regras do backend escolhido (validador do fornecedor ou `promtool` para regras no formato Prometheus) e contém as duas regras com os limiares do contrato; os nomes dos instrumentos do `JukerMetrics` batem com a tabela usada pelas SPECs 0014 e 0020.
 
 ### 7.5 Testes E2E
-- N/A — user_facing: false.
+- N/A — telemetria, health checks e alertas; nenhuma tela ou API pública usada pelo cliente, pela TV ou pelo gerente muda.
 
 ### 7.6 Outros
 - Disparo real do alerta `juker-ready-down` no celular do fundador: **transferido para a SPEC-0006** (exige ambiente e backend gerenciado).
@@ -210,4 +210,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
-| escopo | 2026-09-30 | Alertas e uptime check versionados agora e ativados com a SPEC-0006; conta do backend e segredos OTLP saem dos pré-requisitos; disparo real do alerta transferido para a SPEC-0006 | CD e ambientes adiados por decisão do fundador | SPEC-0006 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), a confirmar no overview |
+| escopo | 2026-09-30 | Alertas e uptime check versionados agora e ativados com a SPEC-0006; conta do backend e segredos OTLP saem dos pré-requisitos; disparo real do alerta transferido para a SPEC-0006 | CD e ambientes adiados por decisão do fundador | SPEC-0006 | thomas — autorização prévia no chat (2026-09-30: "deixar a infra de fora… optar pela recomendação"), confirmada por thomas no chat em 2026-10-13 |

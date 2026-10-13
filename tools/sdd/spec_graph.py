@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import datetime as dt
 import heapq
 import json
@@ -14,7 +15,7 @@ import unicodedata
 from collections import Counter, defaultdict, deque
 from pathlib import Path
 
-SDD_TOOL_VERSION = "2026.09.5"
+SDD_TOOL_VERSION = "2026.09.11"
 SKILL_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = SKILL_DIR / "references"
 ASSETS_DIR = SKILL_DIR / "assets"
@@ -48,7 +49,7 @@ TYPES_BY_TIER = {
 }
 SIZES = ("S", "M", "L")
 ADR_STATUSES = ("proposed", "accepted", "rejected", "deprecated", "superseded")
-ADR_ORIGINS = ("decision", "as-is")
+ADR_ORIGINS = ("decision", "user", "as-is")
 GATE_ROWS = ("G0", "G1", "G2", "G3", "G4", "G5", "H2", "G6", "G7")
 DELIVERY_SUBSECTIONS = ("O que foi entregue", "Como foi feito", "Verificação", "Definição de Pronto", "Deploy", "Pendências")
 IMPEDIMENT_TYPES = ("spec", "decisão", "trabalho", "externo", "falha")
@@ -63,6 +64,32 @@ CHANGELOG_BY_TYPE = {"feature": "Added", "fix": "Fixed", "refactor": "Changed", 
 PR_TITLE_DEFAULT = "{conv}: {title} [{id}]"
 PR_TITLE_FIELDS = {"conv", "type", "title", "id", "scope"}
 MERGE_GATES = ("G0", "G1", "G2", "G3", "G4")
+# Merge messages that change-request platforms generate (GitHub, GitLab, Azure DevOps, Bitbucket); override with pr_merge_pattern.
+PR_MERGE_PATTERN_DEFAULT = r"Merge pull request #?\d+|See merge request|Merged PR \d+|Merge pull request .* from|\(#\d+\)$|\(!\d+\)$"
+SQUASH_PATTERN = r"\(#\d+\)$|\(!\d+\)$"
+CONTROL_PATHS = ["tools/sdd/", "docs/specs/sdd-config.yml", "docs/adr/", ".githooks/"]
+
+# Pillars of an end-to-end delivery. Neutral: each is a question the project answers with an ADR (or a recorded waiver).
+PILLAR_CATALOG_VERSION = "2026.09"
+PROFILES = ("minimo", "padrao", "rigoroso")
+PILLARS = {
+    "arquitetura": ("Arquitetura e fronteiras", "Como o sistema é dividido e quais dependências são proibidas?", "minimo"),
+    "testes": ("Estratégia de testes", "Quais níveis de teste, onde rodam e o que é obrigatório?", "minimo"),
+    "qualidade-codigo": ("Qualidade de código", "Formatação, lint, tipos e análise estática rodam automaticamente?", "minimo"),
+    "entrega": ("Entrega contínua e ambientes", "Como o código chega a produção, e como volta atrás?", "minimo"),
+    "fluxo-mudanca": ("Fluxo de mudança", "Como mudanças entram na branch principal e quem revisa?", "minimo"),
+    "segredos-dados": ("Segredos e dados sensíveis", "Onde ficam credenciais e como dados pessoais são protegidos?", "minimo"),
+    "seguranca-acesso": ("Identidade e acesso", "Como usuários e serviços se autenticam e o que cada um pode fazer?", "padrao"),
+    "dependencias": ("Dependências e ciclo de vida da stack", "Como vulnerabilidades, atualizações e fim de suporte são tratados?", "padrao"),
+    "observabilidade": ("Observabilidade", "Como se sabe que o sistema está saudável ou quebrado?", "padrao"),
+    "resiliencia": ("Resiliência e recuperação", "Backups, tempo de recuperação e tolerância a falhas?", "padrao"),
+    "dados-migracoes": ("Dados e migrações", "Como o schema evolui sem quebrar versões em uso?", "padrao"),
+    "custo": ("Custo", "Quanto custa operar, com que premissas, e como é acompanhado?", "padrao"),
+    "desempenho-escala": ("Desempenho e escala", "Quais metas de carga e latência, e como são verificadas?", "rigoroso"),
+    "acessibilidade-conformidade": ("Acessibilidade e conformidade", "Quais normas (acessibilidade, legais, do setor) se aplicam?", "rigoroso"),
+}
+NA_RECURRENT_THRESHOLD = 3
+JOURNEY_TAG_RE = re.compile(r"\[jornada:\s*([\w-]+)\]", re.I)
 PHASES = ("DISCOVER", "SPEC (G0)", "APPROVAL (H1)", "PLAN (waves)", "EXECUTE (G1–G4)",
           "INTEGRATE (G5 + H2)", "DEPLOY (G6)", "CLOSE (G7)")
 H1_QUESTION = ("Os contratos e os cenários de teste estão adequados e seguem o padrão atual? "
@@ -80,6 +107,7 @@ DEFAULT_TEST_PATHS = [
     "**/*Tests.*", "**/*Test.*", "**/test_*.py", "**/*_test.*",
 ]
 DEFAULT_SCOPE_EXEMPT = ["docs/specs/**", "docs/adr/**"]
+DEFAULT_ROOT_DOCS = ["README.md", "AGENTS.md", "CLAUDE.md", "GEMINI.md"]
 DEFAULT_MANIFESTS = [
     "**/package.json", "**/*.csproj", "**/*.fsproj", "**/Directory.Packages.props", "**/packages.config",
     "**/requirements*.txt", "**/pyproject.toml", "**/Pipfile", "**/go.mod", "**/pom.xml",
@@ -482,7 +510,7 @@ class Project:
 
     def scope_exempt(self):
         """Paths never out of scope: configured exemptions plus root docs and changelog updated at G7."""
-        docs = self.cfg_list("root_docs", []) + [self.cfg("changelog", "CHANGELOG.md")]
+        docs = self.cfg_list("root_docs", DEFAULT_ROOT_DOCS) + [self.cfg("changelog", "CHANGELOG.md")]
         return self.cfg_list("scope_exempt", DEFAULT_SCOPE_EXEMPT) + [d for d in docs if d]
 
     def max_parallel(self) -> int:
@@ -578,7 +606,363 @@ def validate(project: Project, only=None):
             validate_adr(project, project.adrs[aid], add)
     if only is None:
         validate_config(project, add)
+        validate_change_flow(project, add)
+        validate_pillars(project, add)
+        validate_journeys(project, add)
+        validate_worktrees(project, add)
+        validate_test_tooling(project, add)
+        seen = defaultdict(list)
+        for sid, doc in sorted(project.specs.items()):
+            evidence = ((gate_table(doc) or {}).get("G2") or {}).get("evidence", "")
+            if evidence and not doc.legacy:
+                seen[evidence].append(sid)
+        for evidence, sids in seen.items():
+            if len(sids) > 1:
+                add("WARN", sids[0], f"evidência de G2 idêntica em {', '.join(sids)} ('{evidence[:50]}') — cada spec precisa da própria execução")
     return issues
+
+
+def pillar_settings(project: Project):
+    cfg = project.cfg_map("pillars")
+    profile = cfg.get("profile") if isinstance(cfg.get("profile"), str) else ""
+    extra = cfg.get("extra") if isinstance(cfg.get("extra"), dict) else {}
+    return profile.strip(), pillar_waivers(project), extra
+
+
+def required_pillars(project: Project):
+    profile, _, extra = pillar_settings(project)
+    if profile not in PROFILES:
+        return []
+    level = PROFILES.index(profile)
+    ids = [pid for pid, (_, _, lvl) in PILLARS.items() if PROFILES.index(lvl) <= level]
+    return ids + [pid for pid in extra if pid not in ids]
+
+
+def pillar_coverage(project: Project):
+    _, waived, extra = pillar_settings(project)
+    rows = []
+    for pid in required_pillars(project):
+        title = PILLARS[pid][0] if pid in PILLARS else str(extra.get(pid, pid))
+        adrs = [a for a in sorted(project.adrs.values(), key=lambda d: d.id) if pid in a.list("pillars")]
+        accepted = [a.id for a in adrs if a.status == "accepted"]
+        proposed = [a.id for a in adrs if a.status == "proposed"]
+        if accepted:
+            state, detail = "coberto", ", ".join(accepted)
+        elif proposed:
+            state, detail = "proposto", ", ".join(proposed) + " (aguarda aprovação)"
+        elif pid in waived:
+            state, detail = "dispensado", str(waived[pid])
+        else:
+            state, detail = "sem decisão", f"`new-adr --baseline {pid}`" if pid in PILLARS else "crie um ADR com pillars: [" + pid + "]"
+        rows.append((pid, title, state, detail))
+    return rows
+
+
+def recurrent_na(project: Project):
+    """Gates repeatedly N/A for a pillar that isn't waived: the gap is permanent, not temporary."""
+    _, waived, _ = pillar_settings(project)
+    out = []
+    for gate, pid in GATE_PILLAR.items():
+        sids = [sid for sid, d in sorted(project.specs.items())
+                if not d.legacy and ((gate_table(d) or {}).get(gate) or {}).get("status") == "N/A"]
+        if len(sids) >= NA_RECURRENT_THRESHOLD and pid not in waived:
+            out.append((gate, pid, sids))
+    return out
+
+
+def validate_pillars(project: Project, add):
+    profile, waived, extra = pillar_settings(project)
+    known = set(PILLARS) | set(extra)
+    for pid in waived:
+        if pid not in known:
+            add("ERROR", "sdd-config", f"pillars.waived: pilar desconhecido '{pid}' ({', '.join(sorted(known))})")
+        elif len(str(waived[pid]).strip()) < 15:
+            add("ERROR", "sdd-config", f"pillars.waived.{pid}: motivo com pelo menos 15 caracteres")
+    for adr in project.adrs.values():
+        unknown = [p for p in adr.list("pillars") if p not in known]
+        if unknown:
+            add("ERROR", adr.id, f"pillars desconhecido(s): {', '.join(unknown)} — veja `pillars` (ou declare em pillars.extra)")
+    foundations = [d for d in project.specs.values() if d.tier == "epic" and d.type == "foundation"]
+    if profile and profile not in PROFILES:
+        add("ERROR", "sdd-config", f"pillars.profile '{profile}' inválido ({' | '.join(PROFILES)})")
+        return
+    if not profile:
+        if foundations:
+            add("WARN", "sdd-config", "projeto com épico de fundação sem pillars.profile (minimo | padrao | rigoroso) — rode `pillars`")
+        return
+    missing = [pid for pid, _, state, _ in pillar_coverage(project) if state == "sem decisão"]
+    if missing:
+        add("WARN", "pilares", f"sem decisão no perfil {profile}: {', '.join(missing)} — `pillars` mostra como resolver")
+        for epic in foundations:
+            if epic.status == "proposed":
+                add("ERROR", epic.id, f"épico de fundação não passa do G0 com pilares sem decisão: {', '.join(missing)} "
+                                      "(crie o ADR de base ou registre a dispensa com motivo)")
+    covered = {pid for pid, _, state, _ in pillar_coverage(project) if state == "coberto"}
+    for gate, pid, sids in recurrent_na(project):
+        if pid in covered:
+            add("WARN", "pilares", f"{gate} N/A em {len(sids)} specs — o pilar '{pid}' tem ADR mas nada o verifica: "
+                                   "crie a spec do teste/pipeline que o garante")
+        else:
+            add("WARN", "pilares", f"{gate} N/A em {len(sids)} specs — o pilar '{pid}' está em aberto de forma permanente: "
+                                   f"crie a spec que resolve ou registre pillars.waived.{pid} com motivo")
+
+
+def cmd_pillars(project: Project):
+    profile, waived, _ = pillar_settings(project)
+    if profile not in PROFILES:
+        print("pillars.profile não definido no sdd-config.yml (minimo | padrao | rigoroso). Catálogo:")
+        for pid, (title, question, lvl) in PILLARS.items():
+            print(f"  {pid:<28} [{lvl}] {title} — {question}")
+        return 0
+    print(f"Pilares — perfil {profile} (catálogo {PILLAR_CATALOG_VERSION})\n")
+    icons = {"coberto": "✅", "proposto": "📝", "dispensado": "➖", "sem decisão": "⚠"}
+    for pid, title, state, detail in pillar_coverage(project):
+        print(f"{icons[state]} {title} [{pid}] — {state}: {detail}")
+        if state == "sem decisão" and pid in PILLARS:
+            print(f"     pergunta a responder: {PILLARS[pid][1]}")
+    covered = {pid for pid, _, state, _ in pillar_coverage(project) if state == "coberto"}
+    for gate, pid, sids in recurrent_na(project):
+        listed = f"{', '.join(sids[:5])}{' …' if len(sids) > 5 else ''}"
+        if pid in covered:
+            print(f"\n⚠ {gate} N/A em {len(sids)} specs ({listed}): o pilar '{pid}' tem ADR, mas nada o verifica — "
+                  "crie a spec do teste/pipeline que o garante (enforced_by)")
+        else:
+            print(f"\n⚠ {gate} N/A em {len(sids)} specs ({listed}): pilar '{pid}' sem solução — crie a spec que resolve "
+                  "ou registre a dispensa")
+    return 0
+
+
+def journey_coverage(project: Project):
+    journeys = project.cfg_map("critical_journeys")
+    proven, planned = defaultdict(list), defaultdict(list)
+    unknown = []
+    for sid, doc in sorted(project.specs.items()):
+        plan = COMMENT_RE.sub("", doc.section("Plano de Testes") or "")
+        for line in plan.split("\n"):
+            if "E2E-" not in line:
+                continue
+            for jid in JOURNEY_TAG_RE.findall(line):
+                if jid not in journeys:
+                    unknown.append((sid, jid))
+                elif doc.status == "implemented":
+                    proven[jid].append(sid)
+                elif doc.status in OPEN:
+                    planned[jid].append(sid)
+    rows = []
+    for jid, title in journeys.items():
+        state = "provada" if proven[jid] else "planejada" if planned[jid] else "descoberta"
+        rows.append((jid, str(title), state, proven[jid] or planned[jid]))
+    return rows, unknown
+
+
+def validate_journeys(project: Project, add):
+    rows, unknown = journey_coverage(project)
+    for sid, jid in unknown:
+        add("ERROR", sid, f"E2E marca [jornada: {jid}], que não está em critical_journeys do sdd-config")
+    uncovered = [jid for jid, _, state, _ in rows if state == "descoberta"]
+    if uncovered:
+        add("WARN", "jornadas", f"jornadas críticas sem E2E em nenhuma spec: {', '.join(uncovered)} — "
+                                "marque o E2E que as prova com [jornada: <id>] ou crie a spec")
+
+
+def cmd_journeys(project: Project):
+    rows, unknown = journey_coverage(project)
+    if not rows:
+        print("Nenhuma jornada em critical_journeys no sdd-config.yml.")
+        return 0
+    icons = {"provada": "✅", "planejada": "📝", "descoberta": "⚠"}
+    for jid, title, state, sids in rows:
+        print(f"{icons[state]} {title} [{jid}] — {state}" + (f": {', '.join(sids)}" if sids else ""))
+    for sid, jid in unknown:
+        print(f"✖ {sid} marca jornada desconhecida '{jid}'")
+    return 0
+
+
+WORKTREE_DIR_DEFAULT = "../{repo}.worktrees"
+
+
+def worktree_base(project: Project) -> Path:
+    pattern = project.cfg("worktree_dir", WORKTREE_DIR_DEFAULT).replace("{repo}", project.root.name)
+    base = Path(pattern)
+    return (base if base.is_absolute() else project.root / base).resolve()
+
+
+def spec_slug(doc: Doc) -> str:
+    stem = doc.path.stem
+    return stem[len(doc.id) + 1:] if stem.startswith(doc.id + "-") else slugify(doc.title)
+
+
+def worktree_for(project: Project, doc: Doc):
+    slug = spec_slug(doc)
+    return worktree_base(project) / f"{doc.id}-{slug}", f"sdd/{doc.id}-{slug}"
+
+
+def list_worktrees(project: Project):
+    code, out, _ = run_git(project.root, "worktree", "list", "--porcelain")
+    if code != 0:
+        return []
+    entries, cur = [], {}
+    for line in out.splitlines() + [""]:
+        if not line.strip():
+            if cur:
+                entries.append(cur)
+            cur = {}
+        elif line.startswith("worktree "):
+            cur["path"] = line[9:]
+        elif line.startswith("branch "):
+            cur["branch"] = line[7:].replace("refs/heads/", "")
+        elif line.startswith("prunable"):
+            cur["prunable"] = True
+    return entries[1:]  # the first entry is the main checkout
+
+
+def stale_worktrees(project: Project):
+    stale = []
+    for entry in list_worktrees(project):
+        m = re.search(r"\bsdd/(SPEC-\d{4,})", entry.get("branch", ""))
+        doc = project.specs.get(m.group(1)) if m else None
+        if entry.get("prunable") or not Path(entry.get("path", "")).exists():
+            stale.append((entry.get("path", "?"), "pasta não existe mais — rode `git worktree prune`"))
+        elif doc is not None and doc.status in DONE:
+            stale.append((entry["path"], f"{doc.id} está {doc.status} — `git worktree remove {entry['path']}`"))
+    return stale
+
+
+def misplaced_worktrees(project: Project):
+    """Worktrees outside worktree_dir (e.g. old sibling folders, or a folder inside the repo)."""
+    base = worktree_base(project)
+    root = project.root.resolve()
+    allow = project.cfg_list("worktree_allow", [])
+    out = []
+    for entry in list_worktrees(project):
+        path = Path(entry.get("path", "")).resolve()
+        if not path.exists() or path == base or base in path.parents:
+            continue
+        inside = root in path.parents
+        rel = path.relative_to(root).as_posix() if inside else str(path)
+        if allow and matches_any(rel, allow):
+            continue
+        branch = entry.get("branch", "")
+        m = re.search(r"\bsdd/(SPEC-\d{4,}[\w-]*)", branch)
+        target = base / (m.group(1) if m else path.name)
+        why = ""
+        if inside and run_git(project.root, "check-ignore", "-q", rel + "/")[0] != 0:
+            why = " — está DENTRO do repositório e fora do .gitignore (ferramentas podem ver o código em dobro)"
+        out.append((str(path), f"fora do worktree_dir{why}; quando ninguém estiver trabalhando nela: "
+                               f"`git worktree move {path} {target}`"))
+    return out
+
+
+def validate_worktrees(project: Project, add):
+    if run_git(project.root, "rev-parse", "--is-inside-work-tree")[0] != 0:
+        return
+    base = worktree_base(project)
+    try:
+        inside = base.relative_to(project.root.resolve())
+    except ValueError:
+        inside = None
+    if inside is not None and run_git(project.root, "check-ignore", "-q", str(inside) + "/")[0] != 0:
+        add("WARN", "worktrees", f"worktree_dir '{inside}' fica dentro do repositório e não está no .gitignore — "
+                                 "adicione-o (e exclua a pasta de builds de container, IDE e descoberta de testes) ou use "
+                                 f"o padrão {WORKTREE_DIR_DEFAULT}")
+    for path, why in stale_worktrees(project):
+        add("WARN", "worktrees", f"worktree esquecida {path}: {why}")
+    for path, why in misplaced_worktrees(project):
+        add("WARN", "worktrees", f"worktree {path} {why}")
+
+
+def cmd_worktree(project: Project, spec_id: str, create: bool, base):
+    doc = project.specs.get(spec_id)
+    if doc is None or doc.tier == "epic":
+        die(f"{spec_id} não encontrada ou é épico")
+    path, branch = worktree_for(project, doc)
+    if not create:
+        print(f"{path}\n{branch}")
+        return 0
+    if path.exists():
+        die(f"{path} já existe")
+    start = base or (f"sdd/{doc.scalar('parent')}" if doc.scalar("parent") else project.cfg("base_branch", "main"))
+    exists = run_git(project.root, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}")[0] == 0
+    args = ["worktree", "add", str(path), branch] if exists else ["worktree", "add", str(path), "-b", branch, start]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    code, out, err = run_git(project.root, *args)
+    if code != 0:
+        die(f"git worktree add falhou: {err.strip()}")
+    print(f"worktree criada: {path}\nbranch: {branch}" + ("" if exists else f" (a partir de {start})"))
+    return 0
+
+
+REQUIRED_TEST_LEVELS = (("unitario", "Unitário"), ("integracao", "Integração"), ("e2e", "E2E"))
+
+
+def validate_test_tooling(project: Project, add):
+    """The `testes` pillar decides a tool (or a reasoned N/A) per test level; may be spread over several ADRs."""
+    adrs = [a for a in sorted(project.adrs.values(), key=lambda d: d.id)
+            if "testes" in a.list("pillars") and a.status in ("proposed", "accepted")]
+    if not adrs or any(PLACEHOLDER_RE.search(COMMENT_RE.sub("", a.text)) for a in adrs):
+        return
+    levels = {}
+    for adr in adrs:
+        for header, rows in parse_tables(COMMENT_RE.sub("", adr.body)):
+            if not header or norm(header[0]) not in ("nivel", "nível"):
+                continue
+            for row in rows:
+                if len(row) > 1 and row[0]:
+                    levels.setdefault(norm(row[0]), (row[1].strip(), adr.id))
+    level = "WARN" if any(a.status == "accepted" for a in adrs) else "ERROR"
+    subject = adrs[0].id
+    for key, label in REQUIRED_TEST_LEVELS:
+        tool, where = levels.get(key, ("", subject))
+        if not tool:
+            add(level, where, f"pilar testes sem decisão para o nível {label}: tabela 'Ferramenta por nível' "
+                              "(ferramenta, por quê, onde roda) ou 'N/A — motivo'")
+        elif re.match(r"^N/A", tool, re.I) and len(re.sub(r"^N/A\s*[—–:-]?\s*", "", tool, flags=re.I)) < 10:
+            add(level, where, f"pilar testes: N/A no nível {label} sem motivo")
+
+
+def validate_change_flow(project: Project, add):
+    flow = project.cfg("change_flow", "pr")
+    if flow not in ("pr", "direct"):
+        add("ERROR", "sdd-config", f"change_flow '{flow}' inválido (pr | direct)")
+        return
+    if flow == "direct":
+        if not project.cfg("change_flow_reason"):
+            add("ERROR", "sdd-config", "change_flow: direct exige change_flow_reason (ex: repositório pessoal sem plataforma)")
+        return
+    if run_git(project.root, "rev-parse", "--is-inside-work-tree")[0] != 0:
+        return
+    base = project.cfg("base_branch", "main")
+    first = run_git(project.root, "log", "--format=%H", "--diff-filter=A", "--reverse", base, "--", "docs/specs")[1].split()
+    if not first:
+        return
+    log = run_git(project.root, "log", "--first-parent", "--format=%h%x1f%P%x1f%s", f"{first[0]}..{base}", "-n", "300")[1]
+    pattern = re.compile(project.cfg("pr_merge_pattern", PR_MERGE_PATTERN_DEFAULT))
+    direct, records, local_merges, squashed = [], [], [], []
+    for line in log.splitlines():
+        sha, parents, subject = (line.split("\x1f") + ["", ""])[:3]
+        is_merge = len(parents.split()) > 1
+        if is_merge and not pattern.search(subject):
+            local_merges.append(f"{sha} {subject[:50]}")
+        elif not is_merge and re.search(SQUASH_PATTERN, subject):
+            squashed.append(sha)
+        elif not is_merge:
+            files = run_git(project.root, "show", "--name-only", "--format=", sha)[1].split()
+            if files and all(f.startswith(("docs/specs/", "docs/adr/")) for f in files):
+                records.append(sha)
+            else:
+                direct.append(f"{sha} {subject[:50]}")
+    if direct:
+        add("WARN", "fluxo", f"{len(direct)} commit(s) de código direto(s) na {base} sem solicitação de mudança (change_flow: pr): "
+                             + "; ".join(direct[:3]) + " — proteja a branch e passe tudo por PR/MR")
+    if records:
+        add("WARN", "fluxo", f"{len(records)} commit(s) de registros SDD direto(s) na {base} — registre gates na branch de "
+                             "integração (vão no PR da onda) e o fechamento (G6/G7) num PR de fechamento")
+    if local_merges:
+        add("WARN", "fluxo", f"{len(local_merges)} merge(s) na {base} sem PR/MR (feitos localmente?): "
+                             + "; ".join(local_merges[:3]) + " — ajuste pr_merge_pattern se a plataforma usa outra mensagem")
+    if squashed:
+        add("WARN", "fluxo", f"{len(squashed)} merge(s) por squash: os commits citados nas evidências dos gates somem do histórico "
+                             "— prefira merge commit (ADR de fluxo de mudança) ou registre o commit final no G5")
 
 
 def validate_config(project: Project, add):
@@ -593,6 +977,27 @@ def validate_config(project: Project, add):
         missing = [k for k in kinds if not t["issue_types"].get(k)]
         if missing:
             add("WARN", "sdd-config", f"tracker.issue_types sem mapeamento para: {', '.join(missing)}")
+    h1 = project.cfg("h1_policy", "chat")
+    if h1 not in ("chat", "pr-approval"):
+        add("ERROR", "sdd-config", f"h1_policy '{h1}' inválida (chat | pr-approval)")
+    elif h1 == "pr-approval":
+        for sid, doc in sorted(project.specs.items()):
+            if doc.status in APPROVED_PLUS and not doc.legacy and not doc.scalar("approved_via"):
+                add("WARN", sid, "h1_policy pr-approval: registre approved_via (ex: \"PR #12\") com o revisor em approved_by")
+    policy = project.cfg("h2_policy", "per-wave")
+    if policy not in ("per-wave", "auto-on-green"):
+        add("ERROR", "sdd-config", f"h2_policy '{policy}' inválida (per-wave | auto-on-green)")
+    elif policy == "auto-on-green" and not (project.cfg("h2_policy_approved_by") and valid_date(project.cfg("h2_policy_approved_at"))):
+        add("ERROR", "sdd-config", "h2_policy auto-on-green exige h2_policy_approved_by e h2_policy_approved_at (decisão humana registrada)")
+    h2_texts = defaultdict(list)
+    for sid, doc in sorted(project.specs.items()):
+        evidence = ((gate_table(doc) or {}).get("H2") or {}).get("evidence", "")
+        if evidence and not evidence.startswith("política auto-on-green") and not doc.legacy:
+            h2_texts[re.sub(r"\s+", " ", evidence.lower())].append(sid)
+    for evidence, sids in h2_texts.items():
+        if len(sids) >= 3:
+            add("WARN", "sdd-config", f"H2 com o mesmo texto em {len(sids)} specs ('{evidence[:50]}') — se é uma autorização "
+                                      "permanente, declare h2_policy: auto-on-green no sdd-config.yml em vez de repeti-la")
     fields = set(re.findall(r"\{(\w+)\}", project.cfg("pr_title", PR_TITLE_DEFAULT)))
     if fields - PR_TITLE_FIELDS:
         add("ERROR", "sdd-config", f"pr_title com campos desconhecidos: {', '.join(sorted(fields - PR_TITLE_FIELDS))} "
@@ -750,6 +1155,14 @@ def validate_executable(project: Project, doc: Doc, add):
             add("ERROR", sid, "user_facing deve ser true ou false (true = altera jornada do usuário em UI ou API pública)")
         elif user_facing == "true" and "E2E" not in kinds:
             add("ERROR", sid, "user_facing: true exige ao menos um teste E2E (E2E-xx) da jornada afetada")
+        elif user_facing == "false" and "E2E" not in kinds:
+            e2e = find_sub(parse_subsections(plan), "E2E") or ""
+            m = re.search(r"N/A\s*[—–:-]?\s*(.*)", e2e)
+            reason = re.sub(r"user_facing\s*:\s*false", "", m.group(1) if m else "", flags=re.I).strip(" .;—–-")
+            if len(reason) < 15:
+                add("ERROR" if status == "proposed" else "WARN", sid,
+                    "user_facing: false sem justificativa: na seção Testes E2E escreva \"N/A — <por que nenhuma jornada "
+                    "de usuário (UI ou API pública) é afetada>\"")
         if doc.type == "migration" and not doc.list("adrs"):
             add("ERROR", sid, "type migration exige o ADR da nova arquitetura/padrão em adrs")
         validate_contract_map(doc, defined, add)
@@ -780,6 +1193,9 @@ def validate_executable(project: Project, doc: Doc, add):
                 add("ERROR", sid, f"gate {g}: status '{info['status']}' inválido (PENDING | PASS | FAIL | N/A)")
             elif info["status"] in ("PASS", "N/A") and not info["evidence"]:
                 add("ERROR", sid, f"gate {g} marcado {info['status']} sem evidência")
+        manual = [g for g in ("G1", "G2", "G3", "G5", "G6") if gates.get(g, {}).get("evidence", "").startswith(MANUAL_PREFIX)]
+        if manual:
+            add("WARN", sid, f"evidência manual (não gerada pela ferramenta) em {', '.join(manual)} — prefira `gate {sid} <G> --run`")
         if status in APPROVED_PLUS and gates.get("G0", {}).get("status") != "PASS":
             add("WARN", sid, "G0 não registrado como PASS no registro de gates")
         if status == "implemented":
@@ -979,14 +1395,17 @@ def validate_epic(project: Project, doc: Doc, add):
     if doc.status in APPROVED_PLUS and not kids:
         add("ERROR", sid, f"épico aprovado sem specs filhas (nenhuma spec com parent: {sid})")
     decomposition = COMMENT_RE.sub("", doc.section("Decomposição") or "")
+    # Only the first column lists children; other columns (e.g. "Depende de") may cite specs of other epics.
+    listed = {ref for _, rows in parse_tables(decomposition) for row in rows if row
+              for ref in SPEC_REF_RE.findall(row[0])}
     for kid in kids:
         if kid.id not in decomposition:
             add("WARN", sid, f"filha {kid.id} não aparece na seção Decomposição")
     for ref in sorted(set(SPEC_REF_RE.findall(decomposition))):
         if ref not in project.specs:
             add("WARN", sid, f"Decomposição cita {ref}, que ainda não existe")
-        elif project.specs[ref].scalar("parent") != sid:
-            add("WARN", sid, f"Decomposição cita {ref}, mas ela não tem parent: {sid}")
+        elif ref in listed and project.specs[ref].scalar("parent") != sid:
+            add("WARN", sid, f"Decomposição lista {ref} como filha, mas ela não tem parent: {sid}")
     criteria = COMMENT_RE.sub("", doc.section("Critérios de Aceite") or "")
     level = "ERROR" if doc.status == "implemented" else "WARN"
     for line in (l for l in criteria.split("\n") if CHECKBOX_RE.match(l)):
@@ -1028,6 +1447,8 @@ def validate_adr(project: Project, adr: Doc, add):
     origin = adr.scalar("origin").lower()
     if origin and origin not in ADR_ORIGINS:
         add("ERROR", aid, f"origin inválido '{origin}' ({' | '.join(ADR_ORIGINS)})")
+    if not PLACEHOLDER_RE.search(COMMENT_RE.sub("", adr.text)) and adr.status in ("proposed", "accepted"):
+        validate_adr_content(adr, origin, add)
     if PLACEHOLDER_RE.search(COMMENT_RE.sub("", adr.text)):
         add("ERROR", aid, "marcadores {{...}} não preenchidos")
     if adr.status == "accepted" and not adr.scalar("enforced_by"):
@@ -1041,6 +1462,24 @@ def validate_adr(project: Project, adr: Doc, add):
     sup = adr.scalar("supersedes")
     if sup and sup not in project.adrs:
         add("ERROR", aid, f"supersedes: {sup} não existe")
+
+
+def validate_adr_content(adr: Doc, origin: str, add):
+    """Decision quality: options and sources for recommended decisions; risks recorded for user-chosen ones."""
+    aid = adr.id
+    options = COMMENT_RE.sub("", adr.section("Opções") or "")
+    bullets = [l for l in options.split("\n") if re.match(r"^\s*[-*]\s+\S", l) and not re.match(r"^\s*[-*]\s+N/A", l, re.I)]
+    sources = COMMENT_RE.sub("", (adr.section("Mais Informações") or "") + (adr.section("Fontes") or ""))
+    consequences = COMMENT_RE.sub("", adr.section("Consequências") or adr.section("Resultado da Decisão") or "")
+    if origin in ("", "decision"):
+        if len(bullets) < 2:
+            add("WARN", aid, "decisão recomendada com menos de 2 opções consideradas — compare alternativas reais "
+                             "(ou use origin: user se a escolha veio do usuário, ou as-is se já existia)")
+        if not re.search(r"https?://", sources) and not re.search(r"n[aã]o verificad", norm(sources)):
+            add("WARN", aid, "sem fontes (links oficiais com data) nem declaração explícita de 'não verificado' em Mais Informações")
+    elif origin == "user":
+        if not re.search(r"ruim|risco|trade-?off|limita", norm(consequences)):
+            add("WARN", aid, "escolha do usuário sem riscos registrados — respeite a escolha, mas registre riscos e custos em Consequências")
 
 
 def find_cycles(project: Project):
@@ -1197,11 +1636,21 @@ def cmd_validate(project: Project, ids, staged: bool = False, exclude_drafts: bo
     return report_issues(validate(project, only), ", ".join(sorted(only)) if only else "projeto inteiro")
 
 
+def ci_annotate(level: str, message: str):
+    """When running in GitHub Actions, surface findings as annotations on the PR (plain text elsewhere)."""
+    if os.environ.get("GITHUB_ACTIONS") != "true" or level not in ("ERROR", "FAIL", "WARN"):
+        return
+    kind = "warning" if level == "WARN" else "error"
+    text = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    print(f"::{kind} title=SDD::{text}")
+
+
 def report_issues(issues, scope: str) -> int:
     errors = [i for i in issues if i[0] == "ERROR"]
     warns = [i for i in issues if i[0] == "WARN"]
     for level, subject, msg in sorted(issues, key=lambda x: (x[1], x[0] != "ERROR")):
         print(f"{level:<5} {subject}: {msg}")
+        ci_annotate(level, f"{subject}: {msg}")
     print(f"\nG0 [{scope}]: {'PASS' if not errors else 'FAIL'} — {len(errors)} erro(s), {len(warns)} aviso(s)")
     return 1 if errors else 0
 
@@ -1295,6 +1744,17 @@ def build_index(project: Project) -> str:
                        f"| {md_cell(i['Responsável'])} | {i['Aberto em']} | {age_days(i['Aberto em'])} | {md_cell(i['Descrição'])} |")
         out.append("")
 
+    coverage = pillar_coverage(project)
+    if coverage:
+        out += ["## Cobertura de Pilares", "", f"Perfil: **{pillar_settings(project)[0]}**", "",
+                "| Pilar | Situação | Detalhe |", "|---|---|---|"]
+        out += [f"| {md_cell(title)} | {state} | {md_cell(detail)} |" for _, title, state, detail in coverage]
+        out.append("")
+    journeys, _ = journey_coverage(project)
+    if journeys:
+        out += ["## Jornadas Críticas", "", "| Jornada | Situação | Specs |", "|---|---|---|"]
+        out += [f"| {md_cell(title)} | {state} | {', '.join(sids) or '—'} |" for _, title, state, sids in journeys]
+        out.append("")
     out += ["## Plano de Execução", ""]
     if plan is None:
         out.append("⛔ Ciclo em `depends_on` — planejamento impossível até ser resolvido.")
@@ -1402,13 +1862,13 @@ def run_git(root: Path, *args):
     return result.returncode, result.stdout, result.stderr
 
 
-def verify_spec(project: Project, spec_id: str, base):
+def verify_spec(project: Project, spec_id: str, base, git_root=None):
     doc = project.specs.get(spec_id)
     if doc is None:
         die(f"{spec_id} não encontrada")
     if doc.tier == "epic":
         die("verify roda por spec executável (lite/full), não por épico")
-    root = project.root
+    root = Path(git_root) if git_root else project.root
     if run_git(root, "rev-parse", "--is-inside-work-tree")[0] != 0:
         die("não é um repositório git")
     base = base or project.cfg("base_branch", "main")
@@ -1527,6 +1987,7 @@ def print_results(header: str, results) -> int:
     print(header + "\n")
     for level, gate, msg in results:
         print(f"[{gate}] {level:<4}  {msg}")
+        ci_annotate(level, f"[{gate}] {msg}")
     fails = sum(1 for r in results if r[0] == "FAIL")
     warns = sum(1 for r in results if r[0] == "WARN")
     print(f"\nResultado: {'FAIL' if fails else 'PASS'} — {fails} falha(s), {warns} aviso(s)")
@@ -1613,6 +2074,155 @@ def cmd_report(project: Project, spec_id: str, changelog: bool = False):
     out.append(f"Spec completa: `{project.rel(doc.path)}`")
     print("\n".join(out))
     return 0
+
+
+# ---------------------------------------------------------------- gate (evidence generated by the tool)
+
+GATE_COMMANDS = {
+    "G2": ("build", "test", "lint", "coverage"),
+    "G3": ("arch_test",),
+    "G5": ("build", "test", "test_integration", "test_e2e", "arch_test", "security_scan"),
+    "G6": ("smoke_test",),
+}
+RUNNABLE_GATES = {"G0", "G1", "G2", "G3", "G4", "G5", "G6", "G7"}
+HUMAN_GATES = {"H2"}
+GATE_PILLAR = {"G3": "arquitetura", "G6": "entrega"}
+MANUAL_PREFIX = "MANUAL:"
+
+
+def run_shell(command: str, cwd: Path):
+    try:
+        result = subprocess.run(command, shell=True, cwd=cwd, capture_output=True, text=True, timeout=1800)
+    except subprocess.TimeoutExpired:
+        return 124, "timeout (30 min)"
+    lines = [l.strip() for l in (result.stdout + "\n" + result.stderr).splitlines() if l.strip()]
+    summary = next((l for l in reversed(lines) if not l.startswith("---")), "")
+    return result.returncode, summary[:90]
+
+
+def head_ref(cwd: Path):
+    code, sha, _ = run_git(cwd, "rev-parse", "--short", "HEAD")
+    dirty = bool(run_git(cwd, "status", "--porcelain", "--untracked-files=no")[1].strip())
+    return (sha.strip() if code == 0 else "?"), dirty
+
+
+def set_gate_row(doc: Doc, gate: str, status: str, evidence: str):
+    lines = doc.text.split("\n")
+    bounds = section_bounds(lines, "Registro de Gates")
+    if bounds is None:
+        die(f"{doc.id} não tem 'Registro de Gates' — rode `upgrade {doc.id} --apply`")
+    for i in range(bounds[0] + 1, bounds[1]):
+        cells = [c.strip() for c in CELL_SPLIT_RE.split(lines[i].strip()[1:-1])] if lines[i].strip().startswith("|") else []
+        if cells and cells[0].split() and cells[0].split()[0].upper() == gate:
+            lines[i] = f"| {cells[0]} | {status} | {md_cell(evidence)} | {today()} |"
+            doc.path.write_text("\n".join(lines), encoding="utf-8")
+            return
+    die(f"{doc.id}: linha do gate {gate} não encontrada no Registro de Gates — rode `upgrade {doc.id} --apply`")
+
+
+def pillar_waivers(project: Project) -> dict:
+    waived = project.cfg_map("pillars").get("waived")
+    return waived if isinstance(waived, dict) else {}
+
+
+def cmd_gate(project: Project, spec_id, gate, run, cwd, na, fail, by, evidence, manual, allow_dirty, expect_green=False):
+    doc = project.specs.get(spec_id)
+    if doc is None or doc.tier == "epic":
+        die(f"{spec_id} não encontrada ou é épico (gates são por spec executável)")
+    gate = gate.upper()
+    if gate not in GATE_ROWS:
+        die(f"gate inválido {gate} ({' | '.join(GATE_ROWS)})")
+    gates = gate_table(doc) or {}
+    order = list(GATE_ROWS)
+    workdir = Path(cwd).resolve() if cwd else project.root
+
+    if fail:
+        set_gate_row(doc, gate, "FAIL", fail)
+        print(f"{spec_id} {gate} = FAIL — {fail}")
+        return 0
+    pending = [g for g in order[:order.index(gate)] if not gate_ok(gates, g)]
+    if pending:
+        die(f"{gate} só depois de {', '.join(pending)} (PASS ou N/A)")
+
+    if na:
+        if len(na.strip()) < 15:
+            die("N/A exige motivo com pelo menos 15 caracteres")
+        pillar = GATE_PILLAR.get(gate)
+        if pillar:
+            refs = [r for r in SPEC_REF_RE.findall(na) if r in project.specs and r != spec_id]
+            if not refs and pillar not in pillar_waivers(project):
+                die(f"N/A em {gate} precisa apontar a spec que vai resolver (SPEC-NNNN existente) "
+                    f"ou a dispensa do pilar '{pillar}' em sdd-config.yml (pillars.waived)")
+        set_gate_row(doc, gate, "N/A", na)
+        print(f"{spec_id} {gate} = N/A — {na}")
+        return 0
+
+    if gate in HUMAN_GATES:
+        policy = project.cfg("h2_policy", "per-wave")
+        if gate == "H2" and policy == "auto-on-green" and not by:
+            if not gate_ok(gates, "G5") or gates.get("G5", {}).get("status") != "PASS":
+                die("h2_policy auto-on-green exige G5 = PASS")
+            approver = project.cfg("h2_policy_approved_by", "?")
+            text = f"política auto-on-green (aprovada por {approver} em {project.cfg('h2_policy_approved_at', '?')}); G5 PASS"
+        elif by:
+            text = f"aprovado por {by}" + (f" — {evidence}" if evidence else "")
+        else:
+            die(f"{gate} é humano: informe --by <quem aprovou> (ou configure h2_policy: auto-on-green)")
+        set_gate_row(doc, gate, "PASS", text)
+        print(f"{spec_id} {gate} = PASS — {text}")
+        return 0
+
+    if not run:
+        if not manual or not evidence:
+            die(f"{gate} registra PASS com --run (evidência gerada) ou, excepcionalmente, --manual --evidence \"...\"")
+        set_gate_row(doc, gate, "PASS", f"{MANUAL_PREFIX} {evidence}")
+        print(f"{spec_id} {gate} = PASS (manual) — {evidence}")
+        return 0
+
+    sha, dirty = head_ref(workdir)
+    if dirty and not allow_dirty and gate != "G0":
+        die(f"há alterações não commitadas em {workdir}: a evidência precisa apontar um commit (commite ou use --allow-dirty)")
+    parts, ok = [], True
+    if gate == "G0":
+        errors = [m for lvl, s, m in validate(project, {spec_id}) if lvl == "ERROR" and s == spec_id]
+        ok = not errors
+        parts.append(f"validate: {len(errors)} erro(s)")
+    elif gate in ("G1", "G4"):
+        _, results = verify_spec(project, spec_id, None, git_root=workdir)
+        wanted = {"G1"} if gate == "G1" else {"G1", "G4"}
+        fails = [m for lvl, g, m in results if lvl == "FAIL" and g in wanted]
+        ok = not fails
+        parts.append(f"verify {'+'.join(sorted(wanted))}: {'PASS' if ok else 'FAIL — ' + fails[0][:70]}")
+        if gate == "G1" and ok and project.cfg("test"):
+            code, summary = run_shell(project.cfg("test"), workdir)
+            red = code != 0
+            ok = red or expect_green
+            parts.append(f"`{project.cfg('test')}` exit {code} ({'red' if red else 'verde'}: {summary})")
+        if gate == "G4":
+            if not by:
+                die("G4 exige o veredito do Reviewer: --by \"<revisor>: APPROVED ...\"")
+            if "APPROVED" not in by.upper():
+                ok = False
+            parts.append(f"revisão: {by}")
+    elif gate == "G7":
+        issues = []
+        plan = set(plan_test_ids(doc))
+        validate_delivery(doc, plan, lambda lvl, s, m: issues.append(m) if lvl == "ERROR" else None)
+        ok = not issues
+        parts.append("Relatório de Entrega e Definição de Pronto: " + ("ok" if ok else issues[0][:80]))
+    else:
+        configured = [key for key in GATE_COMMANDS[gate] if project.cfg(key)]
+        if not configured:
+            die(f"nenhum comando configurado para {gate} ({', '.join(GATE_COMMANDS[gate])}) — configure no sdd-config "
+                f"ou registre N/A com --na apontando a spec que vai criá-lo")
+        for key in configured:
+            code, summary = run_shell(project.cfg(key), workdir)
+            parts.append(f"{key} exit {code} ({summary})")
+            ok = ok and code == 0
+    evidence_text = "; ".join(parts) + f" — {sha}" + (" (árvore suja)" if dirty else "")
+    set_gate_row(doc, gate, "PASS" if ok else "FAIL", evidence_text)
+    print(f"{spec_id} {gate} = {'PASS' if ok else 'FAIL'} — {evidence_text}")
+    return 0 if ok else 1
 
 
 def section_bounds(lines, keyword: str):
@@ -1790,6 +2400,13 @@ def cmd_status(project: Project, ids):
             print(progress_panel(doc, done))
             print(f"\nPróximo passo: {step}\n")
         return 0
+    for path, why in stale_worktrees(project):
+        print(f"⚠ worktree esquecida {path}: {why}")
+    for path, why in misplaced_worktrees(project):
+        print(f"⚠ worktree {path} {why}")
+    gaps = [pid for pid, _, state, _ in pillar_coverage(project) if state == "sem decisão"]
+    if gaps:
+        print(f"⚠ Pilares sem decisão: {', '.join(gaps)} — rode `pillars`\n")
     open_docs = [d for d in sorted(project.specs.values(), key=lambda d: d.id) if d.status in OPEN]
     if not open_docs:
         print("Nenhuma spec aberta. Novo trabalho: DISCOVER → `new`.")
@@ -1850,6 +2467,27 @@ def cmd_export(project: Project, out):
     return 0
 
 
+def required_structure(project: Project) -> dict:
+    t = project.tracker()
+    return {
+        "statuses": sorted({v for v in t["statuses"].values() if v}),
+        "issue_types": sorted({v for v in t["issue_types"].values() if v}),
+        "labels": sorted(set(t["labels"]) | {t["blocked_label"]}),
+        "relations": ["parent (épico → spec)", "blocks (dependência → dependente)"],
+    }
+
+
+def structure_operations(project: Project, structure: dict):
+    ops = []
+    need = required_structure(project)
+    for key, op in (("statuses", "create_status"), ("issue_types", "create_issue_type"), ("labels", "create_label")):
+        have = {norm(str(x)) for x in (structure.get(key) or [])}
+        for value in need[key]:
+            if norm(value) not in have:
+                ops.append({"op": op, "name": value})
+    return ops
+
+
 def sync_operations(project: Project, board):
     t = project.tracker()
     provider, statuses = t["provider"], t["statuses"]
@@ -1895,16 +2533,22 @@ def sync_operations(project: Project, board):
     return ops
 
 
-def cmd_sync(project: Project, board_file, as_json: bool, check: bool):
+def cmd_sync(project: Project, board_file, as_json: bool, check: bool, structure: bool = False):
     t = project.tracker()
+    if structure:
+        print(json.dumps({"provider": t["provider"], "project": t["project"], "structure": required_structure(project)},
+                         ensure_ascii=False, indent=2))
+        return 0
     if t["provider"] == "none":
         print("tracker.provider = none — o repositório é o único board. Nada a sincronizar.")
         return 0
-    board = None
+    board, structure_ops = None, []
     if board_file:
         raw = json.loads(Path(board_file).read_text(encoding="utf-8"))
         board = {i["ref"]: i for i in raw.get("items", []) if isinstance(i, dict) and i.get("ref")}
-    ops = sync_operations(project, board)
+        if isinstance(raw.get("structure"), dict):
+            structure_ops = structure_operations(project, raw["structure"])
+    ops = structure_ops + sync_operations(project, board)
     if as_json:
         print(json.dumps({"provider": t["provider"], "project": t["project"], "operations": ops}, ensure_ascii=False, indent=2))
     else:
@@ -2062,7 +2706,6 @@ def cmd_pr(project: Project, ids, title_only: bool, out):
     if out:
         Path(out).write_text(body, encoding="utf-8")
         print(title)
-        print(f"corpo escrito em: {out}", file=sys.stderr)
     else:
         print(title + "\n\n" + body)
     return 0
@@ -2080,13 +2723,31 @@ def cmd_pr_check(project: Project, title, body, body_file, base):
         if re.match(r"^\s*(refs\s*:|<!--\s*sdd:)", line, re.I):
             declared |= set(SPEC_REF_RE.findall(line))
     refs = sorted(declared) if declared else sorted(set(SPEC_REF_RE.findall(body)))
-    m = CONVENTIONAL_RE.match(title)
+    title_level = "WARN" if project.cfg("pr_title_policy", "fail") == "warn" else "FAIL"
+    bare = re.sub(r"\s*\[no-spec\]\s*", " ", title, flags=re.I).replace(" :", ":").strip()
+    m = CONVENTIONAL_RE.match(bare)
     if not m or m.group(1).lower() not in COMMIT_TYPES:
-        results.append(("WARN", "PR", f"título fora do Conventional Commits (<tipo>(escopo)?: descrição; tipos: {', '.join(COMMIT_TYPES)})"))
+        results.append((title_level, "PR", f"título fora do Conventional Commits: '{title[:60]}' — use "
+                        f"<tipo>(escopo)?: descrição [SPEC-NNNN] (tipos: {', '.join(COMMIT_TYPES)}); "
+                        "gere com `pr SPEC-X --title`"))
+    try:
+        max_len = int(project.cfg("pr_title_max", "100"))
+    except ValueError:
+        max_len = 100
+    if len(title) > max_len:
+        results.append((title_level, "PR", f"título com {len(title)} caracteres (máximo {max_len})"))
     docs = []
     if not refs:
         if "[no-spec]" in title.lower():
             results.append(("WARN", "PR", "PR marcado [no-spec] — reviewer confirma que não há mudança de comportamento"))
+            base_ref = base or project.cfg("base_branch", "main")
+            code, mb, _ = run_git(project.root, "merge-base", base_ref, "HEAD")
+            if code == 0:
+                changed = [f for f in run_git(project.root, "diff", "--name-only", mb.strip(), "HEAD")[1].splitlines() if f]
+                code_files = [f for f in changed if not (f.endswith(".md") or f.startswith("docs/"))]
+                if code_files:
+                    results.append(("WARN", "PR", "[no-spec] altera arquivos que não são documentação: " + ", ".join(code_files[:8])
+                                    + " — se muda comportamento, precisa de spec (mesmo lite, criada na hora)"))
         else:
             results.append(("FAIL", "PR", "PR não referencia nenhuma spec (SPEC-NNNN no título ou corpo); "
                                           "mudança sem comportamento: marque [no-spec] no título"))
@@ -2145,18 +2806,25 @@ AGENT_FILES = ("AGENTS.md", "CLAUDE.md", "GEMINI.md")
 AGENT_BLOCK_RE = re.compile(r"<!-- sdd:start -->.*?<!-- sdd:end -->\n?", re.S)
 
 
-def cmd_vendor(project: Project, ci, pr_template, hooks: bool, agents: bool, changelog: bool, force: bool):
+CODEOWNERS_PATHS = {"github": ".github/CODEOWNERS", "gitlab": ".gitlab/CODEOWNERS"}
+
+
+def cmd_vendor(project: Project, ci, pr_template, hooks: bool, agents: bool, changelog: bool, force: bool,
+               codeowners=None, owner=None, overwrite=False):
     notes = []
 
-    def put(rel: str, content: str, executable: bool = False):
+    def put(rel: str, content: str, executable: bool = False, always: bool = False):
         dest = project.root / rel
         if dest.exists():
             current = dest.read_text(encoding="utf-8")
             if current == content:
                 print(f"inalterado: {rel}")
                 return
-            if not force:
-                print(f"mantido (já existe e difere, use --force para sobrescrever): {rel}")
+            if not (always or overwrite):
+                changed = sum(1 for l in difflib.unified_diff(current.splitlines(), content.splitlines(), lineterm="")
+                              if l[:1] in "+-" and l[:3] not in ("+++", "---"))
+                print(f"mantido (customizado no projeto, {changed} linha(s) diferem do modelo da skill): {rel} — "
+                      "revise e, se quiser o modelo, use --overwrite")
                 return
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(content, encoding="utf-8")
@@ -2170,7 +2838,7 @@ def cmd_vendor(project: Project, ci, pr_template, hooks: bool, agents: bool, cha
             die(f"asset não encontrado: {path}")
         return path.read_text(encoding="utf-8")
 
-    put(VENDORED_TOOL, Path(__file__).read_text(encoding="utf-8"), executable=True)
+    put(VENDORED_TOOL, Path(__file__).read_text(encoding="utf-8"), executable=True, always=True)
     if ci:
         src, dest = CI_TARGETS[ci]
         put(dest, asset(src), executable=dest.endswith(".sh"))
@@ -2185,6 +2853,18 @@ def cmd_vendor(project: Project, ci, pr_template, hooks: bool, agents: bool, cha
         put(".githooks/pre-commit", asset("hooks/pre-commit"), executable=True)
         notes.append("ative os hooks (decisão do time): `git config core.hooksPath .githooks` "
                      "— ou chame os mesmos scripts pelo husky/lefthook/pre-commit que o projeto já usa")
+    if codeowners:
+        if not owner:
+            die("--codeowners exige --owner (ex: @usuario ou @org/time)")
+        extra = [CI_TARGETS[ci][1]] if ci else []
+        lines = ["# SDD: arquivos de controle exigem revisão de quem responde pelo processo"] + \
+                [f"/{path} {owner}" for path in CONTROL_PATHS + extra]
+        if codeowners in CODEOWNERS_PATHS:
+            put(CODEOWNERS_PATHS[codeowners], "\n".join(lines) + "\n")
+            notes.append("ative 'exigir revisão de code owners' na proteção da branch para o arquivo ter efeito")
+        else:
+            notes.append("plataforma sem CODEOWNERS: configure revisores obrigatórios por caminho para: "
+                         + ", ".join(CONTROL_PATHS + extra))
     if changelog and not (project.root / "CHANGELOG.md").exists():
         put("CHANGELOG.md", asset("CHANGELOG.template.md"))
     if agents:
@@ -2233,8 +2913,16 @@ def cmd_new(project: Project, tier: str, title: str, slug, parent):
     return 0
 
 
-def cmd_new_adr(project: Project, title: str, slug):
-    new_id, dest, text = create_from_template(project, "template-adr.md", project.adr_dir, "ADR", title, slug)
+def cmd_new_adr(project: Project, title, slug, baseline=None):
+    template = "template-adr.md"
+    if baseline:
+        if baseline not in PILLARS:
+            die(f"pilar desconhecido '{baseline}' ({', '.join(PILLARS)})")
+        template = f"adr-baseline/{baseline}.md"
+        title = title or PILLARS[baseline][0]
+    if not title:
+        die("informe --title (ou --baseline <pilar>)")
+    new_id, dest, text = create_from_template(project, template, project.adr_dir, "ADR", title, slug)
     dest.write_text(text, encoding="utf-8")
     print(f"{new_id}  {project.rel(dest)}")
     return 0
@@ -2275,6 +2963,101 @@ def cmd_set(project: Project, args):
 def cmd_next_id(project: Project, kind: str):
     prefix = "SPEC" if kind == "spec" else "ADR"
     print(f"{prefix}-{project.next_number(prefix):04d}")
+    return 0
+
+
+# ---------------------------------------------------------------- upgrade (bring old specs to the current templates)
+
+def template_parts(tier: str):
+    text = (TEMPLATES_DIR / f"template-{tier}.md").read_text(encoding="utf-8")
+    fm, body = split_frontmatter(text)
+    keys = [line.split(":", 1)[0].strip() for line in (fm or "").splitlines() if re.match(r"^[A-Za-z_][\w-]*\s*:", line)]
+    meta = parse_yaml_subset(fm or "")
+    return keys, meta, parse_sections(body)
+
+
+def strip_number(heading: str) -> str:
+    return re.sub(r"^\d+(\.\d+)*\.?\s*", "", heading).strip()
+
+
+def upgrade_doc(doc: Doc):
+    keys, tmeta, tsections = template_parts(doc.tier)
+    text, changes = doc.text, []
+    for key in keys:
+        if key in doc.meta:
+            continue
+        default = tmeta.get(key, "")
+        if isinstance(default, str) and "{{" in default:
+            continue
+        text = set_meta(text, key, default)
+        changes.append(f"frontmatter +{key}: {fmt_value(default) or '(vazio)'}")
+    lines = text.split("\n")
+    required = [kw for kw, _ in REQUIRED_SECTIONS[doc.tier]]
+    tnames = [strip_number(h) for h, _ in tsections]
+    for keyword in required:
+        if section_bounds(lines, keyword) is not None:
+            continue
+        idx = next((i for i, name in enumerate(tnames) if norm(keyword) in norm(name)), None)
+        if idx is None:
+            continue
+        content = tsections[idx][1].replace("{{id}}", doc.id)
+        if doc.status != "proposed":
+            content = PLACEHOLDER_RE.sub("", content.replace(
+                "{{- [ ] dúvida que precisa de resposta e quem responde | Nenhuma}}", "Nenhuma (seção adicionada por upgrade)"))
+        block = [f"## {tnames[idx]}"] + content.rstrip("\n").split("\n") + [""]
+        insert_at = None
+        for later in tnames[idx + 1:]:
+            bounds = section_bounds(lines, later)
+            if bounds is not None:
+                insert_at = bounds[0]
+                break
+        if insert_at is None:
+            if lines and lines[-1].strip():
+                lines.append("")
+            lines += block
+        else:
+            lines[insert_at:insert_at] = block
+        changes.append(f"seção +{tnames[idx]}")
+    text = "\n".join(lines)
+    gate_rows = [row for h, c in tsections if norm("Registro de Gates") in norm(h)
+                 for _, rows in parse_tables(c) for row in rows]
+    probe = Doc(doc.path, text)
+    existing = gate_table(probe)
+    if existing is not None:
+        missing = [row for row in gate_rows if row[0].split()[0].upper() not in existing]
+        if missing:
+            lines = text.split("\n")
+            start, end = section_bounds(lines, "Registro de Gates")
+            last = max(i for i in range(start + 1, end) if lines[i].strip().startswith("|"))
+            lines[last + 1:last + 1] = [f"| {row[0]} | PENDING | | |" for row in missing]
+            text = "\n".join(lines)
+            changes.append("gates +" + ", ".join(row[0].split()[0] for row in missing))
+    return text, changes
+
+
+def cmd_upgrade(project: Project, ids, apply: bool):
+    targets = [project.specs[i] for i in ids] if ids else [d for _, d in sorted(project.specs.items())]
+    total = 0
+    for doc in targets:
+        if doc.legacy or doc.tier not in TIERS:
+            continue
+        text, changes = upgrade_doc(doc)
+        if not changes:
+            continue
+        total += 1
+        print(f"{doc.id} [{doc.status}]")
+        for change in changes:
+            print(f"  {change}")
+        if doc.status == "implemented" and doc.section("Relatório de Entrega") is None:
+            print("  ⚠ implemented sem Relatório de Entrega: preencha a seção adicionada ou marque `legacy: true`")
+        if apply:
+            doc.path.write_text(text, encoding="utf-8")
+    if not total:
+        print("Todas as specs já estão no formato atual.")
+    elif not apply:
+        print(f"\nSimulação: {total} spec(s) seriam atualizadas. Rode com --apply para gravar.")
+    else:
+        print(f"\nAtualizadas {total} spec(s). Rode `validate` para ver o que ainda precisa ser preenchido.")
     return 0
 
 
@@ -2373,6 +3156,7 @@ def main(argv=None):
     p.add_argument("--board", help="snapshot neutro do board em JSON (gerado pelo adaptador)")
     p.add_argument("--json", action="store_true")
     p.add_argument("--check", action="store_true", help="exit 1 se houver divergência")
+    p.add_argument("--structure", action="store_true", help="imprime a estrutura que o board precisa ter (preparação)")
     p = sub.add_parser("pr", help="título e corpo padronizados de PR para uma ou mais specs (épico = filhas aprovadas)")
     p.add_argument("ids", nargs="+")
     p.add_argument("--title", action="store_true", help="imprime só o título")
@@ -2388,7 +3172,10 @@ def main(argv=None):
     p.add_argument("--hooks", action="store_true")
     p.add_argument("--agents", action="store_true")
     p.add_argument("--changelog", action="store_true", help="cria CHANGELOG.md (Keep a Changelog) se não existir")
-    p.add_argument("--force", action="store_true")
+    p.add_argument("--codeowners", help="github | gitlab | outra (lista caminhos para revisores obrigatórios)")
+    p.add_argument("--owner", help="dono dos arquivos de controle (ex: @usuario)")
+    p.add_argument("--force", action="store_true", help="(compatibilidade) a ferramenta em tools/sdd é sempre atualizada")
+    p.add_argument("--overwrite", action="store_true", help="substitui também arquivos customizados (workflow, template, hooks)")
     sub.add_parser("waves", help="plano de execução em ondas + próximo lote")
     sub.add_parser("next", help="próximo lote pronto para despachar")
     p = sub.add_parser("index", help="gera docs/specs/INDEX.md")
@@ -2401,6 +3188,18 @@ def main(argv=None):
     p = sub.add_parser("report", help="resumo de entrega (o que, como, verificação, gates) para PR/changelog")
     p.add_argument("id")
     p.add_argument("--changelog", action="store_true", help="entrada no formato Keep a Changelog")
+    p = sub.add_parser("gate", help="registra um gate: --run gera a evidência executando os comandos do sdd-config")
+    p.add_argument("id")
+    p.add_argument("gate")
+    p.add_argument("--run", action="store_true", help="executa validate/verify/comandos e grava PASS ou FAIL com a evidência")
+    p.add_argument("--cwd", help="diretório onde rodar comandos e git (ex: worktree da spec); o registro vai para a spec do projeto atual")
+    p.add_argument("--na", help="registra N/A com motivo (G3/G6: aponte SPEC-NNNN ou dispensa de pilar)")
+    p.add_argument("--fail", help="registra FAIL com motivo")
+    p.add_argument("--by", help="gates humanos: quem aprovou; G4: veredito do Reviewer")
+    p.add_argument("--evidence", help="texto de evidência (com --manual) ou complemento")
+    p.add_argument("--manual", action="store_true", help="PASS sem execução (marcado MANUAL:, gera aviso)")
+    p.add_argument("--allow-dirty", action="store_true")
+    p.add_argument("--expect-green", action="store_true", help="G1: todos os testes novos são de guarda/caracterização")
     p = sub.add_parser("impede", help="registra impedimento (spec | decisão | trabalho | externo | falha)")
     p.add_argument("id")
     p.add_argument("--type", required=True)
@@ -2417,13 +3216,23 @@ def main(argv=None):
     p.add_argument("--title", required=True)
     p.add_argument("--slug")
     p.add_argument("--parent")
-    p = sub.add_parser("new-adr", help="cria ADR a partir do template")
-    p.add_argument("--title", required=True)
+    p = sub.add_parser("new-adr", help="cria ADR a partir do template (ou do ADR de base de um pilar com --baseline)")
+    p.add_argument("--title")
+    p.add_argument("--baseline", help="pilar do catálogo (veja `pillars`)")
     p.add_argument("--slug")
     p = sub.add_parser("set", help="atualiza frontmatter: set ID [ID ...] chave=valor (valor 'today' = data de hoje)")
     p.add_argument("args", nargs="+")
     p = sub.add_parser("next-id", help="próximo ID livre")
     p.add_argument("kind", choices=("spec", "adr"))
+    p = sub.add_parser("worktree", help="caminho e branch padronizados da worktree de uma spec (--create cria)")
+    p.add_argument("id")
+    p.add_argument("--create", action="store_true")
+    p.add_argument("--base", help="branch de partida (padrão: integração do épico ou base_branch)")
+    sub.add_parser("journeys", help="cobertura das jornadas críticas (critical_journeys) por testes E2E")
+    sub.add_parser("pillars", help="cobertura dos pilares de entrega (perfil do sdd-config) e N/A recorrente")
+    p = sub.add_parser("upgrade", help="atualiza specs antigas para os templates atuais (seções, chaves, gates); simulação por padrão")
+    p.add_argument("ids", nargs="*")
+    p.add_argument("--apply", action="store_true")
     p = sub.add_parser("migrate", help="converte o layout legado (pastas de status + nomes com data)")
     p.add_argument("--apply", action="store_true")
     args = parser.parse_args(argv)
@@ -2437,13 +3246,14 @@ def main(argv=None):
     if args.command == "export":
         return cmd_export(project, args.out)
     if args.command == "sync":
-        return cmd_sync(project, args.board, args.json, args.check)
+        return cmd_sync(project, args.board, args.json, args.check, args.structure)
     if args.command == "pr":
         return cmd_pr(project, args.ids, args.title, args.out)
     if args.command == "pr-check":
         return cmd_pr_check(project, args.title, args.body, args.body_file, args.base)
     if args.command == "vendor":
-        return cmd_vendor(project, args.ci, args.pr_template, args.hooks, args.agents, args.changelog, args.force)
+        return cmd_vendor(project, args.ci, args.pr_template, args.hooks, args.agents, args.changelog, args.force,
+                          args.codeowners, args.owner, args.overwrite)
     if args.command == "waves":
         return cmd_waves(project)
     if args.command == "next":
@@ -2456,6 +3266,9 @@ def main(argv=None):
         return cmd_impacted(project, args.id)
     if args.command == "report":
         return cmd_report(project, args.id, args.changelog)
+    if args.command == "gate":
+        return cmd_gate(project, args.id, args.gate, args.run, args.cwd, args.na, args.fail, args.by, args.evidence,
+                        args.manual, args.allow_dirty, args.expect_green)
     if args.command == "impede":
         return cmd_impede(project, args.id, args.type, args.reason, args.owner, args.phase, args.tried)
     if args.command == "resolve":
@@ -2463,11 +3276,19 @@ def main(argv=None):
     if args.command == "new":
         return cmd_new(project, args.tier, args.title, args.slug, args.parent)
     if args.command == "new-adr":
-        return cmd_new_adr(project, args.title, args.slug)
+        return cmd_new_adr(project, args.title, args.slug, args.baseline)
     if args.command == "set":
         return cmd_set(project, args.args)
     if args.command == "next-id":
         return cmd_next_id(project, args.kind)
+    if args.command == "worktree":
+        return cmd_worktree(project, args.id, args.create, args.base)
+    if args.command == "journeys":
+        return cmd_journeys(project)
+    if args.command == "pillars":
+        return cmd_pillars(project)
+    if args.command == "upgrade":
+        return cmd_upgrade(project, args.ids, args.apply)
     if args.command == "migrate":
         return cmd_migrate(project, args.apply)
     return 2

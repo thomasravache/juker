@@ -27,6 +27,11 @@ deploy_production: ""     # alvo: "gh workflow run deploy.yml -f env=production 
 staging_url: ""           # domínio a definir (pré-requisito externo de SPEC-0005)
 production_url: ""
 
+# --- Worktrees ---
+# Dentro do repositório por decisão do fundador; a pasta está no .gitignore (não há .dockerignore).
+worktree_dir: ".worktrees"
+worktree_allow: []
+
 # --- Rastreabilidade e escopo (G1, G4) ---
 test_paths:
   - "tests/**"
@@ -35,6 +40,11 @@ test_paths:
 scope_exempt:
   - "docs/specs/**"
   - "docs/adr/**"
+  - "AGENTS.md"          # doc raiz atualizada no G7 de qualquer spec (root_docs)
+  - "README.md"          # idem
+  - "CLAUDE.md"          # idem
+  - "tools/sdd/**"       # cópia vendorizada da skill, atualizada por `vendor` ([no-spec])
+  - ".gitignore"         # mudanças sem comportamento ([no-spec]); revisadas no PR
 dependency_manifests:
   - "Directory.Packages.props"
   - "Directory.Build.props"
@@ -64,8 +74,32 @@ tracker:
     migration: ""
     foundation: ""
 
+# --- Jornadas críticas (references/testing.md da skill) ---
+# Definidas a partir da SPEC-0025 (harness de E2E); cada uma precisará de um E2E marcado [jornada: <id>].
+critical_journeys: {}
+
+# --- Pilares de entrega --- decisão do fundador em 2026-10-13
+pillars:
+  profile: padrao
+  waived: {}
+  extra: {}
+
+# --- Fluxo de mudança --- decisão do fundador em 2026-10-13: toda onda entra na main por PR
+# da branch de integração (sdd/SPEC-0001), com merge commit. O histórico anterior (merges locais) fica como está.
+change_flow: pr
+change_flow_reason: ""
+
+# --- Aprovações humanas --- H1 sempre no chat. H2: thomas autorizou no chat (2026-10-13) push, PRs e merge
+# quando o CI configurado passar por inteiro. Deploy em produção nunca é coberto: confirmação por release.
+h1_policy: chat
+h2_policy: auto-on-green
+h2_policy_approved_by: thomas
+h2_policy_approved_at: 2026-10-13
+
 # --- Pull requests ---
 pr_title: "{conv}: {title} [{id}]"
+pr_title_policy: fail
+pr_title_max: 100
 
 # --- Documentação (G7) ---
 root_docs:

@@ -127,7 +127,7 @@ mutation.yml (não obrigatório): on schedule (diário, 03:00 UTC) | workflow_di
 - **CT-01** — O workflow publica o output `image_digest` e a tag `ghcr.io/<owner>/juker:<sha>` que o `deploy.yml` (SPEC-0006) consome; um teste em `tests/Juker.CiTests` lê o YAML e verifica os nomes dos jobs, do output e da tag.
 
 ### 7.5 Testes E2E
-- N/A — user_facing: false.
+- N/A — pipeline de CI; nenhuma jornada de usuário muda (o CI só executa os E2E das outras specs).
 
 ### 7.6 Outros
 - N/A.

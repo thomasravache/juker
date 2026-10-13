@@ -13,7 +13,7 @@ touches: [BannedSymbols.txt, src/Juker.Host/Diagnostics/ComposedModules.cs, test
 adrs: [ADR-0014]
 external: []
 size: S
-approved_by: thomas (autorização prévia de 2026-09-30, a confirmar no overview)
+approved_by: thomas (autorização prévia de 2026-09-30, confirmada por thomas no chat em 2026-10-13)
 approved_at: 2026-09-30
 ---
 
@@ -74,7 +74,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G3 Arquitetura | PASS | `dotnet test --project tests/Juker.ArchitectureTests -c Release` → sem falhas | 2026-10-01 |
 | G4 Review | PASS | Reviewer independente: APPROVED em 2605283 (verify PASS 0/0; build 0/0; 39/39; arquitetura 20/20; lint ok; IT-01 vermelho em bc010b7 pelo motivo certo). 2 minor: IT-02 é guarda (rotulado); risco residual aceito — o nome composto não é amarrado a um serviço registrado porque os `Add*Module` ainda estão vazios (revisitar quando o primeiro módulo registrar serviços, a partir da SPEC-0007) | 2026-10-01 |
 | G5 Integração & CI | PASS | Merge --no-ff em `sdd/SPEC-0001` (473807b): build 0/0; `dotnet test --solution` 39/39; integração exit 0; lint ok. CI: N/A até a SPEC-0005 | 2026-10-01 |
-| H2 Integração aprovada | PASS | autorização prévia de thomas no chat (2026-09-30: "continue trabalhando… opte pela recomendação"), a confirmar no overview | 2026-10-01 |
+| H2 Integração aprovada | PASS | autorização prévia de thomas no chat (2026-09-30: "continue trabalhando… opte pela recomendação"), confirmada por thomas no chat em 2026-10-13 | 2026-10-01 |
 | G6 Deploy | N/A | CD adiado por decisão do fundador; entrega = merge na `main` | 2026-10-01 |
 | G7 Pronto & Docs | PASS | Relatório de Entrega, prova de correção e Verificação; DoD marcada; CHANGELOG na branch de integração | 2026-10-01 |
 

@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: SPEC-0003:IT-03, SPEC-0003:IT-06, SPEC-0003:UT-01 e SPEC-0005:IT-05
+pillars: [testes]
 ---
 
 # ADR-0013 — Estratégia de E2E e testes de interface

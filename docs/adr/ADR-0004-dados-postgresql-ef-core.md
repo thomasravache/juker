@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: ARQ-03 (DbContext por módulo) e testes de integração com Testcontainers (SPEC-0003)
+pillars: [dados-migracoes]
 ---
 
 # ADR-0004 — PostgreSQL 18 com EF Core 10, schema e migrations por módulo, busca com pg_trgm

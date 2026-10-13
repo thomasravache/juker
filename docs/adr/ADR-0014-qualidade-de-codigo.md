@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: SPEC-0002:IT-03 (build quebra com API proibida e regra do Meziantou), SPEC-0003:UT-02 (tokens do design) e SPEC-0005:IT-06 (cobertura do diff)
+pillars: [qualidade-codigo]
 ---
 
 # ADR-0014 — Qualidade de código

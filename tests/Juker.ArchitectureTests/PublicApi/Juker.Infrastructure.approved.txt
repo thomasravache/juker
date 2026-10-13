@@ -1,0 +1,69 @@
+namespace Juker.Infrastructure
+{
+    public sealed class FixedTenantContext : Juker.Infrastructure.ITenantContext
+    {
+        public FixedTenantContext(Juker.SharedKernel.VenueId? venueId) { }
+        public Juker.SharedKernel.VenueId? VenueId { get; }
+    }
+    public interface ICommandHandler<in TCommand, TResult>
+        where in TCommand : Juker.Infrastructure.ICommand<TResult>
+    {
+        System.Threading.Tasks.Task<Juker.SharedKernel.Result<TResult>> Handle(TCommand command, System.Threading.CancellationToken ct);
+    }
+    public interface ICommand<TResult> { }
+    public interface IIdGenerator
+    {
+        System.Guid NewId();
+    }
+    public interface IIntegrationEventHandler<in TEvent>
+        where in TEvent : Juker.SharedKernel.IIntegrationEvent
+    {
+        System.Threading.Tasks.Task Handle(TEvent integrationEvent, System.Threading.CancellationToken ct);
+    }
+    public interface IOutboxDrainer
+    {
+        System.Threading.Tasks.Task<int> DrainAsync(System.Threading.CancellationToken ct);
+    }
+    public interface IQueryHandler<in TQuery, TResult>
+        where in TQuery : Juker.Infrastructure.IQuery<TResult>
+    {
+        System.Threading.Tasks.Task<Juker.SharedKernel.Result<TResult>> Handle(TQuery query, System.Threading.CancellationToken ct);
+    }
+    public interface IQuery<TResult> { }
+    public interface ITenantContext
+    {
+        Juker.SharedKernel.VenueId? VenueId { get; }
+    }
+    public static class InfrastructureRegistration
+    {
+        public static Microsoft.Extensions.DependencyInjection.IServiceCollection AddJukerInfrastructure(this Microsoft.Extensions.DependencyInjection.IServiceCollection s, Microsoft.Extensions.Configuration.IConfiguration c) { }
+        public static Microsoft.Extensions.DependencyInjection.IServiceCollection AddModuleDbContext<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection s, string connectionName = "juker")
+            where TContext : Juker.Infrastructure.ModuleDbContext { }
+        public static Microsoft.Extensions.DependencyInjection.IServiceCollection AddModuleHandlers(this Microsoft.Extensions.DependencyInjection.IServiceCollection s, System.Reflection.Assembly moduleAssembly) { }
+    }
+    public abstract class ModuleDbContext : Microsoft.EntityFrameworkCore.DbContext
+    {
+        protected ModuleDbContext(Microsoft.EntityFrameworkCore.DbContextOptions options, Juker.Infrastructure.ITenantContext tenant, string schema) { }
+        protected string Schema { get; }
+        protected override void ConfigureConventions(Microsoft.EntityFrameworkCore.ModelConfigurationBuilder configurationBuilder) { }
+        protected override void OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder modelBuilder) { }
+    }
+    public sealed class OutboxOptions
+    {
+        public OutboxOptions() { }
+        public bool DispatcherEnabled { get; set; }
+        public int IntervalMs { get; set; }
+        public int MaxAttempts { get; set; }
+    }
+    public static class ResultHttpExtensions
+    {
+        public static Microsoft.AspNetCore.Http.IResult ToHttpResult(this Juker.SharedKernel.Result r) { }
+        public static Microsoft.AspNetCore.Http.IResult ToHttpResult<T>(this Juker.SharedKernel.Result<T> r, System.Func<T, Microsoft.AspNetCore.Http.IResult> onSuccess) { }
+    }
+    public sealed class TenantNotResolvedException : System.InvalidOperationException
+    {
+        public TenantNotResolvedException() { }
+        public TenantNotResolvedException(string message) { }
+        public TenantNotResolvedException(string message, System.Exception innerException) { }
+    }
+}

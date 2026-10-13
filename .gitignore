@@ -18,3 +18,6 @@ coverage*.xml
 .env
 .env.*
 appsettings.*.local.json
+
+# Worktrees das specs (worktree_dir no docs/specs/sdd-config.yml)
+.worktrees/
