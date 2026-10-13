@@ -20,6 +20,8 @@
     - se o projeto já ignora o código 8, nada muda;
     - se o projeto já ignora outros códigos, o 8 entra na mesma lista (2 vira 2;8);
     - senão, a opção é acrescentada com o 8.
+    Os projetos escrevem a opção separada dos códigos por espaço (ignore-exit-code 2): as formas com = ou : não são
+    reconhecidas, recebem uma segunda opção com o 8 e a execução termina com o código 5.
   -->
   <PropertyGroup>
     <_JukerIgnoreExitCodeOption>--ignore-exit-code\s+"?[0-9;]*[0-9]</_JukerIgnoreExitCodeOption>

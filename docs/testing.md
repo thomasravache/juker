@@ -32,6 +32,10 @@ garante o 8 sem repetir a opção:
 - se o projeto já ignora outros códigos, o 8 entra na mesma lista (`--ignore-exit-code 2` vira `2;8`);
 - senão, a opção é acrescentada com o 8.
 
+No `.csproj`, escreva a opção separada dos códigos por espaço (`--ignore-exit-code <códigos>`). As formas
+`--ignore-exit-code=2` e `--ignore-exit-code:2` não são reconhecidas: recebem uma segunda opção com o 8 e a execução
+termina com o código 5.
+
 Não passe `--ignore-exit-code` na linha de comando do `dotnet test`: somada à do projeto, ela fica repetida.
 
 A proteção contra um projeto de teste que perdeu seus testes é estática. O teste de convenção
