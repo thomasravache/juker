@@ -40,6 +40,11 @@ test_paths:
 scope_exempt:
   - "docs/specs/**"
   - "docs/adr/**"
+  - "AGENTS.md"          # doc raiz atualizada no G7 de qualquer spec (root_docs)
+  - "README.md"          # idem
+  - "CLAUDE.md"          # idem
+  - "tools/sdd/**"       # cópia vendorizada da skill, atualizada por `vendor` ([no-spec])
+  - ".gitignore"         # mudanças sem comportamento ([no-spec]); revisadas no PR
 dependency_manifests:
   - "Directory.Packages.props"
   - "Directory.Build.props"
