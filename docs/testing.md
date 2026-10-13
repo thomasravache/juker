@@ -22,8 +22,17 @@ O Microsoft.Testing.Platform termina com o código 8 quando nenhum teste roda nu
 zero testes** (SPEC-0027): o `tests/Directory.Build.targets` acrescenta `--ignore-exit-code 8` a
 `TestingPlatformCommandLineArguments` em todos os projetos de `tests/`. Assim, os filtros por categoria
 (`test_integration`, `--filter-trait "Category=Unit"`) podem esvaziar os projetos que só têm testes de outra
-categoria. A opção entra uma única vez: não a repita no `.csproj` nem na linha de comando, porque duplicada a
-plataforma rejeita a execução com o código 5. Falhas de teste continuam terminando com código diferente de zero.
+categoria. Falhas de teste continuam terminando com código diferente de zero.
+
+A opção `--ignore-exit-code` aparece uma única vez: repetida, a plataforma rejeita a execução com o código 5. Ela
+aceita uma lista separada por ponto e vírgula (`--ignore-exit-code 2;8`), e o `tests/Directory.Build.targets`
+garante o 8 sem repetir a opção:
+
+- se o projeto já ignora o código 8 em `TestingPlatformCommandLineArguments`, nada muda;
+- se o projeto já ignora outros códigos, o 8 entra na mesma lista (`--ignore-exit-code 2` vira `2;8`);
+- senão, a opção é acrescentada com o 8.
+
+Não passe `--ignore-exit-code` na linha de comando do `dotnet test`: somada à do projeto, ela fica repetida.
 
 A proteção contra um projeto de teste que perdeu seus testes é estática. O teste de convenção
 `TestProjectsConventionsTests` (SPEC-0027:UT-03, no `arch_test`) conta os `[Fact]`/`[Theory]` de cada projeto
