@@ -1,7 +1,7 @@
 ---
 id: ADR-0015
 title: Fluxo de mudança — PR para a main com merge commit, checks obrigatórios e merge automático autorizado com CI verde
-status: proposed
+status: accepted
 origin: decision
 date: 2026-10-13
 pillars: [fluxo-mudanca]

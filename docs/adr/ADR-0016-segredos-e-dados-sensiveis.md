@@ -1,7 +1,7 @@
 ---
 id: ADR-0016
 title: Segredos e dados sensíveis — GitHub Environments, .env 600 na VPS, gitleaks no CI e nenhum dado pessoal do cliente
-status: proposed
+status: accepted
 origin: decision
 date: 2026-10-13
 pillars: [segredos-dados]

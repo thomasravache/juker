@@ -1,7 +1,7 @@
 ---
 id: ADR-0019
 title: Custo — piloto abaixo de €20/mês com duas VPS, Object Storage e planos gratuitos, revisão mensal da fatura
-status: proposed
+status: accepted
 origin: decision
 date: 2026-10-13
 pillars: [custo]

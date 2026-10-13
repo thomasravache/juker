@@ -1,7 +1,7 @@
 ---
 id: ADR-0018
 title: Resiliência e recuperação — backup diário com restauração testada, RPO 24 h, RTO 4 h e degradação das integrações externas
-status: proposed
+status: accepted
 origin: decision
 date: 2026-10-13
 pillars: [resiliencia]

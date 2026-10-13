@@ -4,7 +4,7 @@ title: Pendências do review da SPEC-0003
 tier: lite
 type: refactor
 user_facing: false
-status: approved
+status: in-progress
 created: 2026-10-01
 parent: SPEC-0001
 depends_on: [SPEC-0003]
@@ -120,4 +120,4 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 11. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
-| escopo | 2026-10-13 | Item 5 (zero testes com filtro) ganha desenho e testes: toda execução aceita zero testes e a proteção vira o teste de convenção UT-03; IT-03 prova os comandos filtrados; `touches` inclui `tests/Directory.Build.targets` e o `.csproj` do `Juker.BuildingBlocks.UnitTests` | Revisão do Architect antes do despacho: o item 5 não tinha teste no plano e os arquivos que ele muda estavam fora do `touches`; o job `unit` da SPEC-0005 (`Category=Unit`) esvazia o `Juker.IntegrationTests` e o `Juker.ArchitectureTests` do mesmo jeito | SPEC-0005 (passa a depender desta spec) | pendente — thomas |
+| escopo | 2026-10-13 | Item 5 (zero testes com filtro) ganha desenho e testes: toda execução aceita zero testes e a proteção vira o teste de convenção UT-03; IT-03 prova os comandos filtrados; `touches` inclui `tests/Directory.Build.targets` e o `.csproj` do `Juker.BuildingBlocks.UnitTests` | Revisão do Architect antes do despacho: o item 5 não tinha teste no plano e os arquivos que ele muda estavam fora do `touches`; o job `unit` da SPEC-0005 (`Category=Unit`) esvazia o `Juker.IntegrationTests` e o `Juker.ArchitectureTests` do mesmo jeito | SPEC-0005 (passa a depender desta spec) | thomas — no chat em 2026-10-13 ("Aprovado!") |

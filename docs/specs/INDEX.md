@@ -5,7 +5,7 @@
 ## Saúde
 
 - Validação (G0): **0 erro(s), 4 aviso(s)** — rode `spec_graph.py validate`
-- Specs: approved 21, implemented 5
+- Specs: approved 20, in-progress 1, implemented 5
 - Impedimentos: **1 aberto(s)**, 4 resolvido(s)
 
 ## Impedimentos Abertos
@@ -24,27 +24,27 @@ Perfil: **padrao**
 | Estratégia de testes | coberto | ADR-0011, ADR-0012, ADR-0013 |
 | Qualidade de código | coberto | ADR-0014 |
 | Entrega contínua e ambientes | coberto | ADR-0009 |
-| Fluxo de mudança | proposto | ADR-0015 (aguarda aprovação) |
-| Segredos e dados sensíveis | proposto | ADR-0016 (aguarda aprovação) |
+| Fluxo de mudança | coberto | ADR-0015 |
+| Segredos e dados sensíveis | coberto | ADR-0016 |
 | Identidade e acesso | coberto | ADR-0008 |
-| Dependências e ciclo de vida da stack | proposto | ADR-0017 (aguarda aprovação) |
+| Dependências e ciclo de vida da stack | coberto | ADR-0017 |
 | Observabilidade | coberto | ADR-0010 |
-| Resiliência e recuperação | proposto | ADR-0018 (aguarda aprovação) |
+| Resiliência e recuperação | coberto | ADR-0018 |
 | Dados e migrações | coberto | ADR-0004 |
-| Custo | proposto | ADR-0019 (aguarda aprovação) |
+| Custo | coberto | ADR-0019 |
 
 ## Plano de Execução
 
-**Em andamento:** —  
+**Em andamento:** SPEC-0027  
 **Paradas por impedimento:** —  
-**Próximo lote:** SPEC-0025
+**Próximo lote:** —
 
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
+| 1 | SPEC-0027 | Pendências do review da SPEC-0003 | lite/S | in-progress | 🔄 em andamento |  |
 | 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 13d) |  |
-| 1 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | approved | ✅ pronta |  |
-| 2 | SPEC-0027 | Pendências do review da SPEC-0003 | lite/S | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0025 |
-| 3 | SPEC-0005 | Pipeline de CI | full/M | approved | ⛔ aguarda implementação de SPEC-0027 |  |
+| 2 | SPEC-0005 | Pipeline de CI | full/M | approved | ⛔ aguarda implementação de SPEC-0027 |  |
+| 3 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0027; saiu da onda 2: arquivos em comum com SPEC-0005 |
 | 4 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ⛔ aguarda implementação de SPEC-0005; aguarda implementação de SPEC-0025 |  |
 | 5 | SPEC-0008 | Observabilidade básica | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
 | 5 | SPEC-0009 | Segurança básica e autorização | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
@@ -86,7 +86,7 @@ flowchart LR
     S0008["SPEC-0008<br/>Observabilidade básica"]:::approved
     S0009["SPEC-0009<br/>Segurança básica e autorização"]:::approved
     S0025["SPEC-0025<br/>Harness de E2E e ambiente de teste cont…"]:::approved
-    S0027["SPEC-0027<br/>Pendências do review da SPEC-0003"]:::approved
+    S0027["SPEC-0027<br/>Pendências do review da SPEC-0003"]:::inprogress
   end
   subgraph E0010["SPEC-0010 · MVP Jukebox colaborativa"]
     S0011["SPEC-0011<br/>Bar, configurações da noite e termos de…"]:::approved
@@ -206,7 +206,7 @@ flowchart LR
 | [SPEC-0024](SPEC-0024-telas-da-fila-minhas-e-pedido.md) | Telas da fila, Minhas e pedido pela busca | full | feature | approved | 2026-09-30 | SPEC-0010 | SPEC-0018 | SPEC-0020@1, SPEC-0012@1 |
 | [SPEC-0025](SPEC-0025-harness-de-e2e-e-ambiente-de-teste-controlavel.md) | Harness de E2E e ambiente de teste controlável | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0003 | — |
 | [SPEC-0026](SPEC-0026-pendencias-do-review-da-spec-0002.md) | Pendências do review da SPEC-0002 | lite | fix | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002 | — |
-| [SPEC-0027](SPEC-0027-pendencias-do-review-da-spec-0003.md) | Pendências do review da SPEC-0003 | lite | refactor | approved | 2026-10-01 | SPEC-0001 | SPEC-0003 | — |
+| [SPEC-0027](SPEC-0027-pendencias-do-review-da-spec-0003.md) | Pendências do review da SPEC-0003 | lite | refactor | in-progress | 2026-10-01 | SPEC-0001 | SPEC-0003 | — |
 | [SPEC-0028](SPEC-0028-pendencias-do-review-da-spec-0026.md) | Pendências do review da SPEC-0026 | lite | fix | implemented | 2026-10-01 | SPEC-0001 | SPEC-0026 | — |
 
 ## ADRs
@@ -227,8 +227,8 @@ flowchart LR
 | [ADR-0012](../adr/ADR-0012-estrategia-de-testes-de-integracao.md) | Estratégia de testes de integração — Postgres real, banco por classe a partir de modelo migrado, esquemas de auth reais e outbox determinístico | accepted | SPEC-0003:IT-04, SPEC-0003:IT-05, ARQ-08 (SPEC-0003:IT-02) e SPEC-0004:IT-05 |
 | [ADR-0013](../adr/ADR-0013-estrategia-de-e2e-e-testes-de-interface.md) | Estratégia de E2E e testes de interface — Aspire.Hosting.Testing + Playwright (Chromium e WebKit), ambiente E2E controlável e bUnit para componentes | accepted | SPEC-0003:IT-03, SPEC-0003:IT-06, SPEC-0003:UT-01 e SPEC-0005:IT-05 |
 | [ADR-0014](../adr/ADR-0014-qualidade-de-codigo.md) | Qualidade de código — analisadores do SDK + Meziantou, APIs proibidas no build, formatação, cobertura do diff e mutation testing nas regras críticas | accepted | SPEC-0002:IT-03 (build quebra com API proibida e regra do Meziantou), SPEC-0003:UT-02 (tokens do design) e SPEC-0005:IT-06 (cobertura do diff) |
-| [ADR-0015](../adr/ADR-0015-fluxo-de-mudanca.md) | Fluxo de mudança — PR para a main com merge commit, checks obrigatórios e merge automático autorizado com CI verde | proposed | Proteção da branch main no GitHub (checks da SPEC-0005); `change_flow: pr` e `h2_policy: auto-on-green` no sdd-config; `spec_graph.py validate` e `pr-check` |
-| [ADR-0016](../adr/ADR-0016-segredos-e-dados-sensiveis.md) | Segredos e dados sensíveis — GitHub Environments, .env 600 na VPS, gitleaks no CI e nenhum dado pessoal do cliente | proposed | SPEC-0005:IT-03 (gitleaks bloqueia segredo), SPEC-0006 (segredos por ambiente, .env 600, bucket privado com SSE) e SPEC-0009 (logs sem e-mail completo) |
-| [ADR-0017](../adr/ADR-0017-dependencias-e-ciclo-de-vida-da-stack.md) | Dependências e ciclo de vida — varredura no CI, Dependabot semanal, versões centralizadas e calendário de fim de suporte | proposed | SPEC-0005 (job security com `dotnet list package --vulnerable`, `dependabot.yml`); gerenciamento central de pacotes (SPEC-0002); `verify` avisa manifesto alterado sem ADR |
-| [ADR-0018](../adr/ADR-0018-resiliencia-e-recuperacao.md) | Resiliência e recuperação — backup diário com restauração testada, RPO 24 h, RTO 4 h e degradação das integrações externas | proposed | SPEC-0006:IT-03 (backup e restauração), SPEC-0014:IT-04 (timeout e retry do YouTube), SPEC-0004:IT-02 (outbox exatamente uma vez) |
-| [ADR-0019](../adr/ADR-0019-custo.md) | Custo — piloto abaixo de €20/mês com duas VPS, Object Storage e planos gratuitos, revisão mensal da fatura | proposed | Estimativa neste ADR; alerta de gasto no console da Hetzner (SPEC-0006); revisão mensal registrada em docs/operations.md |
+| [ADR-0015](../adr/ADR-0015-fluxo-de-mudanca.md) | Fluxo de mudança — PR para a main com merge commit, checks obrigatórios e merge automático autorizado com CI verde | accepted | Proteção da branch main no GitHub (checks da SPEC-0005); `change_flow: pr` e `h2_policy: auto-on-green` no sdd-config; `spec_graph.py validate` e `pr-check` |
+| [ADR-0016](../adr/ADR-0016-segredos-e-dados-sensiveis.md) | Segredos e dados sensíveis — GitHub Environments, .env 600 na VPS, gitleaks no CI e nenhum dado pessoal do cliente | accepted | SPEC-0005:IT-03 (gitleaks bloqueia segredo), SPEC-0006 (segredos por ambiente, .env 600, bucket privado com SSE) e SPEC-0009 (logs sem e-mail completo) |
+| [ADR-0017](../adr/ADR-0017-dependencias-e-ciclo-de-vida-da-stack.md) | Dependências e ciclo de vida — varredura no CI, Dependabot semanal, versões centralizadas e calendário de fim de suporte | accepted | SPEC-0005 (job security com `dotnet list package --vulnerable`, `dependabot.yml`); gerenciamento central de pacotes (SPEC-0002); `verify` avisa manifesto alterado sem ADR |
+| [ADR-0018](../adr/ADR-0018-resiliencia-e-recuperacao.md) | Resiliência e recuperação — backup diário com restauração testada, RPO 24 h, RTO 4 h e degradação das integrações externas | accepted | SPEC-0006:IT-03 (backup e restauração), SPEC-0014:IT-04 (timeout e retry do YouTube), SPEC-0004:IT-02 (outbox exatamente uma vez) |
+| [ADR-0019](../adr/ADR-0019-custo.md) | Custo — piloto abaixo de €20/mês com duas VPS, Object Storage e planos gratuitos, revisão mensal da fatura | accepted | Estimativa neste ADR; alerta de gasto no console da Hetzner (SPEC-0006); revisão mensal registrada em docs/operations.md |

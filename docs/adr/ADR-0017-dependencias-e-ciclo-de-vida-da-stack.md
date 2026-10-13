@@ -1,7 +1,7 @@
 ---
 id: ADR-0017
 title: Dependências e ciclo de vida — varredura no CI, Dependabot semanal, versões centralizadas e calendário de fim de suporte
-status: proposed
+status: accepted
 origin: decision
 date: 2026-10-13
 pillars: [dependencias]
