@@ -6,6 +6,7 @@ using Xunit;
 namespace Juker.IntegrationTests.Harness;
 
 [Trait("Category", "Integration")]
+[Collection(NestedTestRun.Name)]
 public sealed class FilteredTestCommandsTests
 {
     // test_integration (SPEC-0003) e o comando do job unit (SPEC-0005): cada um esvazia algum projeto de teste.
