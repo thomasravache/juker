@@ -79,7 +79,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | Gate | Status | Evidência | Data |
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0027` → 0 erros; aguardando H1 do fundador | 2026-10-01 |
-| G1 Red | PENDING | | |
+| G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — 13426e8 | 2026-10-13 |
 | G2 Green | PENDING | | |
 | G3 Arquitetura | PENDING | | |
 | G4 Review | PENDING | | |
