@@ -9,7 +9,7 @@ created: 2026-10-01
 parent: SPEC-0001
 depends_on: [SPEC-0003]
 consumes_contract: []
-touches: [tests/Juker.ArchitectureTests/**, tests/Juker.TestKit/**, tests/Juker.IntegrationTests/Harness/**, tests/Juker.IntegrationTests/Fixtures/**, tests/Directory.Build.targets, tests/Juker.BuildingBlocks.UnitTests/Juker.BuildingBlocks.UnitTests.csproj, docs/testing.md]
+touches: [tests/Juker.ArchitectureTests/**, tests/Juker.TestKit/**, tests/Juker.IntegrationTests/Harness/**, tests/Juker.IntegrationTests/Fixtures/**, tests/Directory.Build.targets, tests/Juker.BuildingBlocks.UnitTests/Juker.BuildingBlocks.UnitTests.csproj, tests/Directory.Build.props, tests/Juker.Modules.Catalog.UnitTests/Juker.Modules.Catalog.UnitTests.csproj, tests/Juker.Modules.Playback.UnitTests/Juker.Modules.Playback.UnitTests.csproj, tests/Juker.Modules.Queue.UnitTests/Juker.Modules.Queue.UnitTests.csproj, tests/Juker.Modules.Sessions.UnitTests/Juker.Modules.Sessions.UnitTests.csproj, tests/Juker.Modules.Venues.UnitTests/Juker.Modules.Venues.UnitTests.csproj, tests/Juker.Web.UnitTests/Juker.Web.UnitTests.csproj, docs/testing.md]
 adrs: [ADR-0012, ADR-0014]
 external: []
 size: S
@@ -79,10 +79,10 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | Gate | Status | Evidência | Data |
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0027` → 0 erros; aguardando H1 do fundador | 2026-10-01 |
-| G1 Red | PENDING | | |
-| G2 Green | PENDING | | |
-| G3 Arquitetura | PENDING | | |
-| G4 Review | PENDING | | |
+| G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — 13426e8 | 2026-10-13 |
+| G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.32); test exit 0 (duration: 1m 08s 146ms); lint exit 0 () — 5fab990 | 2026-10-13 |
+| G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 964ms) — 5fab990 | 2026-10-13 |
+| G4 Review | FAIL | Reviewer independente: CHANGES_REQUESTED em c9b658b — major: IT-03 (FilteredTestCommandsTests) roda o dotnet test aninhado fora da coleção serializada; minors: condição do --ignore-exit-code ampla demais (Directory.Build.targets:11), comentários do opt-in desatualizados fora do touches (Directory.Build.props e 6 .csproj vazios), comentário do NestedTestRun afirma a causa como fato | 2026-10-13 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
@@ -120,5 +120,6 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 11. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
-| escopo | 2026-10-13 | IT-01 passa a ser guarda (passa antes da mudança); IT-02 tem evidência por repetição (script `tests/Juker.IntegrationTests/Harness/repeat-test-suite.sh`, 10 execuções completas), sem vermelho determinístico; redação do IT-02 sem o ID de teste de outra spec | Test-writer no G1: o caminho do `TemplateDatabase` com migrations reais já funciona (sem a migration o banco só tem `__EFMigrationsHistory`; com ela, a tabela aparece); 10 execuções completas seguidas passaram nesta máquina e nenhum escritor concorrente de `bin`/`obj` foi encontrado; o `verify` lia "CT-01 da SPEC-0003" como teste desta spec | Nenhuma | pendente — thomas |
+| escopo | 2026-10-13 | `touches` inclui `tests/Directory.Build.props` e os `.csproj` dos 6 projetos de UT vazios, só para corrigir os comentários sobre o `JukerAllowZeroTests` (sem mudar comportamento) | G4 (minor): os comentários dizem que o opt-in é "aplicado em tests/Directory.Build.targets", o que deixou de ser verdade com esta spec | Nenhuma | thomas — no chat em 2026-10-13 ("aprovado") |
+| escopo | 2026-10-13 | IT-01 passa a ser guarda (passa antes da mudança); IT-02 tem evidência por repetição (script `tests/Juker.IntegrationTests/Harness/repeat-test-suite.sh`, 10 execuções completas), sem vermelho determinístico; redação do IT-02 sem o ID de teste de outra spec | Test-writer no G1: o caminho do `TemplateDatabase` com migrations reais já funciona (sem a migration o banco só tem `__EFMigrationsHistory`; com ela, a tabela aparece); 10 execuções completas seguidas passaram nesta máquina e nenhum escritor concorrente de `bin`/`obj` foi encontrado; o `verify` lia "CT-01 da SPEC-0003" como teste desta spec | Nenhuma | thomas — no chat em 2026-10-13 ("Aprovado") |
 | escopo | 2026-10-13 | Item 5 (zero testes com filtro) ganha desenho e testes: toda execução aceita zero testes e a proteção vira o teste de convenção UT-03; IT-03 prova os comandos filtrados; `touches` inclui `tests/Directory.Build.targets` e o `.csproj` do `Juker.BuildingBlocks.UnitTests` | Revisão do Architect antes do despacho: o item 5 não tinha teste no plano e os arquivos que ele muda estavam fora do `touches`; o job `unit` da SPEC-0005 (`Category=Unit`) esvazia o `Juker.IntegrationTests` e o `Juker.ArchitectureTests` do mesmo jeito | SPEC-0005 (passa a depender desta spec) | thomas — no chat em 2026-10-13 ("Aprovado!") |
