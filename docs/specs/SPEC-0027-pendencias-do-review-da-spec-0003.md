@@ -80,8 +80,8 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0027` → 0 erros; aguardando H1 do fundador | 2026-10-01 |
 | G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — 13426e8 | 2026-10-13 |
-| G2 Green | PASS | build exit 0 (Time Elapsed 00:00:03.36); test exit 0 (duration: 1m 06s 884ms); lint exit 0 () — c9b658b | 2026-10-13 |
-| G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 537ms) — c9b658b | 2026-10-13 |
+| G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.32); test exit 0 (duration: 1m 08s 146ms); lint exit 0 () — 5fab990 | 2026-10-13 |
+| G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 964ms) — 5fab990 | 2026-10-13 |
 | G4 Review | FAIL | Reviewer independente: CHANGES_REQUESTED em c9b658b — major: IT-03 (FilteredTestCommandsTests) roda o dotnet test aninhado fora da coleção serializada; minors: condição do --ignore-exit-code ampla demais (Directory.Build.targets:11), comentários do opt-in desatualizados fora do touches (Directory.Build.props e 6 .csproj vazios), comentário do NestedTestRun afirma a causa como fato | 2026-10-13 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
