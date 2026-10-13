@@ -82,7 +82,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — 13426e8 | 2026-10-13 |
 | G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.32); test exit 0 (duration: 1m 08s 146ms); lint exit 0 () — 5fab990 | 2026-10-13 |
 | G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 964ms) — 5fab990 | 2026-10-13 |
-| G4 Review | FAIL | Reviewer independente: CHANGES_REQUESTED em c9b658b — major: IT-03 (FilteredTestCommandsTests) roda o dotnet test aninhado fora da coleção serializada; minors: condição do --ignore-exit-code ampla demais (Directory.Build.targets:11), comentários do opt-in desatualizados fora do touches (Directory.Build.props e 6 .csproj vazios), comentário do NestedTestRun afirma a causa como fato | 2026-10-13 |
+| G4 Review | PASS | verify G1+G4: PASS; revisão: Reviewer independente: APPROVED em 837813d (após CHANGES_REQUESTED em c9b658b; 4 achados e 1 minor final resolvidos) — acda2c2 | 2026-10-13 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
