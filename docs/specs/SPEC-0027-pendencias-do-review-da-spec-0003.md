@@ -4,7 +4,7 @@ title: Pendências do review da SPEC-0003
 tier: lite
 type: refactor
 user_facing: false
-status: in-progress
+status: implemented
 created: 2026-10-01
 parent: SPEC-0001
 depends_on: [SPEC-0003]
@@ -86,7 +86,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G5 Integração & CI | PASS | build exit 0 (Time Elapsed 00:00:18.10); test exit 0 (duration: 1m 19s 968ms); test_integration exit 0 (duration: 1m 33s 353ms); arch_test exit 0 (duration: 1s 352ms) — 4d6a34e | 2026-10-13 |
 | H2 Integração aprovada | PASS | política auto-on-green (aprovada por thomas em 2026-10-13); G5 PASS | 2026-10-13 |
 | G6 Deploy | N/A | CD adiado por decisão do fundador; publicação na VPS fica para o fim (SPEC-0006, IMP-01); entrega = PR da sdd/SPEC-0001 na main | 2026-10-13 |
-| G7 Pronto & Docs | PENDING | | |
+| G7 Pronto & Docs | PASS | Relatório de Entrega e Definição de Pronto: ok — 422c869 | 2026-10-13 |
 
 ## 9. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
