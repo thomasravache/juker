@@ -132,7 +132,7 @@ Comandos (sdd-config.yml):
 - **CT-01** — Executar `dotnet test --solution Juker.slnx --filter-trait "Category=Integration" --list-tests` retorna somente testes marcados como Integration, e a API pública do `Juker.TestKit` bate com o snapshot aprovado (contrato consumido pelas SPECs 0004, 0005, 0025 e por todas as specs com IT).
 
 ### 7.5 Testes E2E
-- N/A — user_facing: false.
+- N/A — harness de testes e regras de arquitetura; nenhuma jornada de usuário (UI ou API pública) é afetada (o harness de E2E é da SPEC-0025).
 
 ### 7.6 Outros
 - N/A — o helper axe-core e sua validação pertencem à SPEC-0025 (E2E).

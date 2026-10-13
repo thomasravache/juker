@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: SPEC-0003:IT-04, SPEC-0003:IT-05, ARQ-08 (SPEC-0003:IT-02) e SPEC-0004:IT-05
+pillars: [testes]
 ---
 
 # ADR-0012 — Estratégia de testes de integração

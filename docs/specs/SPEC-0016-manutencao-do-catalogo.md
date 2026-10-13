@@ -122,7 +122,7 @@ Arquivo CSV (UTF-8, separador ';'): artista;titulo;tipos      ex.: Raul Seixas;M
 - **CT-01** — Os consumidores validam os payloads contra os schemas publicados por SPEC-0020@1 (`PlaybackFailed`, `PlaybackFinished`) e SPEC-0018@1 (`RequestRemoved`).
 
 ### 7.5 Testes E2E
-- N/A — user_facing: false.
+- N/A — jobs de manutenção do catálogo em segundo plano; nenhuma tela ou API pública muda.
 
 ### 7.6 Outros
 - Antes do piloto: executar a semeadura em staging e em produção com a lista revisada e registrar o resultado do `seed-status` (itens concluídos e sem resultado).

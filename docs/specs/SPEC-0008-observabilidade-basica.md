@@ -114,7 +114,7 @@ deploy/observability/alerts.yaml
 - **CT-01** — `alerts.yaml` valida contra o schema de regras do backend escolhido (validador do fornecedor ou `promtool` para regras no formato Prometheus) e contém as duas regras com os limiares do contrato; os nomes dos instrumentos do `JukerMetrics` batem com a tabela usada pelas SPECs 0014 e 0020.
 
 ### 7.5 Testes E2E
-- N/A — user_facing: false.
+- N/A — telemetria, health checks e alertas; nenhuma tela ou API pública usada pelo cliente, pela TV ou pelo gerente muda.
 
 ### 7.6 Outros
 - Disparo real do alerta `juker-ready-down` no celular do fundador: **transferido para a SPEC-0006** (exige ambiente e backend gerenciado).

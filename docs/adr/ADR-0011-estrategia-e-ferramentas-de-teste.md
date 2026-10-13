@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: ARQ-06 (sem FluentAssertions ≥ 8) e SPEC-0003 (harness com exemplo de cada nível)
+pillars: [testes]
 ---
 
 # ADR-0011 — Ferramentas de teste

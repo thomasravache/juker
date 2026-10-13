@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: tests/Juker.ArchitectureTests (ArchUnitNET) — regras ARQ-01..ARQ-05
+pillars: [arquitetura]
 ---
 
 # ADR-0001 — Monólito modular com vertical slices por módulo, em um único host

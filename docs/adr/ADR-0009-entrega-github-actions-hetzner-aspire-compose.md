@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: pipeline de deploy (SPEC-0005/SPEC-0006) — smoke obrigatório após cada deploy
+pillars: [entrega]
 ---
 
 # ADR-0009 — Entrega com GitHub Actions, GHCR e VPS Hetzner via Docker Compose gerado pelo Aspire

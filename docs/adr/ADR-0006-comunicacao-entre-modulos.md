@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: ARQ-01/ARQ-02 (ADR-0001) e IT do outbox em SPEC-0004
+pillars: [arquitetura]
 ---
 
 # ADR-0006 — Comunicação entre módulos por interfaces síncronas nos Contracts e eventos de integração in-process com outbox

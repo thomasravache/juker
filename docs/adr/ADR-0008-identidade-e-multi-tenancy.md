@@ -10,6 +10,7 @@ informed: []
 supersedes:
 superseded_by:
 enforced_by: SPEC-0009:IT-01..IT-04 (autorização por política) e SPEC-0009:IT-05 (isolamento entre bares)
+pillars: [seguranca-acesso]
 ---
 
 # ADR-0008 — Identidade e multi-tenancy
@@ -51,4 +52,6 @@ SPEC-0009:IT-01..IT-04 (cada política: anônimo, cliente, TV, gerente) e SPEC-0
 | **Total ponderado** | **61** | **51** | **50** |
 
 ## Mais Informações
-- ASP.NET Core Identity e Data Protection (.NET 10) — documentação oficial Microsoft Learn (consultado em 2026-09-30).
+- ASP.NET Core Identity e Data Protection (.NET 10) — documentação oficial Microsoft Learn (consultado em 2026-09-30):
+  https://learn.microsoft.com/aspnet/core/security/authentication/identity e
+  https://learn.microsoft.com/aspnet/core/security/data-protection/introduction

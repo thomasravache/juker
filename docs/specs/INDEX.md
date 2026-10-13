@@ -1,10 +1,10 @@
 # Índice de Specs
 
-> Gerado por `spec_graph.py index` em 2026-10-06 — não edite manualmente.
+> Gerado por `spec_graph.py index` em 2026-10-13 — não edite manualmente.
 
 ## Saúde
 
-- Validação (G0): **0 erro(s), 3 aviso(s)** — rode `spec_graph.py validate`
+- Validação (G0): **0 erro(s), 8 aviso(s)** — rode `spec_graph.py validate`
 - Specs: approved 21, in-progress 1, implemented 4
 - Impedimentos: **1 aberto(s)**, 3 resolvido(s)
 
@@ -12,7 +12,26 @@
 
 | Spec | ID | Tipo | Fase/Gate | Responsável | Aberto em | Idade | Descrição |
 |---|---|---|---|---|---|---|---|
-| SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 6d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
+| SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 13d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
+
+## Cobertura de Pilares
+
+Perfil: **padrao**
+
+| Pilar | Situação | Detalhe |
+|---|---|---|
+| Arquitetura e fronteiras | coberto | ADR-0001, ADR-0006 |
+| Estratégia de testes | coberto | ADR-0011, ADR-0012, ADR-0013 |
+| Qualidade de código | coberto | ADR-0014 |
+| Entrega contínua e ambientes | coberto | ADR-0009 |
+| Fluxo de mudança | sem decisão | `new-adr --baseline fluxo-mudanca` |
+| Segredos e dados sensíveis | sem decisão | `new-adr --baseline segredos-dados` |
+| Identidade e acesso | coberto | ADR-0008 |
+| Dependências e ciclo de vida da stack | sem decisão | `new-adr --baseline dependencias` |
+| Observabilidade | coberto | ADR-0010 |
+| Resiliência e recuperação | sem decisão | `new-adr --baseline resiliencia` |
+| Dados e migrações | coberto | ADR-0004 |
+| Custo | sem decisão | `new-adr --baseline custo` |
 
 ## Plano de Execução
 
@@ -23,7 +42,7 @@
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
 | 1 | SPEC-0004 | Building blocks dos módulos | full/M | in-progress | 🔄 em andamento |  |
-| 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 6d) |  |
+| 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 13d) |  |
 | 2 | SPEC-0005 | Pipeline de CI | full/M | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0004 |
 | 3 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | approved | ✅ pronta | saiu da onda 1: arquivos em comum com SPEC-0004; saiu da onda 2: arquivos em comum com SPEC-0005 |
 | 4 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ⛔ aguarda implementação de SPEC-0004; aguarda implementação de SPEC-0005; aguarda implementação de SPEC-0025 |  |

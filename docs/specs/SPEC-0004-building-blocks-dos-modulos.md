@@ -187,7 +187,7 @@ Retry: next_attempt_at = agora + 2^(attempts-1) s (1, 2, 4, 8 s); attempts = Max
 - **CT-01** — O snapshot da API pública (PublicApiGenerator, `IncludeAssemblyAttributes=false`) de `Juker.SharedKernel` e `Juker.Infrastructure` é igual ao aprovado em `tests/Juker.ArchitectureTests/PublicApi/*.approved.txt`, escrito a partir deste contrato; as specs do MVP consomem esse contrato.
 
 ### 7.5 Testes E2E
-- N/A — user_facing: false.
+- N/A — building blocks internos (Result, handlers, DbContext, outbox/inbox); nenhuma tela ou API pública muda.
 
 ### 7.6 Outros
 - N/A.
