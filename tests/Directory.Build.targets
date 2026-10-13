@@ -8,13 +8,14 @@
   </PropertyGroup>
   <Import Project="$(_JukerParentBuildTargets)" Condition="'$(_JukerParentBuildTargets)' != ''" />
 
-  <PropertyGroup Condition="'$(JukerAllowZeroTests)' == 'true'">
+  <PropertyGroup Condition="!$(TestingPlatformCommandLineArguments.Contains('--ignore-exit-code'))">
     <!--
-      Microsoft.Testing.Platform termina com o código 8 quando nenhum teste é executado num projeto. Por padrão isso
-      é falha: um projeto de teste que perdeu seus testes precisa quebrar o build. Um projeto opta por aceitar zero
-      testes definindo JukerAllowZeroTests como true no próprio .csproj. Isso vale para os projetos de UT ainda vazios
-      (cada spec remove a propriedade ao acrescentar testes) e para o Juker.ArchitectureTests, que o filtro
-      Category=Integration esvazia de propósito.
+      Microsoft.Testing.Platform termina com o código 8 quando nenhum teste é executado num projeto. Toda execução
+      aceita zero testes (SPEC-0027): os filtros por categoria (test_integration, Category=Unit) esvaziam de propósito
+      os projetos que só têm testes de outra categoria. A proteção contra um projeto que perdeu seus testes é estática:
+      o teste de convenção do Juker.ArchitectureTests (SPEC-0027:UT-03) exige pelo menos um teste em todo projeto sem
+      JukerAllowZeroTests e nenhum teste em quem declara JukerAllowZeroTests=true (só os projetos ainda vazios).
+      A opção entra uma única vez: duplicada, a plataforma rejeita a linha de comando com o código 5.
     -->
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8</TestingPlatformCommandLineArguments>
   </PropertyGroup>

@@ -8,12 +8,6 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <!--
-      Tem testes (SPEC-0004), mas só Category=Unit: o filtro Category=Integration (test_integration) o esvazia de
-      propósito, como no Juker.ArchitectureTests (docs/testing.md). Sem a propriedade, a listagem do test_integration
-      termina com o código 8 e o SPEC-0003:CT-01 falha.
-    -->
-    <JukerAllowZeroTests>true</JukerAllowZeroTests>
   </PropertyGroup>
 
   <ItemGroup>
