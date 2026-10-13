@@ -50,10 +50,10 @@ Casos não cobertos pelo plano de testes original da SPEC-0003 (achados minor do
 - Caracterização: N/A — área já coberta pelos testes da SPEC-0003, que continuam valendo.
 - **UT-01** — (guarda: passa antes da mudança) Dado o fixture com `Substitute.For<HttpMessageHandler>()` e `new Mock<HttpMessageHandler>()`, quando o ARQ-08 avalia, então os dois são apontados e o controle `Substitute.For<IDisposable>()` não é.
 - **UT-02** — Dado o `Juker.slnx`, quando o teste de convenção compara os projetos `tests/**` com as `ProjectReference` do `Juker.ArchitectureTests.csproj`, então falha listando qualquer projeto ausente (hoje passa; com um projeto de exemplo ausente num fixture de solução, falha).
-- **IT-02** — (regressão do teste instável) 10 execuções seguidas de `dotnet test --solution Juker.slnx -c Release` terminam sem nenhuma falha do CT-01 da SPEC-0003 (evidência: script de repetição e saídas).
+- **IT-02** — (regressão do teste instável) 10 execuções seguidas de `dotnet test --solution Juker.slnx -c Release` terminam sem nenhuma falha do teste de contrato do TestKit da SPEC-0003 (evidência: script de repetição e saídas).
 - **UT-03** — Dado o `Juker.slnx`, quando o teste de convenção conta os métodos de teste (`[Fact]`/`[Theory]`) de cada projeto `tests/**` (exceto fixtures), então falha listando o projeto sem `JukerAllowZeroTests` que tem zero testes e o projeto com `JukerAllowZeroTests=true` que tem testes (hoje falha para `Juker.BuildingBlocks.UnitTests` e `Juker.ArchitectureTests`).
 - **IT-03** — Com o opt-in removido dos projetos que têm testes, `dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Integration"` e `... --filter-trait "Category=Unit"` (comando do job `unit` da SPEC-0005) terminam com sucesso (evidência: saídas dos comandos).
-- **IT-01** — Dado um `DbContext` de fixture com uma migration, quando o `TemplateDatabase` prepara o modelo, então o banco clonado da classe contém a tabela criada pela migration.
+- **IT-01** — (guarda: passa antes da mudança — lacuna de cobertura, não defeito) Dado um `DbContext` de fixture com uma migration, quando o `TemplateDatabase` prepara o modelo, então o banco clonado da classe contém a tabela criada pela migration.
 
 ## 5. Questões em Aberto
 Nenhuma.
@@ -120,4 +120,5 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 11. Emendas
 | Versão | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| escopo | 2026-10-13 | IT-01 passa a ser guarda (passa antes da mudança); IT-02 tem evidência por repetição (script `tests/Juker.IntegrationTests/Harness/repeat-test-suite.sh`, 10 execuções completas), sem vermelho determinístico; redação do IT-02 sem o ID de teste de outra spec | Test-writer no G1: o caminho do `TemplateDatabase` com migrations reais já funciona (sem a migration o banco só tem `__EFMigrationsHistory`; com ela, a tabela aparece); 10 execuções completas seguidas passaram nesta máquina e nenhum escritor concorrente de `bin`/`obj` foi encontrado; o `verify` lia "CT-01 da SPEC-0003" como teste desta spec | Nenhuma | pendente — thomas |
 | escopo | 2026-10-13 | Item 5 (zero testes com filtro) ganha desenho e testes: toda execução aceita zero testes e a proteção vira o teste de convenção UT-03; IT-03 prova os comandos filtrados; `touches` inclui `tests/Directory.Build.targets` e o `.csproj` do `Juker.BuildingBlocks.UnitTests` | Revisão do Architect antes do despacho: o item 5 não tinha teste no plano e os arquivos que ele muda estavam fora do `touches`; o job `unit` da SPEC-0005 (`Category=Unit`) esvazia o `Juker.IntegrationTests` e o `Juker.ArchitectureTests` do mesmo jeito | SPEC-0005 (passa a depender desta spec) | thomas — no chat em 2026-10-13 ("Aprovado!") |
