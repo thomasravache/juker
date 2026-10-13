@@ -84,11 +84,12 @@ pillars:
 change_flow: pr
 change_flow_reason: ""
 
-# --- Aprovações humanas --- H1 e H2 no chat, onda a onda (a autorização prévia de 2026-09-30 acabou)
+# --- Aprovações humanas --- H1 sempre no chat. H2: thomas autorizou no chat (2026-10-13) push, PRs e merge
+# quando o CI configurado passar por inteiro. Deploy em produção nunca é coberto: confirmação por release.
 h1_policy: chat
-h2_policy: per-wave
-h2_policy_approved_by: ""
-h2_policy_approved_at: ""
+h2_policy: auto-on-green
+h2_policy_approved_by: thomas
+h2_policy_approved_at: 2026-10-13
 
 # --- Pull requests ---
 pr_title: "{conv}: {title} [{id}]"
