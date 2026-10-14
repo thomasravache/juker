@@ -4,7 +4,7 @@ title: Pipeline de CI
 tier: full
 type: foundation
 user_facing: false
-status: approved
+status: in-progress
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002, SPEC-0027, SPEC-0025]
@@ -221,5 +221,5 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
-| 3 | 2026-10-13 | `mutation.yml` passa de diário a semanal (domingo 03:17 UTC) + manual; Dependabot agrupado por ecossistema com no máximo 2 PRs abertos; `concurrency` com `cancel-in-progress`, artefatos com `retention-days: 7` e cache de NuGet e navegadores; NFR de custo com os limites do GitHub Free | Revisão do Architect antes do despacho: com mutation diário e Dependabot sem agrupamento o consumo estimado se aproxima dos 2.000 min/mês do GitHub Free, e os artefatos do Playwright e da cobertura disputam os 500 MB; o fundador decide custos só no fim, então o CI precisa caber na cota gratuita | Nenhuma | pendente — thomas |
+| 3 | 2026-10-13 | `mutation.yml` passa de diário a semanal (domingo 03:17 UTC) + manual; Dependabot agrupado por ecossistema com no máximo 2 PRs abertos; `concurrency` com `cancel-in-progress`, artefatos com `retention-days: 7` e cache de NuGet e navegadores; NFR de custo com os limites do GitHub Free | Revisão do Architect antes do despacho: com mutation diário e Dependabot sem agrupamento o consumo estimado se aproxima dos 2.000 min/mês do GitHub Free, e os artefatos do Playwright e da cobertura disputam os 500 MB; o fundador decide custos só no fim, então o CI precisa caber na cota gratuita | Nenhuma | thomas — no chat em 2026-10-13 ("aprovado") |
 | 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | Nenhuma (nenhuma spec consome o contrato da SPEC-0005 além da SPEC-0006, que usa só o output/tag da imagem, inalterados) | thomas, 2026-09-30 |
