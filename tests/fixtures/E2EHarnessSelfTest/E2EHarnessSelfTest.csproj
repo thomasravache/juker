@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Autoteste do diagnóstico de falha do harness de E2E (SPEC-0025:IT-03). Fora da solução: nunca roda no test, no
+    test_e2e nem no CI. O IT-03 (tests/Juker.IntegrationTests/Testing) o executa num dotnet test aninhado, com um
+    artifacts-path temporário, e confere o trace, o vídeo e a captura de tela do teste que falha de propósito.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Playwright" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Juker.TestKit.E2E\Juker.TestKit.E2E.csproj" />
+  </ItemGroup>
+
+</Project>
