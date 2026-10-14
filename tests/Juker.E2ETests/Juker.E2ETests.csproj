@@ -9,8 +9,6 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <!-- Scaffold (SPEC-0025): sai junto com os primeiros testes (SPEC-0027:UT-03) -->
-    <JukerAllowZeroTests>true</JukerAllowZeroTests>
   </PropertyGroup>
 
   <ItemGroup>
