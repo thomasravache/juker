@@ -260,9 +260,17 @@ ghcr_digests_with_tag() { # <tag>
 }
 
 # Proteção clássica da branch ou regras de ruleset com checks obrigatórios.
+# Qualquer falha das chamadas conta como "sem proteção": num repositório privado do GitHub Free as duas APIs respondem
+# 403, e o `gh api --jq` imprime o JSON do erro no stdout antes de sair com código != 0. Por isso a contagem só é lida
+# quando o comando teve sucesso, e só vale se for um inteiro > 0.
 branch_protected() {
-  gh api "repos/$repo/branches/$base/protection" > /dev/null 2>&1 \
-    || [[ "$(gh api "repos/$repo/rules/branches/$base" --jq '[.[] | select(.type == "required_status_checks")] | length' 2> /dev/null || echo 0)" != "0" ]]
+  local required_checks
+  if gh api "repos/$repo/branches/$base/protection" > /dev/null 2>&1; then
+    return 0
+  fi
+  required_checks="$(gh api "repos/$repo/rules/branches/$base" \
+    --jq '[.[] | select(.type == "required_status_checks")] | length' 2> /dev/null)" || return 1
+  [[ "$required_checks" =~ ^[0-9]+$ ]] && ((required_checks > 0))
 }
 
 # ------------------------------------------------------------------------- branch, PR e limpeza por cenário
