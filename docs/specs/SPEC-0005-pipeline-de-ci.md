@@ -176,8 +176,8 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0005` → G0 [SPEC-0005]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0014) | 2026-09-30 |
 | G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — 531ea2c | 2026-10-13 |
-| G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.20); test exit 0 (duration: 1m 52s 196ms); lint exit 0 () — 3e42d6b | 2026-10-14 |
-| G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 254ms) — 3e42d6b | 2026-10-14 |
+| G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.08); test exit 0 (duration: 1m 31s 669ms); lint exit 0 () — 2fff29a | 2026-10-14 |
+| G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 263ms) — 2fff29a | 2026-10-14 |
 | G4 Review | FAIL | Reviewer independente: CHANGES_REQUESTED em 3e42d6b — major: job integration sem os navegadores do Playwright (IT-03/CT-01 da SPEC-0025 rodam nele); major de processo: código segue o contrato v4 ainda pendente; minors: packages: write no job image inteiro, pull_request sem edited, comentário do dependabot sobre global.json, cabeçalhos v3 e docs/ci.md linha 8, comandos do sdd-config vazios | 2026-10-14 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
