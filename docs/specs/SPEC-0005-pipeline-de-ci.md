@@ -166,7 +166,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 - [ ] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
 
 **Fase final: Integração, entrega e documentação**
-- [ ] Review independente (G4)
+- [x] Review independente (G4)
 - [ ] Integração + CI verde (G5) e aprovação (H2)
 - [ ] Deploy via pipeline com smoke/E2E no ambiente (G6)
 - [ ] Relatório de Entrega, docs raiz e CHANGELOG (G7)
@@ -178,7 +178,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — 531ea2c | 2026-10-13 |
 | G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.08); test exit 0 (duration: 1m 31s 669ms); lint exit 0 () — 2fff29a | 2026-10-14 |
 | G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 263ms) — 2fff29a | 2026-10-14 |
-| G4 Review | FAIL | Reviewer independente: CHANGES_REQUESTED em 3e42d6b — major: job integration sem os navegadores do Playwright (IT-03/CT-01 da SPEC-0025 rodam nele); major de processo: código segue o contrato v4 ainda pendente; minors: packages: write no job image inteiro, pull_request sem edited, comentário do dependabot sobre global.json, cabeçalhos v3 e docs/ci.md linha 8, comandos do sdd-config vazios | 2026-10-14 |
+| G4 Review | PASS | verify G1+G4: PASS; revisão: Reviewer independente: APPROVED em 2fff29a contra o contrato v4 (aprovado por thomas em 2026-10-14); achados 1, 5 e 6 corrigidos em b12cfef/2fff29a; desvios (d) aceitos na emenda v4 — 2ec7bc3 | 2026-10-14 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
