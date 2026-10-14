@@ -12,16 +12,16 @@ test_integration: "dotnet test --solution Juker.slnx -c Release --filter-trait \
 test_e2e: "dotnet test --project tests/Juker.E2ETests -c Release"   # SPEC-0025
 smoke_test: "dotnet test --project tests/Juker.E2ETests -c Release --filter-trait \"Category=Smoke\""   # SPEC-0025 (com JUKER_E2E_BASE_URL roda contra o ambiente)
 lint: "dotnet format Juker.slnx --verify-no-changes"
-coverage: ""              # SPEC-0005 — alvo: "reportgenerator … && diff-cover coverage.cobertura.xml --compare-branch=origin/main --fail-under=80"
+coverage: "dotnet build Juker.slnx -c Release && bash tools/ci/coverage.sh artifacts/coverage/unit -- dotnet test --solution Juker.slnx -c Release --filter-trait \"Category=Unit\" --no-build && bash tools/ci/coverage.sh artifacts/coverage/integration -- dotnet test --solution Juker.slnx -c Release --filter-trait \"Category=Integration\" --no-build && dotnet tool run reportgenerator \"-reports:artifacts/coverage/**/*.cobertura.xml\" -targetdir:artifacts/coverage-report -reporttypes:Cobertura && python3 -m venv artifacts/.venv-diff-cover && artifacts/.venv-diff-cover/bin/pip install --quiet --require-hashes --no-deps -r tools/ci/requirements-diff-cover.txt && artifacts/.venv-diff-cover/bin/diff-cover artifacts/coverage-report/Cobertura.xml --compare-branch=origin/main --fail-under=80"   # SPEC-0005 (job coverage do ci.yml; docs/ci.md)
 coverage_min_changed_lines: 80
-mutation: ""              # SPEC-0005 — alvo: "dotnet stryker -f tests/Juker.Modules.Queue.UnitTests/stryker-config.json" (não bloqueante)
+mutation: "bash tools/ci/mutation.sh -f tests/Juker.BuildingBlocks.UnitTests/stryker-config.json"   # SPEC-0005 v4 (não bloqueante; workflow mutation.yml semanal)
 
 # --- Arquitetura e segurança (G3, G5) --- criados por SPEC-0003 / SPEC-0004
 arch_test: "dotnet test --project tests/Juker.ArchitectureTests -c Release"   # SPEC-0003
-security_scan: ""         # alvo: "dotnet list package --vulnerable --include-transitive && gitleaks detect"
+security_scan: "mkdir -p artifacts && dotnet list Juker.slnx package --vulnerable --include-transitive --format json > artifacts/vulnerable-packages.json && python3 -I tools/ci/vulnerable-packages.py artifacts/vulnerable-packages.json && bash tools/ci/ci-tools.sh gitleaks detect --source . --config .gitleaks.toml --log-opts=HEAD --redact"   # SPEC-0005 (job security do ci.yml)
 
 # --- CI/CD e ambientes (G5, G6) --- criados por SPEC-0004 / SPEC-0005
-ci: ""                    # alvo: "gh pr checks --watch"
+ci: "gh pr checks --watch"   # SPEC-0005
 deploy_staging: ""        # alvo: "merge em main → workflow deploy (staging)"
 deploy_production: ""     # alvo: "gh workflow run deploy.yml -f env=production (com aprovação do environment)"
 staging_url: ""           # domínio a definir (pré-requisito externo de SPEC-0005)
