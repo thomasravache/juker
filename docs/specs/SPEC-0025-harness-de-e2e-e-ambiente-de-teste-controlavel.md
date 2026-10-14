@@ -194,6 +194,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 13. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
 |---|---|---|---|---|---|---|---|---|
+| IMP-01 | 2026-10-13 | G2 | externo | Os navegadores do Playwright 1.63.0 (Chromium e WebKit) não abrem neste Ubuntu 22.04 por falta de bibliotecas do sistema (libatk, libgbm, libxkbcommon, libasound, dependências do WebKit); instalar exige sudo. Bloqueia o verde do IT-01 e do IT-03 | Test-writer baixou Chromium v1243 e WebKit v2359 sem sudo; o vermelho atual vem de NotImplementedException, não dos navegadores | thomas (rodar sudo npx -y playwright@1.63.0 install-deps chromium webkit) |  |  |
 
 ## 14. Relatório de Entrega
 

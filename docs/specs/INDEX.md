@@ -6,13 +6,14 @@
 
 - Validação (G0): **0 erro(s), 4 aviso(s)** — rode `spec_graph.py validate`
 - Specs: approved 19, in-progress 1, implemented 6
-- Impedimentos: **1 aberto(s)**, 4 resolvido(s)
+- Impedimentos: **2 aberto(s)**, 4 resolvido(s)
 
 ## Impedimentos Abertos
 
 | Spec | ID | Tipo | Fase/Gate | Responsável | Aberto em | Idade | Descrição |
 |---|---|---|---|---|---|---|---|
 | SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 13d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
+| SPEC-0025 | IMP-01 | externo | G2 | thomas (rodar sudo npx -y playwright@1.63.0 install-deps chromium webkit) | 2026-10-13 | 0d | Os navegadores do Playwright 1.63.0 (Chromium e WebKit) não abrem neste Ubuntu 22.04 por falta de bibliotecas do sistema (libatk, libgbm, libxkbcommon, libasound, dependências do WebKit); instalar exige sudo. Bloqueia o verde do IT-01 e do IT-03 |
 
 ## Cobertura de Pilares
 
@@ -35,13 +36,13 @@ Perfil: **padrao**
 
 ## Plano de Execução
 
-**Em andamento:** SPEC-0025  
-**Paradas por impedimento:** —  
+**Em andamento:** —  
+**Paradas por impedimento:** SPEC-0025  
 **Próximo lote:** —
 
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
-| 1 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | in-progress | 🔄 em andamento |  |
+| 1 | SPEC-0025 | Harness de E2E e ambiente de teste controlável | full/M | in-progress | 🚧 parada por impedimento: IMP-01 (externo → thomas (rodar sudo npx -y playwright@1.63.0 install-deps chromium webkit), 0d) |  |
 | 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 13d) |  |
 | 2 | SPEC-0005 | Pipeline de CI | full/M | approved | ⛔ aguarda implementação de SPEC-0025 |  |
 | 3 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ⛔ aguarda implementação de SPEC-0005; aguarda implementação de SPEC-0025 |  |

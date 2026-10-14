@@ -73,5 +73,5 @@ Regras:
 ## Mais Informações
 - Aspire 13.5 e `Aspire.Hosting.Testing` — https://devblogs.microsoft.com/aspire/whats-new-aspire-13-5/ (2026-09-30).
 - Playwright .NET — navegadores suportados (Chromium, Firefox, WebKit) e a API de relógio (`Clock`) — documentação oficial playwright.dev/dotnet. A versão estável será fixada em `Directory.Packages.props` na SPEC-0003, verificada no momento da implementação.
-- axe-core via `Deque.AxeCore.Playwright` (licença MPL-2.0) — a verificar na SPEC-0003.
+- axe-core via `Deque.AxeCore.Playwright` 4.13.0, licença MIT (nuspec em https://api.nuget.org/v3-flatcontainer/deque.axecore.playwright/4.13.0/deque.axecore.playwright.nuspec, verificado em 2026-10-13; a nota anterior dizia MPL-2.0).
 - Relacionados: ADR-0003 (render modes), ADR-0011 (ferramentas), ADR-0012 (IT).
