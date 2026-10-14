@@ -21,7 +21,7 @@ approved_at: 2026-09-30
 # SPEC-0005 — Pipeline de CI
 
 ## 1. Visão Geral
-Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, lint, testes unitários, integração (com Docker), arquitetura, E2E (Playwright), auditoria de dependências, varredura de segredos, o job SDD (`validate` + `pr-check`) e o build da imagem do container. Os jobs viram checks obrigatórios na proteção da `main`, que fica sempre verde e implantável.
+Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, lint, testes unitários, integração (com Docker), arquitetura, E2E (Playwright), auditoria de dependências, varredura de segredos, o job SDD (`validate` + `pr-check`) e o build da imagem do container. Os jobs viram checks obrigatórios na proteção da `main` quando ela for ativada (adiada para a decisão de custos — emenda v4); até lá o merge só acontece com todos verdes (`auto-on-green`), e a `main` fica sempre verde e implantável.
 
 ## 2. Motivação & Escopo
 **Motivação:** o modelo não lembra do processo; o CI garante que nada chega à `main` sem spec aprovada, testes vermelhos antes dos verdes e todos os gates.
@@ -51,7 +51,7 @@ Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, 
 ## 4. Decisão Arquitetural
 **Contexto:** projeto novo; ADR-0009 (GitHub Actions, GHCR), ADR-0011 (ferramentas de teste) e ADR-0013 (E2E com Chromium e WebKit e artefatos de falha).
 
-**Decisão:** um único workflow de CI com jobs paralelos após o `build`, reutilizando os artefatos de build, e o job `image` dependente de todos os jobs de qualidade.
+**Decisão:** um único workflow de CI com jobs paralelos após o `build`, cada um compilando o que usa (a saída de build passa da cota de artefatos do plano gratuito — emenda v4), `coverage` depois de `unit` e `integration` e o job `image` dependente de todos os jobs de qualidade.
 
 **Justificativa:** o feedback fica rápido com os jobs em paralelo, e a imagem só existe se tudo passou.
 
@@ -74,7 +74,7 @@ Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, 
 
 ```text
 on: pull_request (branches: main) | push (branches: main)
-jobs (checks obrigatórios na proteção da main):
+jobs (checks obrigatórios na proteção da main, quando ativada — emenda v4):
   build          → dotnet build Juker.slnx -c Release -warnaserror
   lint           → dotnet format Juker.slnx --verify-no-changes
   unit           → dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Unit"
