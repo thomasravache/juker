@@ -22,7 +22,9 @@ Jukebox colaborativa para bares: monólito modular em .NET 10 com vertical slice
 | Testes (tudo) | `dotnet test --solution Juker.slnx -c Release` (Microsoft.Testing.Platform; Docker necessário) |
 | Integração | `dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Integration"` |
 | Arquitetura | `dotnet test --project tests/Juker.ArchitectureTests -c Release` (regras ARQ-01..ARQ-08) |
-| Guia do harness | `docs/testing.md` (fixtures, convenções, regra de zero testes e `JukerAllowZeroTests`) |
+| E2E | `dotnet test --project tests/Juker.E2ETests -c Release` (AppHost + Chromium/WebKit; navegadores: `playwright install --with-deps chromium webkit`) |
+| Smoke | `JUKER_E2E_BASE_URL=<url> dotnet test --project tests/Juker.E2ETests -c Release --filter-trait "Category=Smoke"` |
+| Guia do harness | `docs/testing.md` (fixtures, convenções, regra de zero testes, `JukerAllowZeroTests` e E2E) |
 | Lint | `dotnet format Juker.slnx --verify-no-changes` (corrigir: `dotnet format Juker.slnx`) |
 | Rodar localmente | `dotnet run --project src/Aspire/Juker.AppHost` |
 | Estado das specs | `python3 tools/sdd/spec_graph.py status` |

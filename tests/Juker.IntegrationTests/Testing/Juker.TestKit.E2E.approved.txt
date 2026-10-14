@@ -1,0 +1,36 @@
+sealed class Juker.TestKit.E2E.AspireAppFixture : System.IAsyncDisposable, Xunit.IAsyncLifetime
+  ctor()
+  method System.Threading.Tasks.ValueTask DisposeAsync()
+  method System.Threading.Tasks.ValueTask InitializeAsync()
+  property Juker.TestKit.E2E.TestControlClient Control { get; }
+  property System.Uri HostUrl { get; }
+enum Juker.TestKit.E2E.BrowserKind : System.Enum
+  field System.Int32 value__
+  field static Juker.TestKit.E2E.BrowserKind Chromium
+  field static Juker.TestKit.E2E.BrowserKind WebKit
+abstract class Juker.TestKit.E2E.PageObject
+sealed class Juker.TestKit.E2E.PlaywrightFixture : System.IAsyncDisposable, Xunit.IAsyncLifetime
+  ctor()
+  method System.Threading.Tasks.Task AssertNoA11yViolationsAsync(Microsoft.Playwright.IPage)
+  method System.Threading.Tasks.Task<Microsoft.Playwright.IPage> NewAdminPageAsync(System.Boolean)
+  method System.Threading.Tasks.Task<Microsoft.Playwright.IPage> NewGuestPageAsync(Juker.TestKit.E2E.BrowserKind)
+  method System.Threading.Tasks.Task<Microsoft.Playwright.IPage> NewTvPageAsync()
+  method System.Threading.Tasks.ValueTask DisposeAsync()
+  method System.Threading.Tasks.ValueTask InitializeAsync()
+sealed class Juker.TestKit.E2E.TestControlClient
+  method System.Threading.Tasks.Task AdvanceClockAsync(System.TimeSpan)
+  method System.Threading.Tasks.Task<Juker.TestKit.E2E.TestVenue> CreateVenueAsync(Juker.TestKit.E2E.VenueSetup)
+sealed class Juker.TestKit.E2E.TestVenue : System.IEquatable<Juker.TestKit.E2E.TestVenue>
+  ctor(System.Guid, System.String)
+  method Juker.TestKit.E2E.TestVenue <Clone>$()
+  method System.Boolean Equals(Juker.TestKit.E2E.TestVenue)
+  method System.Void Deconstruct(System.Guid&, System.String&)
+  property System.Guid VenueId { get; set; }
+  property System.String Slug { get; set; }
+sealed class Juker.TestKit.E2E.VenueSetup : System.IEquatable<Juker.TestKit.E2E.VenueSetup>
+  ctor(System.String, System.String)
+  method Juker.TestKit.E2E.VenueSetup <Clone>$()
+  method System.Boolean Equals(Juker.TestKit.E2E.VenueSetup)
+  method System.Void Deconstruct(System.String&, System.String&)
+  property System.String Name { get; set; }
+  property System.String Slug { get; set; }
