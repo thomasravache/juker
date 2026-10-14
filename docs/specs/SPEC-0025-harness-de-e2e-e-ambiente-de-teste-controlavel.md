@@ -4,7 +4,7 @@ title: Harness de E2E e ambiente de teste controlável
 tier: full
 type: foundation
 user_facing: false
-status: in-progress
+status: implemented
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0003]
@@ -189,7 +189,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G5 Integração & CI | PASS | build exit 0 (Time Elapsed 00:00:08.38); test exit 0 (duration: 2m 04s 254ms); test_integration exit 0 (duration: 2m 14s 077ms); test_e2e exit 0 (duration: 1m 20s 216ms); arch_test exit 0 (duration: 4s 943ms) — 6ae32bc | 2026-10-13 |
 | H2 Integração aprovada | PASS | política auto-on-green (aprovada por thomas em 2026-10-13); G5 PASS | 2026-10-13 |
 | G6 Deploy | N/A | CD adiado por decisão do fundador; publicação na VPS fica para o fim (SPEC-0006, IMP-01); entrega = PR da sdd/SPEC-0001 na main | 2026-10-13 |
-| G7 Pronto & Docs | PENDING | | |
+| G7 Pronto & Docs | PASS | Relatório de Entrega e Definição de Pronto: ok — a443796 | 2026-10-13 |
 
 ## 13. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
