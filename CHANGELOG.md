@@ -14,6 +14,7 @@ Cada entrada cita a spec de origem (`SPEC-NNNN`); gere-as com `spec_graph.py rep
 - `GetAwaiter().GetResult()` (Task/ValueTask) passa a ser API proibida no build; `/_diag/modules` lista os módulos que o host de fato compôs; nota sobre o hook de pre-commit no `AGENTS.md` (SPEC-0026)
 
 ### Added
+- Harness de E2E: `Juker.TestKit.E2E` com AppHost no ambiente `E2E`, Chromium e WebKit, verificação de acessibilidade (axe-core), diagnóstico de falha (trace, vídeo e screenshot) e modo smoke por `JUKER_E2E_BASE_URL`; API de teste do host (`/_test/clock/advance`, `/_test/ping`) só no ambiente `E2E`; comandos `test_e2e` e `smoke_test` (SPEC-0025)
 - Regra de zero testes: toda execução aceita projeto vazio sob filtro e um teste de convenção protege contra projeto que perdeu os testes; cobertura do ARQ-08 para NSubstitute/Moq, das referências do `Juker.ArchitectureTests` e do banco-modelo com migrations reais (SPEC-0027)
 - Building blocks dos módulos: `Result`/`Error`, handlers com decorators de validação, logging e unidade de trabalho, erros como `ProblemDetails`, `ModuleDbContext` com schema e filtro de tenant, outbox/inbox com entrega exatamente uma vez e dispatcher em segundo plano (`Juker.SharedKernel` e o novo `Juker.Infrastructure`) (SPEC-0004)
 - Harness de testes de integração (`Juker.TestKit`): Postgres real com banco por classe clonado de um modelo migrado, `JukerApiFactory` com relógio controlado e outbox desligado, `MigrationsGuard` e `FakeHttpServer` (SPEC-0003)

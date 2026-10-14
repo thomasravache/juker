@@ -4,8 +4,8 @@
 
 ## Saúde
 
-- Validação (G0): **0 erro(s), 4 aviso(s)** — rode `spec_graph.py validate`
-- Specs: approved 19, in-progress 1, implemented 6
+- Validação (G0): **0 erro(s), 5 aviso(s)** — rode `spec_graph.py validate`
+- Specs: proposed 1, approved 19, in-progress 1, implemented 6
 - Impedimentos: **1 aberto(s)**, 5 resolvido(s)
 
 ## Impedimentos Abertos
@@ -61,12 +61,13 @@ Perfil: **padrao**
 | 9 | SPEC-0023 | Painel do gerente | full/M | approved | ⛔ aguarda implementação de SPEC-0021; aguarda implementação de SPEC-0022 |  |
 | 9 | SPEC-0017 | Modo karaokê | full/M | approved | ⛔ aguarda implementação de SPEC-0014; aguarda implementação de SPEC-0020; aguarda implementação de SPEC-0024 |  |
 | 9 | SPEC-0019 | Votos e auto-remoção | full/M | approved | ⛔ aguarda implementação de SPEC-0024 |  |
+| 10 | SPEC-0029 | Pendências do review da SPEC-0025 | lite/S | proposed | ⏳ aguardando aprovação (H1) | saiu da onda 2: arquivos em comum com SPEC-0005; saiu da onda 3: arquivos em comum com SPEC-0007; saiu da onda 4: arquivos em comum com SPEC-0009; saiu da onda 5: arquivos em comum com SPEC-0011, SPEC-0013; saiu da onda 6: arquivos em comum com SPEC-0015, SPEC-0020; saiu da onda 7: arquivos em comum com SPEC-0014, SPEC-0021; saiu da onda 8: arquivos em comum com SPEC-0022, SPEC-0024; saiu da onda 9: arquivos em comum com SPEC-0023, SPEC-0017, SPEC-0019 |
 
 ## Épicos
 
 | Épico | Título | Status | Progresso |
 |---|---|---|---|
-| SPEC-0001 | Fundação do Juker | approved | 6/12 implementadas |
+| SPEC-0001 | Fundação do Juker | approved | 6/13 implementadas |
 | SPEC-0010 | MVP Jukebox colaborativa | approved | 0/14 implementadas |
 
 ## Grafo de Dependências
@@ -86,6 +87,7 @@ flowchart LR
     S0009["SPEC-0009<br/>Segurança básica e autorização"]:::approved
     S0025["SPEC-0025<br/>Harness de E2E e ambiente de teste cont…"]:::inprogress
     S0027["SPEC-0027<br/>Pendências do review da SPEC-0003"]:::implemented
+    S0029["SPEC-0029<br/>Pendências do review da SPEC-0025"]:::proposed
   end
   subgraph E0010["SPEC-0010 · MVP Jukebox colaborativa"]
     S0011["SPEC-0011<br/>Bar, configurações da noite e termos de…"]:::approved
@@ -169,6 +171,7 @@ flowchart LR
   S0012 -. contrato v1 .-> S0024
   S0003 --> S0025
   S0003 --> S0027
+  S0025 --> S0029
   classDef proposed fill:#fef3c7,stroke:#d97706,color:#111
   classDef approved fill:#dbeafe,stroke:#2563eb,color:#111
   classDef inprogress fill:#ede9fe,stroke:#7c3aed,color:#111
@@ -208,6 +211,7 @@ flowchart LR
 | [SPEC-0026](SPEC-0026-pendencias-do-review-da-spec-0002.md) | Pendências do review da SPEC-0002 | lite | fix | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002 | — |
 | [SPEC-0027](SPEC-0027-pendencias-do-review-da-spec-0003.md) | Pendências do review da SPEC-0003 | lite | refactor | implemented | 2026-10-01 | SPEC-0001 | SPEC-0003 | — |
 | [SPEC-0028](SPEC-0028-pendencias-do-review-da-spec-0026.md) | Pendências do review da SPEC-0026 | lite | fix | implemented | 2026-10-01 | SPEC-0001 | SPEC-0026 | — |
+| [SPEC-0029](SPEC-0029-pendencias-do-review-da-spec-0025.md) | Pendências do review da SPEC-0025 | lite | fix | proposed | 2026-10-13 | SPEC-0001 | SPEC-0025 | — |
 
 ## ADRs
 

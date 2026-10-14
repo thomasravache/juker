@@ -161,22 +161,22 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 11. Checklist de Implementação
 
 **Fase 1: Regras e componentes (unitário)**
-- [ ] Red: escrever UT-01 com a tag `SPEC-0025:<ID>` e confirmar que falham pelo motivo certo
-- [ ] Green: implementar o mínimo para passar, seguindo os ADRs de fundação e o padrão de slices
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + lint + suíte de UT (G2)
+- [x] Red: escrever UT-01 com a tag `SPEC-0025:<ID>` e confirmar que falham pelo motivo certo
+- [x] Green: implementar o mínimo para passar, seguindo os ADRs de fundação e o padrão de slices
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + lint + suíte de UT (G2)
 
 **Fase 2: Integração e contrato**
-- [ ] Red: escrever IT-01, IT-02, IT-03, CT-01 com a tag `SPEC-0025:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
-- [ ] Green: implementar endpoints, persistência, migrations e integrações até passar
-- [ ] Refactor mantendo tudo verde
-- [ ] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
+- [x] Red: escrever IT-01, IT-02, IT-03, CT-01 com a tag `SPEC-0025:<ID>` (Postgres real, esquemas de auth reais, `DrainOutboxAsync`, WireMock — ADR-0012) e confirmar que falham pelo motivo certo
+- [x] Green: implementar endpoints, persistência, migrations e integrações até passar
+- [x] Refactor mantendo tudo verde
+- [x] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3) — cobertura: N/A até a SPEC-0005 (`coverage` vazio no sdd-config)
 
 **Fase final: Integração, entrega e documentação**
-- [ ] Review independente (G4)
-- [ ] Integração + CI verde (G5) e aprovação (H2)
-- [ ] Deploy via pipeline com smoke/E2E no ambiente (G6)
-- [ ] Relatório de Entrega, docs raiz e CHANGELOG (G7)
+- [x] Review independente (G4)
+- [x] Integração + CI verde (G5) e aprovação (H2)
+- [x] Deploy via pipeline com smoke/E2E no ambiente (G6) — N/A: CD adiado (SPEC-0006)
+- [x] Relatório de Entrega, docs raiz e CHANGELOG (G7)
 
 ## 12. Registro de Gates
 | Gate | Status | Evidência | Data |
@@ -186,9 +186,9 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G2 Green | PASS | build exit 0 (Time Elapsed 00:00:19.50); test exit 0 (duration: 2m 25s 528ms); lint exit 0 () — 3476a61 | 2026-10-13 |
 | G3 Arquitetura | PASS | arch_test exit 0 (duration: 3s 006ms) — 3476a61 | 2026-10-13 |
 | G4 Review | PASS | verify G1+G4: PASS; revisão: Reviewer independente: APPROVED em 3476a61 (sem blocker/major; 5 minors viram a SPEC-0029) — 3476a61 | 2026-10-13 |
-| G5 Integração & CI | PENDING | | |
-| H2 Integração aprovada | PENDING | | |
-| G6 Deploy | PENDING | | |
+| G5 Integração & CI | PASS | build exit 0 (Time Elapsed 00:00:08.38); test exit 0 (duration: 2m 04s 254ms); test_integration exit 0 (duration: 2m 14s 077ms); test_e2e exit 0 (duration: 1m 20s 216ms); arch_test exit 0 (duration: 4s 943ms) — 6ae32bc | 2026-10-13 |
+| H2 Integração aprovada | PASS | política auto-on-green (aprovada por thomas em 2026-10-13); G5 PASS | 2026-10-13 |
+| G6 Deploy | N/A | CD adiado por decisão do fundador; publicação na VPS fica para o fim (SPEC-0006, IMP-01); entrega = PR da sdd/SPEC-0001 na main | 2026-10-13 |
 | G7 Pronto & Docs | PENDING | | |
 
 ## 13. Registro de Impedimentos
@@ -199,32 +199,47 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 14. Relatório de Entrega
 
 ### O que foi entregue
+O harness de E2E. `Juker.TestKit.E2E` (assembly próprio): `AspireAppFixture` (sobe o `Juker.AppHost` com `ASPNETCORE_ENVIRONMENT=E2E`, compartilhado entre as instâncias do processo; com `JUKER_E2E_BASE_URL` não sobe nada e só aponta para a URL), `TestControlClient` (`AdvanceClockAsync`; `CreateVenueAsync` chama o `/_test/venues` que a SPEC-0007 implementa), `PlaywrightFixture` (Chromium e WebKit abertos sob demanda, perfis de celular 390×844 pt-BR/America/Sao_Paulo, TV 1920×1080 e painel, verificação axe-core A/AA, trace + vídeo + screenshot gravados e movidos para `TestResults/playwright/<teste>/` só quando o teste falha) e `PageObject`. No host, `src/Juker.Host/Testing`: `AddE2ETestingSupport` (troca o `TimeProvider` por um `ControllableTimeProvider`) e `MapTestEndpoints` (`POST /_test/clock/advance` → 204, `GET /_test/ping`, ponto de extensão para as próximas specs), chamados pelo `Program.cs` só no ambiente `E2E` — em Staging/Production `/_test/*` é 404 e o relógio é `TimeProvider.System`. Projeto `tests/Juker.E2ETests` com o teste de convenção de espera fixa, a página de teste e o smoke; fixture fora da solução `tests/fixtures/E2EHarnessSelfTest`; seção de E2E do `docs/testing.md`; `test_e2e` e `smoke_test` no `sdd-config.yml`.
 
 ### Como foi feito
+- Commits: scaffold 35f1033 (chore), red 9d50d71, green 3476a61; merge em `sdd/SPEC-0001` 6ae32bc.
+- Emendas: contrato v3 (endpoint de bar de teste passa à SPEC-0007, tipos `VenueSetup`/`TestVenue`, `/_test/ping`, teste que falha de propósito fora da solução, IT-03 na coleção `NestedTestRun`) — aprovada por thomas em 2026-10-13; escopo de 2026-10-01 (assembly próprio).
+- Pacotes: Microsoft.Playwright 1.63.0 e Deque.AxeCore.Playwright 4.13.0 (licença MIT, ADR-0013 corrigido); Aspire.Hosting.Testing 13.6.0 já existente.
+- Decisões aceitas no review (G4): diagnóstico de falha por atributo interno de assembly (`PlaywrightDiagnosticsAttribute`) com `InternalsVisibleTo`, sem ampliar a API pública; `Juker.TestKit.E2E` referencia o `Juker.AppHost.csproj` (necessário para `Projects.Juker_AppHost`); `Control` lança exceção quando `JUKER_E2E_BASE_URL` está definido.
+- Impedimento IMP-01 (bibliotecas de sistema dos navegadores) resolvido por thomas em 2026-10-13.
 
 ### Prova de Correção
+N/A — type: foundation.
 
 ### Verificação
 | Teste | Comportamento | Resultado | Evidência |
 |---|---|---|---|
+| UT-01 | Método de teste que chama `Thread.Sleep`/`Task.Delay` (inclusive em async e lambda) é listado | PASS | `tests/Juker.E2ETests/Conventions/FixedWaitConventionTests.cs`; `dotnet test --project tests/Juker.E2ETests -c Release` (test_e2e) em 6ae32bc (5/5, Chromium e WebKit) |
+| IT-01 | AppHost em `E2E` com `/health/ready` = 200 em menos de 60 s; `/_test/ping` em Chromium e WebKit sem violações axe; axe acusa `image-alt` numa página com violação | PASS | `tests/Juker.E2ETests/Harness/HarnessTests.cs`; `dotnet test --project tests/Juker.E2ETests -c Release` (test_e2e) em 6ae32bc (5/5, Chromium e WebKit); IT-01 isolado em ~28 s |
+| IT-02 | Relógio do host avança 15 min pela API de teste; em Staging/Production `/_test/*` = 404 e `TimeProvider.System` | PASS | `tests/Juker.IntegrationTests/Testing/TestEnvironmentTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 6ae32bc (87/87; duas execuções em 3476a61) |
+| IT-03 | Teste que falha de propósito deixa `trace.zip`, `video.webm` e `screenshot.png` em `TestResults/playwright/<teste>/`; o que passa não deixa nada | PASS | `tests/Juker.IntegrationTests/Testing/FailureDiagnosticsTests.cs` + `tests/fixtures/E2EHarnessSelfTest`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 6ae32bc (87/87; duas execuções em 3476a61) |
+| CT-01 | Com `JUKER_E2E_BASE_URL`, só os Smoke rodam, sem AppHost e sem `/_test/*`; API pública igual ao snapshot; comandos do `sdd-config` iguais ao contrato | PASS | `tests/Juker.IntegrationTests/Testing/SmokeRunTests.cs` e `TestKitE2EContractTests.cs`; `dotnet test --solution Juker.slnx -c Release` no resultado integrado 6ae32bc (87/87; duas execuções em 3476a61) |
 
 ### Definição de Pronto
-- [ ] Todos os testes do plano passando e listados na Verificação
-- [ ] Todo comportamento do Mapa de Comportamentos coberto e verificado
-- [ ] Suíte completa, arquitetura e CI verdes no resultado integrado (G5)
-- [ ] Review independente sem achados blocker/major (G4)
-- [ ] Padrão arquitetural existente mantido, ou desvio coberto por ADR aprovado
-- [ ] Requisitos não-funcionais medidos com evidência (ou N/A justificado)
-- [ ] Disponível no ambiente-alvo via pipeline, com smoke/E2E passando no ambiente (G6)
-- [ ] Observabilidade e rollback prontos conforme o Plano de Rollout
-- [ ] Documentação raiz e CHANGELOG atualizados (G7)
-- [ ] Pendências registradas como novas specs (ou nenhuma)
-- [ ] Textos da interface em português do Brasil, sem conceitos fora do produto (contas, créditos, mesa, música ao vivo)
-- [ ] Tokens visuais vindos do design system do Stitch (projeto 8904741919458823023), sem cores/fontes avulsas
+- [x] Todos os testes do plano passando e listados na Verificação
+- [x] Todo comportamento do Mapa de Comportamentos coberto e verificado
+- [x] Suíte completa, arquitetura e CI verdes no resultado integrado (G5) — CI: N/A até a SPEC-0005
+- [x] Review independente sem achados blocker/major (G4)
+- [x] Padrão arquitetural existente mantido, ou desvio coberto por ADR aprovado
+- [x] Requisitos não-funcionais medidos com evidência (ou N/A justificado) — subida do AppHost < 60 s (IT-01, ~28 s com navegadores); sem espera fixa (UT-01); nada de teste fora do `E2E` (IT-02)
+- [x] Disponível no ambiente-alvo via pipeline, com smoke/E2E passando no ambiente (G6) — N/A: CD adiado (SPEC-0006); entrega pelo PR da `sdd/SPEC-0001` na `main`
+- [x] Observabilidade e rollback prontos conforme o Plano de Rollout — rollback = reverter o merge; observabilidade N/A no plano
+- [x] Documentação raiz e CHANGELOG atualizados (G7)
+- [x] Pendências registradas como novas specs (ou nenhuma) — SPEC-0029
+- [x] Textos da interface em português do Brasil, sem conceitos fora do produto (contas, créditos, mesa, música ao vivo) — N/A: só a página de teste `/_test/ping`
+- [x] Tokens visuais vindos do design system do Stitch (projeto 8904741919458823023), sem cores/fontes avulsas — N/A: sem interface do produto
 
 ### Deploy
+N/A — CD adiado (SPEC-0006). Integrado em `sdd/SPEC-0001`; entra na `main` pelo PR da onda.
 
 ### Pendências
+- SPEC-0029 — achados minor do review: AppHost uma vez por assembly, timers do servidor conduzidos pelo relógio de teste, validação do máximo em `/_test/clock/advance`, scanner seguindo o `Juker.TestKit.E2E`.
+- Aceito como está (documentado): cada projeto de E2E novo precisa do arquivo de ligação do diagnóstico e de uma entrada de `InternalsVisibleTo` no `Juker.TestKit.E2E`.
 
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
