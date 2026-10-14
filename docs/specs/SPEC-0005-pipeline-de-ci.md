@@ -179,7 +179,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.08); test exit 0 (duration: 1m 31s 669ms); lint exit 0 () — 2fff29a | 2026-10-14 |
 | G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 263ms) — 2fff29a | 2026-10-14 |
 | G4 Review | PASS | verify G1+G4: PASS; revisão: Reviewer independente: APPROVED em 2fff29a contra o contrato v4 (aprovado por thomas em 2026-10-14); achados 1, 5 e 6 corrigidos em b12cfef/2fff29a; desvios (d) aceitos na emenda v4 — 2ec7bc3 | 2026-10-14 |
-| G5 Integração & CI | PENDING | | |
+| G5 Integração & CI | PASS | build exit 0 (Time Elapsed 00:00:16.61); test exit 0 (duration: 1m 51s 681ms); test_integration exit 0 (duration: 1m 44s 781ms); test_e2e exit 0 (duration: 22s 871ms); arch_test exit 0 (duration: 1s 422ms); security_scan exit 0 (6:46PM INF no leaks found) — dfd3a28; GitHub real (ci-check.sh, /tmp/spec-0005-it.tsv): IT-01 PARTIAL run 38641244130 (unit=failure, sem merge; bloqueio pela plataforma adiado — v4), IT-02 PASS run 38635305684, IT-03 PASS run 38636594256, IT-05 PASS run 38637766504, IT-06 PASS runs 38638653308/38639860693; IT-04 e IT-07 no PR de integração | 2026-10-14 |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
 | G7 Pronto & Docs | PENDING | | |
