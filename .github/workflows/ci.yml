@@ -1,4 +1,4 @@
-# CI do Juker (SPEC-0005, contrato v3; ADR-0009, ADR-0011, ADR-0013, ADR-0014, ADR-0016, ADR-0017).
+# CI do Juker (SPEC-0005, contrato v4; ADR-0009, ADR-0011, ADR-0013, ADR-0014, ADR-0016, ADR-0017).
 #
 # Os ids dos jobs são os checks obrigatórios da proteção da main (docs/ci.md): build, lint, unit, integration,
 # architecture, e2e, security, coverage, sdd e image. Renomear um job exige atualizar a proteção da branch.
@@ -122,7 +122,7 @@ jobs:
 
   integration:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -141,6 +141,20 @@ jobs:
           dotnet tool restore
       - name: Build
         run: dotnet build Juker.slnx -c Release --no-restore
+      - name: Versão do Playwright
+        id: playwright
+        run: |
+          version="$(sed -n 's/.*Include="Microsoft\.Playwright" Version="\([^"]*\)".*/\1/p' Directory.Packages.props)"
+          [[ -n "$version" ]] || { echo "::error::versão do Microsoft.Playwright não encontrada no Directory.Packages.props"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-chromium
+      - name: Navegador do Playwright (Chromium, com as bibliotecas do sistema)
+        # Os testes de integração do harness de E2E (SPEC-0025: FailureDiagnosticsTests e SmokeRunTests) rodam um
+        # dotnet test aninhado que abre o Chromium; o smoke só usa a API HTTP do Playwright, sem navegador.
+        run: pwsh tests/Juker.E2ETests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
       - name: Testes de integração com cobertura (coverlet; Postgres no Docker do runner)
         run: |
           # Mesmo esquema do job unit: coverlet por fora (tools/ci/coverage.sh), comando do contrato por dentro.

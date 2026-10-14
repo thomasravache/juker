@@ -1,4 +1,4 @@
-# Mutation testing com o Stryker.NET (SPEC-0005, contrato v3; ADR-0014 regra 6).
+# Mutation testing com o Stryker.NET (SPEC-0005, contrato v4; ADR-0014 regra 6).
 #
 # Não é check de PR: roda toda semana (domingo às 03:17 UTC) e sob demanda (Actions > mutation > Run workflow).
 # O stryker-config.json de STRYKER_CONFIG muta só as classes críticas do seu "mutate" e quebra abaixo de 80%
