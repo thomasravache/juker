@@ -1,18 +1,19 @@
 # Índice de Specs
 
-> Gerado por `spec_graph.py index` em 2026-10-13 — não edite manualmente.
+> Gerado por `spec_graph.py index` em 2026-10-14 — não edite manualmente.
 
 ## Saúde
 
-- Validação (G0): **0 erro(s), 5 aviso(s)** — rode `spec_graph.py validate`
+- Validação (G0): **0 erro(s), 6 aviso(s)** — rode `spec_graph.py validate`
 - Specs: proposed 1, approved 18, in-progress 1, implemented 7
-- Impedimentos: **1 aberto(s)**, 6 resolvido(s)
+- Impedimentos: **2 aberto(s)**, 6 resolvido(s)
 
 ## Impedimentos Abertos
 
 | Spec | ID | Tipo | Fase/Gate | Responsável | Aberto em | Idade | Descrição |
 |---|---|---|---|---|---|---|---|
-| SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 13d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
+| SPEC-0005 | IMP-02 | decisão | G4 | thomas (GitHub Pro, repositório público, ou seguir só com a política auto-on-green + pr-check até a decisão de custos no fim) | 2026-10-14 | 0d | GitHub Free não permite proteção de branch nem rulesets em repositório privado (API: 403 'Upgrade to GitHub Pro or make this repository public'); o contrato pede os jobs como checks obrigatórios na proteção da main, o IT-01 espera 'o PR não pode ser mesclado' e o rollout prevê o fundador ativando a proteção |
+| SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 14d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
 
 ## Cobertura de Pilares
 
@@ -35,14 +36,14 @@ Perfil: **padrao**
 
 ## Plano de Execução
 
-**Em andamento:** SPEC-0005  
-**Paradas por impedimento:** —  
+**Em andamento:** —  
+**Paradas por impedimento:** SPEC-0005  
 **Próximo lote:** —
 
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
-| 1 | SPEC-0005 | Pipeline de CI | full/M | in-progress | 🔄 em andamento |  |
-| 2 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 13d) | saiu da onda 1: arquivos em comum com SPEC-0005 |
+| 1 | SPEC-0005 | Pipeline de CI | full/M | in-progress | 🚧 parada por impedimento: IMP-02 (decisão → thomas (GitHub Pro, repositório público, ou seguir só com a política auto-on-green + pr-check até a decisão de custos no fim), 0d) |  |
+| 2 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 14d); contrato de SPEC-0005 mudou (v3 → v4): revisar spec | saiu da onda 1: arquivos em comum com SPEC-0005 |
 | 2 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ⛔ aguarda implementação de SPEC-0005 |  |
 | 3 | SPEC-0008 | Observabilidade básica | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
 | 3 | SPEC-0009 | Segurança básica e autorização | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |

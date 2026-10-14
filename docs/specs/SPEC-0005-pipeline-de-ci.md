@@ -9,7 +9,7 @@ created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002, SPEC-0027, SPEC-0025]
 consumes_contract: [SPEC-0003@2, SPEC-0025@3]
-contract_version: 3
+contract_version: 4
 touches: [.github/workflows/ci.yml, .github/workflows/mutation.yml, .github/dependabot.yml, .gitleaks.toml, .config/dotnet-tools.json, tools/sdd/**, tools/ci/**, tests/Juker.CiTests/**, tests/**/stryker-config.json, docs/ci.md, Juker.slnx, tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, Directory.Packages.props]
 adrs: [ADR-0009, ADR-0011, ADR-0013, ADR-0014]
 external: []
@@ -176,8 +176,8 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0005` → G0 [SPEC-0005]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0014) | 2026-09-30 |
 | G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — 531ea2c | 2026-10-13 |
-| G2 Green | PENDING | | |
-| G3 Arquitetura | PENDING | | |
+| G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.20); test exit 0 (duration: 1m 52s 196ms); lint exit 0 () — 3e42d6b | 2026-10-14 |
+| G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 254ms) — 3e42d6b | 2026-10-14 |
 | G4 Review | PENDING | | |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
@@ -188,6 +188,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
 |---|---|---|---|---|---|---|---|---|
 | IMP-01 | 2026-10-13 | G1 | spec | touches não inclui Juker.slnx nem tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, necessários para registrar o projeto novo tests/Juker.CiTests (convenção da SPEC-0003/0027); os testes do CT-01 leem YAML com YamlDotNet, que chega só transitivamente pelo Aspire.Hosting.Testing e não está em nenhum ADR nem fixado no Directory.Packages.props | Test-writer escreveu UT-01, CT-01 e o script IT-01..IT-07 dentro do touches; verify PASS; não editou os dois arquivos | Architect (emenda de escopo) + thomas (aprovação) | Emenda de escopo de 2026-10-13 (touches com Juker.slnx, csproj da suíte de arquitetura e Directory.Packages.props; YamlDotNet explícito e no ADR-0011) — aprovada por thomas | 2026-10-13 |
+| IMP-02 | 2026-10-14 | G4 | decisão | GitHub Free não permite proteção de branch nem rulesets em repositório privado (API: 403 'Upgrade to GitHub Pro or make this repository public'); o contrato pede os jobs como checks obrigatórios na proteção da main, o IT-01 espera 'o PR não pode ser mesclado' e o rollout prevê o fundador ativando a proteção | Implementer e Architect consultaram repos/thomasravache/juker/branches/main/protection e /rulesets (403); docs/ci.md já traz o passo a passo para quando houver | thomas (GitHub Pro, repositório público, ou seguir só com a política auto-on-green + pr-check até a decisão de custos no fim) |  |  |
 
 ## 14. Relatório de Entrega
 
@@ -222,6 +223,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 4 | 2026-10-14 | (a) Proteção de branch adiada para a decisão de custos do fim (ADR-0019): até lá, os checks rodam em todo PR e o merge só acontece com todos verdes pela política `auto-on-green` (ADR-0015), sem bloqueio pela plataforma; o IT-01 passa a exigir só o job `unit` vermelho e o PR sem merge; `docs/ci.md` mantém o passo a passo para ativar a proteção. (b) Decisão Arquitetural: cada job compila o que usa, em vez de reaproveitar os artefatos do `build` (a saída de build tem ~900 MB, acima dos 500 MB de artefatos do plano gratuito); `coverage` depende de `unit` e `integration` e `image` de todos. (c) O `mutation.yml` começa vermelho (score 46,94% no `Juker.Infrastructure`, abaixo do `break` 80) sem bloquear PRs; o reforço dos testes vira spec própria. ADR-0014 alinhado: Stryker semanal | IMP-02: GitHub Free não permite proteção de branch em repositório privado (403); Implementer: artefatos de build excedem a cota; Stryker real com 23 mortos, 11 sobreviventes e 15 sem cobertura | SPEC-0006 (consome @3 — só nomes de jobs/saída da imagem, sem mudança; repinar @4) | pendente — thomas |
 | escopo | 2026-10-13 | `touches` inclui `Juker.slnx` e `tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj` (registrar o projeto `tests/Juker.CiTests`) e `Directory.Packages.props` (fixar YamlDotNet, referenciado explicitamente pelo `Juker.CiTests` em vez de chegar só pelo Aspire.Hosting.Testing); ADR-0011 passa a listar o YamlDotNet para leitura de YAML nos testes de contrato do CI | IMP-01 (SPEC_DEFECT do Test-writer): projeto de teste novo precisa estar na solução e nas referências da suíte de arquitetura (UT-02/UT-03 da SPEC-0027); dependência indireta não declarada quebraria sem aviso numa atualização do Aspire (ADR-0017) | Nenhuma | thomas — no chat em 2026-10-13 ("aprovado") |
 | 3 | 2026-10-13 | `mutation.yml` passa de diário a semanal (domingo 03:17 UTC) + manual; Dependabot agrupado por ecossistema com no máximo 2 PRs abertos; `concurrency` com `cancel-in-progress`, artefatos com `retention-days: 7` e cache de NuGet e navegadores; NFR de custo com os limites do GitHub Free | Revisão do Architect antes do despacho: com mutation diário e Dependabot sem agrupamento o consumo estimado se aproxima dos 2.000 min/mês do GitHub Free, e os artefatos do Playwright e da cobertura disputam os 500 MB; o fundador decide custos só no fim, então o CI precisa caber na cota gratuita | Nenhuma | thomas — no chat em 2026-10-13 ("aprovado") |
 | 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | Nenhuma (nenhuma spec consome o contrato da SPEC-0005 além da SPEC-0006, que usa só o output/tag da imagem, inalterados) | thomas, 2026-09-30 |
