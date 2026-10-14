@@ -5,22 +5,27 @@ ADR-0017). São dois workflows:
 
 | Workflow | Quando roda | Bloqueia PR? |
 |---|---|---|
-| `.github/workflows/ci.yml` | todo PR para a `main` e todo push na `main` | sim (checks obrigatórios) |
+| `.github/workflows/ci.yml` | todo PR para a `main` e todo push na `main` | pela política: só há merge com todos os checks verdes (ver abaixo) |
 | `.github/workflows/mutation.yml` | domingo às 03:17 UTC e sob demanda (Actions → mutation → Run workflow) | não |
+
+Hoje o bloqueio é de processo, não da plataforma: pela política `h2_policy: auto-on-green` do
+`docs/specs/sdd-config.yml`, um PR só é mesclado com todos os checks do `ci.yml` verdes. A proteção da `main` pelo
+GitHub (branch protection ou ruleset) espera a decisão de custo do fundador, porque no GitHub Free um repositório
+privado não tem esse recurso (a API responde 403); veja "Ativar a proteção da main".
 
 As atualizações de dependência chegam pelo Dependabot (`.github/dependabot.yml`): NuGet e GitHub Actions toda
 segunda, um PR agrupado por ecossistema e no máximo 2 PRs abertos de cada.
 
 ## Checks obrigatórios
 
-O nome de cada check é o id do job no `ci.yml`. A proteção da `main` exige estes 10 checks:
+O nome de cada check é o id do job no `ci.yml`. São estes 10 os checks que a política de merge exige verdes e que a proteção da `main` vai exigir quando for ativada:
 
 | Check | O que roda | Falha quando |
 |---|---|---|
 | `build` | `dotnet build Juker.slnx -c Release -warnaserror` | erro de compilação ou qualquer aviso (analisadores, APIs proibidas) |
 | `lint` | `dotnet format Juker.slnx --verify-no-changes` | arquivo fora da formatação ou do estilo do `.editorconfig` |
 | `unit` | `dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Unit"`, com cobertura do coverlet | teste de unidade vermelho |
-| `integration` | `dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Integration"` (Postgres no Docker do runner), com cobertura | teste de integração vermelho |
+| `integration` | `dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Integration"` (Postgres no Docker do runner; Chromium do Playwright para os testes do harness de E2E), com cobertura | teste de integração vermelho |
 | `architecture` | `dotnet test --project tests/Juker.ArchitectureTests -c Release` | violação de ARQ-01..ARQ-08 ou das convenções de teste |
 | `e2e` | `playwright install --with-deps chromium webkit` e `dotnet test --project tests/Juker.E2ETests -c Release` | jornada E2E vermelha (Chromium ou WebKit) |
 | `security` | `dotnet list package --vulnerable --include-transitive` e `gitleaks detect` | pacote com vulnerabilidade High/Critical ou segredo no histórico |
@@ -130,14 +135,14 @@ Estimativa por execução completa do `ci.yml` (runner de 2 núcleos, cobrança 
 | `build` | 3 |
 | `lint` | 3 |
 | `unit` | 3 |
-| `integration` | 5 |
+| `integration` | 6 |
 | `architecture` | 3 |
 | `e2e` | 7 |
 | `security` | 2 |
 | `coverage` | 2 |
 | `sdd` | 1 |
 | `image` | 3 |
-| **Total** | **~32** (a SPEC-0005 estima ~40) |
+| **Total** | **~33** (a SPEC-0005 estima ~40) |
 
 Com ~40 execuções por mês (PRs, pushes por PR e merges) são ~1.300 min, mais ~4 execuções do `mutation.yml`
 (~5 min cada) e os PRs do Dependabot. O consumo real fica em Settings → Billing and plans → Usage (ou na página
