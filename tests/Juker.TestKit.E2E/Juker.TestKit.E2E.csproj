@@ -18,4 +18,18 @@
     <PackageReference Include="xunit.v3.extensibility.core" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- O AspireAppFixture sobe este AppHost (Projects.Juker_AppHost) com o host no ambiente E2E -->
+    <ProjectReference Include="..\..\src\Aspire\Juker.AppHost\Juker.AppHost.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Gancho interno do diagnóstico de falha (PlaywrightDiagnosticsAttribute), aplicado no nível do assembly pelos
+      projetos que usam a PlaywrightFixture: fora do contrato público (snapshot do SPEC-0025:CT-01).
+    -->
+    <InternalsVisibleTo Include="Juker.E2ETests" />
+    <InternalsVisibleTo Include="E2EHarnessSelfTest" />
+  </ItemGroup>
+
 </Project>
