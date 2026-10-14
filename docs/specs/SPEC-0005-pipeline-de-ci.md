@@ -9,7 +9,7 @@ created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002, SPEC-0027, SPEC-0025]
 consumes_contract: [SPEC-0003@2, SPEC-0025@3]
-contract_version: 2
+contract_version: 3
 touches: [.github/workflows/ci.yml, .github/workflows/mutation.yml, .github/dependabot.yml, .gitleaks.toml, .config/dotnet-tools.json, tools/sdd/**, tools/ci/**, tests/Juker.CiTests/**, tests/**/stryker-config.json, docs/ci.md]
 adrs: [ADR-0009, ADR-0011, ADR-0013, ADR-0014]
 external: []
@@ -34,7 +34,8 @@ Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, 
 - `security`: `dotnet list package --vulnerable --include-transitive` (falha em High/Critical) e `gitleaks detect`.
 - `image`: build da imagem do `Juker.Host` (Dockerfile gerado pelo Aspire/SDK container) com tag `sha`; publicação no GHCR só em push na `main` (usada por SPEC-0006).
 - Resultados de teste publicados como artefato (TRX) e resumo no job.
-- `dependabot.yml` para NuGet e GitHub Actions (semanal).
+- `dependabot.yml` para NuGet e GitHub Actions (semanal, com as atualizações agrupadas num PR por ecossistema e no máximo 2 PRs abertos por ecossistema).
+- Consumo dentro da cota gratuita (emenda v3): `concurrency` com `cancel-in-progress` por branch/PR, artefatos com `retention-days: 7` e `actions/cache` para NuGet e navegadores.
 - `docs/ci.md` com a lista de checks obrigatórios e a instrução para o fundador ativar a proteção de branch (ação humana).
 - Preenche `ci`, `lint`, `security_scan`, `coverage` e `mutation` no `sdd-config.yml`.
 
@@ -66,7 +67,7 @@ Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, 
 - **Privacidade e dados pessoais:** N/A — sem dados de usuários.
 - **Disponibilidade e resiliência:** jobs idempotentes; falha de rede no restore tenta de novo uma vez (retry do `setup-dotnet`) — sem retry de testes (teste instável é defeito).
 - **Acessibilidade (UI):** N/A.
-- **Custo:** dentro da cota gratuita de minutos do GitHub para repositório privado — acompanhado no resumo de uso mensal.
+- **Custo:** dentro da cota gratuita do GitHub Free para repositório privado (2.000 min/mês de Actions e 500 MB de armazenamento de artefatos, compartilhado com Packages; imagens no GHCR hoje sem cobrança — docs.github.com, consultado em 2026-10-13). Estimativa: ~40 min-runner por execução completa do CI; mutation semanal; Dependabot agrupado. O uso real é medido no IT-04 e acompanhado no resumo mensal; qualquer coisa que exija plano pago é decisão do fundador (ADR-0019).
 
 ## 6. Artefato A — Contrato
 **Interface:** nomes dos checks obrigatórios, gatilhos e artefatos do workflow `ci.yml`.
@@ -86,7 +87,7 @@ jobs (checks obrigatórios na proteção da main):
   sdd            → spec_graph.py validate --exclude-drafts ; spec_graph.py pr-check (só em PR)
   image          → needs: todos acima; push em main publica ghcr.io/<owner>/juker:<sha>
 artefatos: test-results-<job> (TRX), coverage-report, playwright-traces (só em falha do e2e), image digest (output "image_digest")
-mutation.yml (não obrigatório): on schedule (diário, 03:00 UTC) | workflow_dispatch
+mutation.yml (não obrigatório): on schedule (semanal, domingo 03:17 UTC) | workflow_dispatch
   → dotnet stryker -f tests/<Módulo>.UnitTests/stryker-config.json (break 80) ; artefato mutation-report
 ```
 
@@ -220,4 +221,5 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 3 | 2026-10-13 | `mutation.yml` passa de diário a semanal (domingo 03:17 UTC) + manual; Dependabot agrupado por ecossistema com no máximo 2 PRs abertos; `concurrency` com `cancel-in-progress`, artefatos com `retention-days: 7` e cache de NuGet e navegadores; NFR de custo com os limites do GitHub Free | Revisão do Architect antes do despacho: com mutation diário e Dependabot sem agrupamento o consumo estimado se aproxima dos 2.000 min/mês do GitHub Free, e os artefatos do Playwright e da cobertura disputam os 500 MB; o fundador decide custos só no fim, então o CI precisa caber na cota gratuita | Nenhuma | pendente — thomas |
 | 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | Nenhuma (nenhuma spec consome o contrato da SPEC-0005 além da SPEC-0006, que usa só o output/tag da imagem, inalterados) | thomas, 2026-09-30 |
