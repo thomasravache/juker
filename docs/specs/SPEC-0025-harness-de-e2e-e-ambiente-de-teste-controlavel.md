@@ -185,7 +185,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — bd03e75 | 2026-10-13 |
 | G2 Green | PASS | build exit 0 (Time Elapsed 00:00:19.50); test exit 0 (duration: 2m 25s 528ms); lint exit 0 () — 3476a61 | 2026-10-13 |
 | G3 Arquitetura | PASS | arch_test exit 0 (duration: 3s 006ms) — 3476a61 | 2026-10-13 |
-| G4 Review | PENDING | | |
+| G4 Review | PASS | verify G1+G4: PASS; revisão: Reviewer independente: APPROVED em 3476a61 (sem blocker/major; 5 minors viram a SPEC-0029) — 3476a61 | 2026-10-13 |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
