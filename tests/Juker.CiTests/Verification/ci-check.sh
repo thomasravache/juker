@@ -373,6 +373,7 @@ save_outcome() { printf '%s\n%s\n%s\n' "$result_partial" "$result_url" "$result_
 
 # ------------------------------------------------------------------------------------------------ cenários
 
+# SPEC-0005:IT-01 — Teste vermelho: o job unit falha e o PR não pode ser mesclado
 scenario_IT_01() {
   start_branch IT-01
   mkdir -p "$worktree/tests/Juker.BuildingBlocks.UnitTests/CiCheck"
@@ -398,6 +399,7 @@ scenario_IT_01() {
   fi
 }
 
+# SPEC-0005:IT-02 — PR sem spec: o job sdd falha no pr-check
 scenario_IT_02() {
   start_branch IT-02
   commit_fixture "chore(ci): commit vazio da verificação $SPEC:IT-02"
@@ -416,6 +418,7 @@ scenario_IT_02() {
   result_note="sdd=failure no pr-check (PR não referencia nenhuma spec)"
 }
 
+# SPEC-0005:IT-03 — Segredo commitado: o job security falha (gitleaks)
 scenario_IT_03() {
   start_branch IT-03
   local token
@@ -439,6 +442,7 @@ scenario_IT_03() {
   result_note="security=failure (gitleaks: leaks found)"
 }
 
+# SPEC-0005:IT-04 — PR saudável: todos os checks verdes em até 12 min; após o merge, imagem no GHCR com a tag do SHA
 scenario_IT_04() {
   local head_sha
   if [[ -n "$it04_pr" ]]; then
@@ -515,6 +519,7 @@ scenario_IT_04() {
   result_note="$result_note; após o merge: ghcr.io/$owner/juker:$merge_sha publicado (digest $digest)"
 }
 
+# SPEC-0005:IT-05 — E2E falha: o job e2e fica vermelho e o artefato playwright-traces traz o trace.zip
 scenario_IT_05() {
   start_branch IT-05
   mkdir -p "$worktree/tests/Juker.E2ETests/CiCheck"
@@ -543,6 +548,7 @@ scenario_IT_05() {
   result_note="e2e=failure; playwright-traces contém ${trace#"$download"/}"
 }
 
+# SPEC-0005:IT-06 — Cobertura do diff: o job coverage falha com a porcentagem; com o teste, passa
 scenario_IT_06() {
   start_branch IT-06
   local module="$worktree/src/Modules/Queue/Juker.Modules.Queue"
@@ -598,6 +604,7 @@ dispatch_mutation() { # <ref>; imprime o id da execução concluída
   printf '%s\n' "$run"
 }
 
+# SPEC-0005:IT-07 — Mutation: o disparo manual gera mutation-report; com teste fraco, termina vermelho
 scenario_IT_07() {
   if ! gh api "repos/$repo/contents/.github/workflows/$MUTATION_WORKFLOW?ref=$base" > /dev/null 2>&1; then
     log "precondição: .github/workflows/$MUTATION_WORKFLOW precisa estar na $base (workflow_dispatch); rode depois do merge do IT-04"
