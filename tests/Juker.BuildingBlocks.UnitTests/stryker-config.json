@@ -1,0 +1,25 @@
+{
+  "stryker-config": {
+    "project": "Juker.Infrastructure.csproj",
+    "configuration": "Release",
+    "test-runner": "mtp",
+    "mutate": [
+      "**/ResultHttpExtensions.cs",
+      "**/Pipeline/ValidationCommandHandlerDecorator.cs",
+      "**/Pipeline/ValidationQueryHandlerDecorator.cs",
+      "**/Conventions/TenantQueryFilterConvention.cs"
+    ],
+    "thresholds": {
+      "high": 90,
+      "low": 80,
+      "break": 80
+    },
+    "reporters": [
+      "html",
+      "json",
+      "markdown",
+      "progress",
+      "cleartext"
+    ]
+  }
+}

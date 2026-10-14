@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Testes do pipeline de CI (SPEC-0005, ADR-0009/0013/0014/0017): o actionlint e a fixação por SHA sobre
+    .github/workflows/*.yml (UT-01) e o contrato dos workflows e do Dependabot (CT-01), lidos dos arquivos.
+    Os IT-01..IT-07 rodam no GitHub real como PRs de verificação descartáveis: Verification/ci-check.sh, com os
+    fixtures de cada branch em Fixtures/CiCheck/ (fora deste assembly).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Fixtures copiados para as branches ci-check/* pelo script de verificação: não fazem parte deste assembly -->
+    <Compile Remove="Fixtures/**" />
+    <None Remove="Fixtures/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <!-- Leitor de YAML dos workflows e do dependabot.yml (ADR-0011) -->
+    <PackageReference Include="YamlDotNet" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,39 @@
+# Dependabot (ADR-0017; SPEC-0005, emenda v3): NuGet (Directory.Packages.props e .config/dotnet-tools.json) e
+# GitHub Actions toda semana, com todas as atualizações de cada ecossistema num único PR e no máximo 2 PRs abertos por
+# ecossistema, para caber na cota de minutos do GitHub Free. O SDK do global.json não entra: ele é do ecossistema
+# dotnet-sdk, deixado de fora para não gastar cota (o rollForward latestFeature já usa o SDK mais novo da 10.0).
+#
+# Cada PR passa pelos mesmos checks do ci.yml. O título sai "build(deps) [no-spec]: …": atualização de versão não muda
+# comportamento, e o pr-check do job sdd aceita PR marcado [no-spec]. Pacote novo (não atualização) continua exigindo
+# ADR e spec.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 2
+    groups:
+      nuget:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: build(deps) [no-spec]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 2
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: ci(deps) [no-spec]

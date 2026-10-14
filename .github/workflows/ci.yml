@@ -1,0 +1,434 @@
+# CI do Juker (SPEC-0005, contrato v4; ADR-0009, ADR-0011, ADR-0013, ADR-0014, ADR-0016, ADR-0017).
+#
+# Os ids dos jobs são os checks obrigatórios da proteção da main (docs/ci.md): build, lint, unit, integration,
+# architecture, e2e, security, coverage, sdd e image. Renomear um job exige atualizar a proteção da branch.
+#
+# Custo (GitHub Free, repositório privado: 2.000 min/mês e 500 MB de artefatos): uma execução por branch/PR (a
+# anterior é cancelada), artefatos por 7 dias, NuGet e navegadores do Playwright no actions/cache.
+#
+# Os jobs rodam em paralelo e cada um compila o que usa: a saída do build (~900 MB) não cabe na cota de artefatos, e
+# esperar o job build somaria ~3 min ao caminho crítico (meta: CI abaixo de 12 min). O image espera todos os outros.
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  # Num PR, um push novo cancela a execução anterior; na main cada merge vai até o fim (a imagem de cada SHA).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  NUGET_XMLDOC_MODE: skip
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore (uma nova tentativa em falha de rede)
+        run: dotnet restore Juker.slnx || { echo "::warning::restore falhou; tentando de novo"; dotnet restore Juker.slnx; }
+      - name: Build
+        run: dotnet build Juker.slnx -c Release -warnaserror --no-restore
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore (uma nova tentativa em falha de rede)
+        run: dotnet restore Juker.slnx || { echo "::warning::restore falhou; tentando de novo"; dotnet restore Juker.slnx; }
+      - name: Formatação e estilo
+        run: dotnet format Juker.slnx --verify-no-changes --no-restore
+
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore (uma nova tentativa em falha de rede)
+        run: |
+          dotnet restore Juker.slnx || { echo "::warning::restore falhou; tentando de novo"; dotnet restore Juker.slnx; }
+          dotnet tool restore
+      - name: Build
+        run: dotnet build Juker.slnx -c Release --no-restore
+      - name: Testes de unidade com cobertura (coverlet)
+        run: |
+          # O coverlet instrumenta os assemblies de src/ na saída de cada projeto de teste e roda o comando do contrato
+          # uma vez, por baixo (tools/ci/coverage.sh); --no-build porque recompilar desfaria a instrumentação.
+          bash tools/ci/coverage.sh artifacts/coverage/unit -- \
+            dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Unit" --no-build \
+            --results-directory "$PWD/artifacts/test-results/unit" --report-xunit-trx --report-xunit-markdown
+      - name: Resumo dos testes
+        if: always()
+        run: |
+          # Um relatório por projeto de teste; os que o filtro deixou vazios ficam de fora.
+          for report in artifacts/test-results/unit/*.md; do
+            if [[ -f "$report" ]] && ! grep -q "No tests were run" "$report"; then cat "$report" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: test-results-unit
+          path: artifacts/test-results/unit/*.trx
+          if-no-files-found: warn
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-unit
+          path: artifacts/coverage/unit/
+          if-no-files-found: error
+          retention-days: 7
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore (uma nova tentativa em falha de rede)
+        run: |
+          dotnet restore Juker.slnx || { echo "::warning::restore falhou; tentando de novo"; dotnet restore Juker.slnx; }
+          dotnet tool restore
+      - name: Build
+        run: dotnet build Juker.slnx -c Release --no-restore
+      - name: Versão do Playwright
+        id: playwright
+        run: |
+          version="$(sed -n 's/.*Include="Microsoft\.Playwright" Version="\([^"]*\)".*/\1/p' Directory.Packages.props)"
+          [[ -n "$version" ]] || { echo "::error::versão do Microsoft.Playwright não encontrada no Directory.Packages.props"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-chromium
+      - name: Navegador do Playwright (Chromium, com as bibliotecas do sistema)
+        # Os testes de integração do harness de E2E (SPEC-0025: FailureDiagnosticsTests e SmokeRunTests) rodam um
+        # dotnet test aninhado que abre o Chromium; o smoke só usa a API HTTP do Playwright, sem navegador.
+        run: pwsh tests/Juker.E2ETests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Testes de integração com cobertura (coverlet; Postgres no Docker do runner)
+        run: |
+          # Mesmo esquema do job unit: coverlet por fora (tools/ci/coverage.sh), comando do contrato por dentro.
+          bash tools/ci/coverage.sh artifacts/coverage/integration -- \
+            dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Integration" --no-build \
+            --results-directory "$PWD/artifacts/test-results/integration" --report-xunit-trx --report-xunit-markdown
+      - name: Resumo dos testes
+        if: always()
+        run: |
+          # Um relatório por projeto de teste; os que o filtro deixou vazios ficam de fora.
+          for report in artifacts/test-results/integration/*.md; do
+            if [[ -f "$report" ]] && ! grep -q "No tests were run" "$report"; then cat "$report" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: test-results-integration
+          path: artifacts/test-results/integration/*.trx
+          if-no-files-found: warn
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-integration
+          path: artifacts/coverage/integration/
+          if-no-files-found: error
+          retention-days: 7
+
+  architecture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore (uma nova tentativa em falha de rede)
+        run: dotnet restore Juker.slnx || { echo "::warning::restore falhou; tentando de novo"; dotnet restore Juker.slnx; }
+      - name: Testes de arquitetura (ARQ-01..ARQ-08 e convenções)
+        run: >-
+          dotnet test --project tests/Juker.ArchitectureTests -c Release --no-restore
+          --results-directory "$PWD/artifacts/test-results/architecture" --report-xunit-trx --report-xunit-markdown
+      - name: Resumo dos testes
+        if: always()
+        run: |
+          # Um relatório por projeto de teste; os que o filtro deixou vazios ficam de fora.
+          for report in artifacts/test-results/architecture/*.md; do
+            if [[ -f "$report" ]] && ! grep -q "No tests were run" "$report"; then cat "$report" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: test-results-architecture
+          path: artifacts/test-results/architecture/*.trx
+          if-no-files-found: warn
+          retention-days: 7
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore (uma nova tentativa em falha de rede)
+        run: dotnet restore tests/Juker.E2ETests || { echo "::warning::restore falhou; tentando de novo"; dotnet restore tests/Juker.E2ETests; }
+      - name: Build
+        run: dotnet build tests/Juker.E2ETests -c Release --no-restore
+      - name: Versão do Playwright
+        id: playwright
+        run: |
+          version="$(sed -n 's/.*Include="Microsoft\.Playwright" Version="\([^"]*\)".*/\1/p' Directory.Packages.props)"
+          [[ -n "$version" ]] || { echo "::error::versão do Microsoft.Playwright não encontrada no Directory.Packages.props"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-chromium-webkit
+      - name: Navegadores do Playwright (Chromium e WebKit, com as bibliotecas do sistema)
+        # O cache traz os navegadores; o --with-deps instala as bibliotecas do sistema (apt) a cada execução.
+        run: pwsh tests/Juker.E2ETests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium webkit
+      - name: Testes E2E (AppHost + Playwright)
+        run: >-
+          dotnet test --project tests/Juker.E2ETests -c Release --no-build
+          --results-directory "$PWD/artifacts/test-results/e2e" --report-xunit-trx --report-xunit-markdown
+      - name: Resumo dos testes
+        if: always()
+        run: |
+          # Um relatório por projeto de teste; os que o filtro deixou vazios ficam de fora.
+          for report in artifacts/test-results/e2e/*.md; do
+            if [[ -f "$report" ]] && ! grep -q "No tests were run" "$report"; then cat "$report" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: playwright-traces
+          path: tests/Juker.E2ETests/bin/Release/net10.0/TestResults/playwright/**
+          if-no-files-found: warn
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: test-results-e2e
+          path: artifacts/test-results/e2e/*.trx
+          if-no-files-found: warn
+          retention-days: 7
+
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # histórico completo: o gitleaks varre todos os commits
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore (uma nova tentativa em falha de rede)
+        run: dotnet restore Juker.slnx || { echo "::warning::restore falhou; tentando de novo"; dotnet restore Juker.slnx; }
+      - name: Pacotes vulneráveis (High e Critical bloqueiam, ADR-0017)
+        run: |
+          mkdir -p artifacts
+          dotnet list Juker.slnx package --vulnerable --include-transitive --format json > artifacts/vulnerable-packages.json
+          python3 -I tools/ci/vulnerable-packages.py artifacts/vulnerable-packages.json
+      - name: Segredos no histórico (gitleaks, ADR-0016)
+        if: success() || failure()
+        # Só o histórico de HEAD (no PR, o merge com a main): as outras branches do origin não entram na varredura.
+        run: bash tools/ci/ci-tools.sh gitleaks detect --source . --config .gitleaks.toml --log-opts=HEAD --redact --no-banner --verbose
+
+  coverage:
+    needs: [unit, integration]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # o diff-cover compara com origin/main
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Ferramentas locais e diff-cover fixado por hash
+        run: |
+          dotnet tool restore
+          python3 -m venv "$RUNNER_TEMP/diff-cover"
+          "$RUNNER_TEMP/diff-cover/bin/pip" install --quiet --require-hashes --no-deps -r tools/ci/requirements-diff-cover.txt
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: coverage-*
+          path: artifacts/coverage # uma pasta por artefato (coverage-unit, coverage-integration)
+      - name: Junção dos relatórios (ReportGenerator, Cobertura)
+        run: >-
+          dotnet tool run reportgenerator "-reports:artifacts/coverage/**/*.cobertura.xml" "-targetdir:artifacts/coverage-report"
+          "-reporttypes:Cobertura;HtmlSummary;MarkdownSummaryGithub"
+      - name: Cobertura das linhas alteradas (diff-cover, mínimo 80%)
+        run: |
+          # Linhas alteradas sem cobertura viram anotações no PR; o relatório HTML do diff vai no coverage-report.
+          "$RUNNER_TEMP/diff-cover/bin/diff-cover" artifacts/coverage-report/Cobertura.xml \
+            --compare-branch=origin/main --fail-under=80 --show-uncovered \
+            --format "markdown:artifacts/coverage-report/diff-cover.md,html:artifacts/coverage-report/diff-cover.html,github-annotations:warning"
+      - name: Resumo da cobertura
+        if: always()
+        run: cat artifacts/coverage-report/diff-cover.md artifacts/coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY" 2> /dev/null || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage-report
+          path: artifacts/coverage-report/
+          if-no-files-found: warn
+          retention-days: 7
+
+  sdd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read # o pr-check relê o título e o corpo atuais do PR
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # verify/pr-check comparam com a branch alvo
+          persist-credentials: false
+      - name: Specs e ADRs válidos (G0)
+        run: python3 tools/sdd/spec_graph.py validate --exclude-drafts
+      - name: PR ligado a specs aprovadas, gates G0–G4, TDD e escopo
+        if: github.event_name == 'pull_request'
+        # Título e corpo entram por variável de ambiente, nunca interpolados no script (evita script injection).
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Uma nova execução do job usa o payload original do evento; relê o título e o corpo para valer a edição.
+          if current="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json title,body 2> /dev/null)"; then
+            PR_TITLE="$(jq -r '.title' <<< "$current")"
+            PR_BODY="$(jq -r '.body // ""' <<< "$current")"
+            export PR_TITLE PR_BODY
+          fi
+          python3 tools/sdd/spec_graph.py pr-check --base "origin/${BASE_REF}"
+
+  image:
+    needs: [build, lint, unit, integration, architecture, e2e, security, coverage, sdd]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write # só usado no push na main (publicação no GHCR)
+    outputs:
+      image_digest: ${{ steps.container.outputs.digest }}
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/juker:${{ github.sha }}
+      PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore (uma nova tentativa em falha de rede)
+        run: dotnet restore src/Juker.Host || { echo "::warning::restore falhou; tentando de novo"; dotnet restore src/Juker.Host; }
+      - name: Login no GHCR (só no push na main)
+        if: env.PUBLISH == 'true'
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: echo "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Imagem do Juker.Host (SDK container; publica no GHCR só no push na main)
+        id: container
+        run: |
+          image="${IMAGE,,}" # o GHCR exige minúsculas
+          registry="${image%%/*}"
+          name="${image#*/}"
+          # PublishRepositoryUrl grava o label org.opencontainers.image.source, que liga o pacote do GHCR ao repositório.
+          args=(-c Release --no-restore -t:PublishContainer -p:PublishRepositoryUrl=true
+            "-p:ContainerRepository=${name%:*}" "-p:ContainerImageTag=${name##*:}"
+            -getProperty:GeneratedContainerDigest "-getResultOutputFile:$RUNNER_TEMP/image-digest.txt")
+          if [[ "$PUBLISH" == "true" ]]; then
+            args+=("-p:ContainerRegistry=$registry")
+          fi
+          dotnet publish src/Juker.Host/Juker.Host.csproj "${args[@]}"
+          digest="$(tr -d '[:space:]' < "$RUNNER_TEMP/image-digest.txt")"
+          [[ "$digest" == sha256:* ]] || { echo "::error::digest da imagem não encontrado ('$digest')"; exit 1; }
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          if [[ "$PUBLISH" == "true" ]]; then where="publicada em $image"; else where="construída sem publicar ($image)"; fi
+          echo "Imagem $where — digest \`$digest\`" | tee -a "$GITHUB_STEP_SUMMARY"

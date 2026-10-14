@@ -1,0 +1,66 @@
+# Mutation testing com o Stryker.NET (SPEC-0005, contrato v4; ADR-0014 regra 6).
+#
+# Não é check de PR: roda toda semana (domingo às 03:17 UTC) e sob demanda (Actions > mutation > Run workflow).
+# O stryker-config.json de STRYKER_CONFIG muta só as classes críticas do seu "mutate" e quebra abaixo de 80%
+# (thresholds.break): o workflow fica vermelho, sem bloquear PRs, e o score baixo vira uma spec lite para reforçar os
+# testes. O relatório (html, json e md) sai no artefato mutation-report, por 7 dias.
+name: mutation
+
+on:
+  schedule:
+    - cron: "17 3 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  NUGET_XMLDOC_MODE: skip
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Um stryker-config.json por projeto de teste com classes críticas (hoje só os building blocks).
+      STRYKER_CONFIG: tests/Juker.BuildingBlocks.UnitTests/stryker-config.json
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', 'global.json', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore (uma nova tentativa em falha de rede)
+        run: |
+          dotnet restore Juker.slnx || { echo "::warning::restore falhou; tentando de novo"; dotnet restore Juker.slnx; }
+          dotnet tool restore
+      - name: Stryker.NET (break em 80%)
+        # Roda na pasta do stryker-config.json: na raiz, ao lado da Juker.slnx, o Stryker entra em modo solução e
+        # testaria cada mutante com todos os projetos de teste (inclusive integração e E2E). O mesmo que
+        # tools/ci/mutation.sh -f "$STRYKER_CONFIG" localmente.
+        run: |
+          cd "$(dirname "$STRYKER_CONFIG")"
+          dotnet stryker -f "$(basename "$STRYKER_CONFIG")" --output "$GITHUB_WORKSPACE/artifacts/stryker" --skip-version-check
+      - name: Resumo do mutation testing
+        if: always()
+        run: cat artifacts/stryker/reports/mutation-report.md >> "$GITHUB_STEP_SUMMARY" 2> /dev/null || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: mutation-report
+          path: artifacts/stryker/reports/
+          if-no-files-found: warn
+          retention-days: 7
