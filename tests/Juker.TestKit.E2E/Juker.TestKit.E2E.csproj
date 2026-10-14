@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    TestKit de E2E (SPEC-0025, ADR-0013): AppHost do Aspire no ambiente E2E, navegadores do Playwright (Chromium e
+    WebKit), API de controle /_test/* e verificação de acessibilidade com axe-core.
+    Assembly próprio para não mudar a API pública congelada do Juker.TestKit (SPEC-0003:CT-01).
+    Biblioteca (não é projeto de teste): consumida por tests/Juker.E2ETests e tests/fixtures/E2EHarnessSelfTest.
+    A API pública é contrato (snapshot em tests/Juker.IntegrationTests/Testing/Juker.TestKit.E2E.approved.txt).
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Testing" />
+    <PackageReference Include="Deque.AxeCore.Playwright" />
+    <PackageReference Include="Microsoft.Playwright" />
+    <PackageReference Include="xunit.v3.extensibility.core" />
+  </ItemGroup>
+
+</Project>

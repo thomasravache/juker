@@ -48,6 +48,11 @@
     <!-- Só no fixture de violações do IT-02 (ARQ-08): nunca em projeto de teste real -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
   </ItemGroup>
+  <ItemGroup Label="Harness de E2E (SPEC-0025, ADR-0011, ADR-0013)">
+    <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
+    <!-- axe-core para o Playwright .NET (AssertNoA11yViolationsAsync, ADR-0013 regra 11) -->
+    <PackageVersion Include="Deque.AxeCore.Playwright" Version="4.13.0" />
+  </ItemGroup>
   <ItemGroup Label="Qualidade (ADR-0014)">
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.290" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />

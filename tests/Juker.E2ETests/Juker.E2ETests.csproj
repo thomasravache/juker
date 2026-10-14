@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    E2E do Juker (SPEC-0025, ADR-0013): app inteiro pelo Aspire.Hosting.Testing no ambiente E2E e navegadores reais
+    do Playwright (Chromium e WebKit). Page objects em Pages/<Área>/.
+    Comandos: test_e2e e smoke_test no docs/specs/sdd-config.yml; com JUKER_E2E_BASE_URL, os Smoke rodam contra a URL.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- Scaffold (SPEC-0025): sai junto com os primeiros testes (SPEC-0027:UT-03) -->
+    <JukerAllowZeroTests>true</JukerAllowZeroTests>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Playwright" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Juker.TestKit.E2E\Juker.TestKit.E2E.csproj" />
+  </ItemGroup>
+
+</Project>

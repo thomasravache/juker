@@ -41,6 +41,7 @@
       Todo projeto de tests/ na Juker.slnx precisa estar aqui.
     -->
     <ProjectReference Include="..\Juker.BuildingBlocks.UnitTests\Juker.BuildingBlocks.UnitTests.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.E2ETests\Juker.E2ETests.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Juker.IntegrationTests\Juker.IntegrationTests.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Juker.Modules.Catalog.UnitTests\Juker.Modules.Catalog.UnitTests.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Juker.Modules.Playback.UnitTests\Juker.Modules.Playback.UnitTests.csproj" ReferenceOutputAssembly="false" />
@@ -48,6 +49,7 @@
     <ProjectReference Include="..\Juker.Modules.Sessions.UnitTests\Juker.Modules.Sessions.UnitTests.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Juker.Modules.Venues.UnitTests\Juker.Modules.Venues.UnitTests.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Juker.TestKit\Juker.TestKit.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Juker.TestKit.E2E\Juker.TestKit.E2E.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Juker.Web.UnitTests\Juker.Web.UnitTests.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
