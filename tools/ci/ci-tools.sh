@@ -3,7 +3,8 @@
 #
 #   tools/ci/ci-tools.sh actionlint [argumentos]   roda o actionlint (com o shellcheck fixado abaixo)
 #   tools/ci/ci-tools.sh shellcheck [argumentos]   roda o shellcheck
-#   tools/ci/ci-tools.sh path <actionlint|shellcheck>  imprime o caminho do binário (baixa se preciso)
+#   tools/ci/ci-tools.sh gitleaks [argumentos]     roda o gitleaks (job security do ci.yml, SPEC-0005:IT-03)
+#   tools/ci/ci-tools.sh path <actionlint|shellcheck|gitleaks>  imprime o caminho do binário (baixa se preciso)
 #
 # Os binários oficiais das releases do GitHub são baixados uma vez para o cache, sem sudo:
 #   ${JUKER_TOOLS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/juker/tools}/<ferramenta>/<versão>/
@@ -14,6 +15,7 @@ set -euo pipefail
 
 readonly ACTIONLINT_VERSION="1.7.12"
 readonly SHELLCHECK_VERSION="0.11.0"
+readonly GITLEAKS_VERSION="8.30.1"
 
 cache_root="${JUKER_TOOLS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/juker/tools}"
 
@@ -59,6 +61,17 @@ shellcheck_sha256() {
     darwin_amd64) echo "c2c15e08df0e8fbc374c335b230a7ee958c313fa5714817a59aa59f1aa594f51" ;;
     darwin_arm64) echo "339b930feb1ea764467013cc1f72d09cd6b869ebf1013296ba9055ab2ffbd26f" ;;
     *) die "shellcheck sem hash para $1" ;;
+  esac
+}
+
+# SHA-256 publicados em gitleaks_<versão>_checksums.txt da release.
+gitleaks_sha256() {
+  case "$1" in
+    linux_amd64) echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb" ;;
+    linux_arm64) echo "e4a487ee7ccd7d3a7f7ec08657610aa3606637dab924210b3aee62570fb4b080" ;;
+    darwin_amd64) echo "dfe101a4db2255fc85120ac7f3d25e4342c3c20cf749f2c20a18081af1952709" ;;
+    darwin_arm64) echo "b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5" ;;
+    *) die "gitleaks sem hash para $1" ;;
   esac
 }
 
@@ -122,8 +135,18 @@ shellcheck_path() {
     "$(shellcheck_sha256 "$p")" "shellcheck-v${SHELLCHECK_VERSION}/shellcheck"
 }
 
+gitleaks_path() {
+  local p asset
+  p="$(platform)"
+  # A release do gitleaks chama amd64 de x64.
+  asset="${p/amd64/x64}"
+  install_tool gitleaks "$GITLEAKS_VERSION" \
+    "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_${asset}.tar.gz" \
+    "$(gitleaks_sha256 "$p")" "gitleaks"
+}
+
 command="${1:-}"
-[[ -n "$command" ]] || die "uso: $0 <actionlint|shellcheck|path> [argumentos]"
+[[ -n "$command" ]] || die "uso: $0 <actionlint|shellcheck|gitleaks|path> [argumentos]"
 shift
 
 case "$command" in
@@ -136,14 +159,19 @@ case "$command" in
     shellcheck_bin="$(shellcheck_path)"
     exec "$shellcheck_bin" "$@"
     ;;
+  gitleaks)
+    gitleaks_bin="$(gitleaks_path)"
+    exec "$gitleaks_bin" "$@"
+    ;;
   path)
     case "${1:-}" in
       actionlint) actionlint_path ;;
       shellcheck) shellcheck_path ;;
-      *) die "uso: $0 path <actionlint|shellcheck>" ;;
+      gitleaks) gitleaks_path ;;
+      *) die "uso: $0 path <actionlint|shellcheck|gitleaks>" ;;
     esac
     ;;
   *)
-    die "comando desconhecido: $command (use actionlint, shellcheck ou path)"
+    die "comando desconhecido: $command (use actionlint, shellcheck, gitleaks ou path)"
     ;;
 esac
