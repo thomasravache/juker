@@ -6,7 +6,7 @@
 
 - Validação (G0): **0 erro(s), 5 aviso(s)** — rode `spec_graph.py validate`
 - Specs: proposed 1, approved 18, in-progress 1, implemented 7
-- Impedimentos: **1 aberto(s)**, 5 resolvido(s)
+- Impedimentos: **1 aberto(s)**, 6 resolvido(s)
 
 ## Impedimentos Abertos
 
