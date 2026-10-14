@@ -8,7 +8,7 @@ status: approved
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: []
-consumes_contract: [SPEC-0005@3]
+consumes_contract: [SPEC-0005@4]
 contract_version: 1
 touches: [deploy/**, .github/workflows/deploy.yml, src/Aspire/Juker.AppHost/Publish/**, tests/Juker.DeployTests/**, docs/operations.md]
 adrs: [ADR-0004, ADR-0009]

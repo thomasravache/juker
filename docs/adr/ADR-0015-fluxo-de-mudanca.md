@@ -36,7 +36,7 @@ O Juker tem um único desenvolvedor (o fundador) e agentes de IA que escrevem te
 - Toda mudança entra na `main` por PR (código, specs, ADRs e registros SDD inclusive).
 - Checks obrigatórios: os jobs do `ci.yml` da SPEC-0005 (build, lint, unit, integration, architecture, e2e, security, coverage, sdd). Até a SPEC-0005 existir, a verificação local completa do Architect, registrada no PR, faz esse papel.
 - Revisão: o fundador autorizou (2026-10-13) o merge pelo agente quando todos os checks passarem (`h2_policy: auto-on-green`); a revisão independente de código continua sendo o G4 de cada spec. Deploy em produção nunca é coberto por essa autorização.
-- Sem push direto nem force-push na `main`, inclusive para o administrador (proteção de branch ativada pelo fundador, SPEC-0005).
+- Sem push direto nem force-push na `main`, inclusive para o administrador. A proteção de branch da plataforma exige GitHub Pro ou repositório público num repo privado do plano gratuito; fica adiada para a decisão de custos do fim (ADR-0019, SPEC-0005 v4). Até lá a regra vale pela política `auto-on-green` e pelo `pr-check`/`validate`.
 - Merge com merge commit, nunca squash nem rebase.
 - Arquivos de controle (`tools/sdd`, `docs/specs/sdd-config.yml`, `docs/adr`, `.githooks`, `.github/workflows`) só mudam por PR; com um único mantenedor, não há CODEOWNERS.
 - Correção urgente segue o mesmo caminho, com spec lite criada na hora.
@@ -46,7 +46,7 @@ O Juker tem um único desenvolvedor (o fundador) e agentes de IA que escrevem te
 - **Ruim**, porque cada onda exige um PR a mais, e o merge automático depende de o CI ser confiável (daí a SPEC-0027 antes da SPEC-0005). Regra removida do modelo: "pelo menos N revisões humanas" — com um único humano, a revisão é o G4 independente e o H2 por política registrada.
 
 ### Confirmação (G3)
-Proteção de branch no GitHub com os checks obrigatórios (`docs/ci.md`, SPEC-0005); `change_flow: pr` no sdd-config; `validate` aponta commits diretos e merges fora de PR.
+Proteção de branch no GitHub com os checks obrigatórios quando for ativada (`docs/ci.md`, SPEC-0005 v4; até lá, jobs do `ci.yml` em todo PR e merge só com todos verdes); `change_flow: pr` no sdd-config; `validate` aponta commits diretos e merges fora de PR.
 
 ## Prós e Contras das Opções
 | Critério (peso) | PR + merge commit | Merge local | PR + squash |
