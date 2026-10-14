@@ -183,8 +183,8 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0025` → G0 [SPEC-0025]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0012/0013) | 2026-09-30 |
 | G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — bd03e75 | 2026-10-13 |
-| G2 Green | PENDING | | |
-| G3 Arquitetura | PENDING | | |
+| G2 Green | PASS | build exit 0 (Time Elapsed 00:00:19.50); test exit 0 (duration: 2m 25s 528ms); lint exit 0 () — 3476a61 | 2026-10-13 |
+| G3 Arquitetura | PASS | arch_test exit 0 (duration: 3s 006ms) — 3476a61 | 2026-10-13 |
 | G4 Review | PENDING | | |
 | G5 Integração & CI | PENDING | | |
 | H2 Integração aprovada | PENDING | | |
