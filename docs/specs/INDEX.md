@@ -6,13 +6,12 @@
 
 - Validação (G0): **0 erro(s), 5 aviso(s)** — rode `spec_graph.py validate`
 - Specs: proposed 1, approved 18, in-progress 1, implemented 7
-- Impedimentos: **2 aberto(s)**, 5 resolvido(s)
+- Impedimentos: **1 aberto(s)**, 6 resolvido(s)
 
 ## Impedimentos Abertos
 
 | Spec | ID | Tipo | Fase/Gate | Responsável | Aberto em | Idade | Descrição |
 |---|---|---|---|---|---|---|---|
-| SPEC-0005 | IMP-01 | spec | G1 | Architect (emenda de escopo) + thomas (aprovação) | 2026-10-13 | 0d | touches não inclui Juker.slnx nem tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, necessários para registrar o projeto novo tests/Juker.CiTests (convenção da SPEC-0003/0027); os testes do CT-01 leem YAML com YamlDotNet, que chega só transitivamente pelo Aspire.Hosting.Testing e não está em nenhum ADR nem fixado no Directory.Packages.props |
 | SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 13d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
 
 ## Cobertura de Pilares
@@ -36,13 +35,13 @@ Perfil: **padrao**
 
 ## Plano de Execução
 
-**Em andamento:** —  
-**Paradas por impedimento:** SPEC-0005  
+**Em andamento:** SPEC-0005  
+**Paradas por impedimento:** —  
 **Próximo lote:** —
 
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
-| 1 | SPEC-0005 | Pipeline de CI | full/M | in-progress | 🚧 parada por impedimento: IMP-01 (spec → Architect (emenda de escopo) + thomas (aprovação), 0d) |  |
+| 1 | SPEC-0005 | Pipeline de CI | full/M | in-progress | 🔄 em andamento |  |
 | 2 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 13d) | saiu da onda 1: arquivos em comum com SPEC-0005 |
 | 2 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ⛔ aguarda implementação de SPEC-0005 |  |
 | 3 | SPEC-0008 | Observabilidade básica | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
