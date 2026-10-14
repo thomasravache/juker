@@ -20,14 +20,11 @@
 
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" />
-    <!--
-      Só pelo leitor de YAML (YamlDotNet), que chega como dependência transitiva do Aspire.Hosting: nenhum pacote novo
-      no Directory.Packages.props (ADR-0017). Se o Aspire deixar de trazer o YamlDotNet, este projeto para de compilar.
-    -->
-    <PackageReference Include="Aspire.Hosting.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
+    <!-- Leitor de YAML dos workflows e do dependabot.yml (ADR-0011) -->
+    <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 
 </Project>
