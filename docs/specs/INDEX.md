@@ -1,19 +1,18 @@
 # Índice de Specs
 
-> Gerado por `spec_graph.py index` em 2026-10-14 — não edite manualmente.
+> Gerado por `spec_graph.py index` em 2026-10-15 — não edite manualmente.
 
 ## Saúde
 
-- Validação (G0): **0 erro(s), 6 aviso(s)** — rode `spec_graph.py validate`
-- Specs: proposed 1, approved 18, in-progress 1, implemented 7
-- Impedimentos: **2 aberto(s)**, 6 resolvido(s)
+- Validação (G0): **0 erro(s), 7 aviso(s)** — rode `spec_graph.py validate`
+- Specs: proposed 2, approved 18, implemented 8
+- Impedimentos: **1 aberto(s)**, 8 resolvido(s)
 
 ## Impedimentos Abertos
 
 | Spec | ID | Tipo | Fase/Gate | Responsável | Aberto em | Idade | Descrição |
 |---|---|---|---|---|---|---|---|
-| SPEC-0005 | IMP-02 | decisão | G4 | thomas (GitHub Pro, repositório público, ou seguir só com a política auto-on-green + pr-check até a decisão de custos no fim) | 2026-10-14 | 0d | GitHub Free não permite proteção de branch nem rulesets em repositório privado (API: 403 'Upgrade to GitHub Pro or make this repository public'); o contrato pede os jobs como checks obrigatórios na proteção da main, o IT-01 espera 'o PR não pode ser mesclado' e o rollout prevê o fundador ativando a proteção |
-| SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 14d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
+| SPEC-0006 | IMP-01 | externo | G1 | thomas (provisionar a infraestrutura e cadastrar os segredos) | 2026-09-30 | 15d | Faltam domínio com DNS, VPS de staging na Hetzner, bucket de Object Storage e segredos no GitHub Environment 'staging' — os IT-01..IT-04 rodam contra o staging real |
 
 ## Cobertura de Pilares
 
@@ -37,37 +36,37 @@ Perfil: **padrao**
 ## Plano de Execução
 
 **Em andamento:** —  
-**Paradas por impedimento:** SPEC-0005  
-**Próximo lote:** —
+**Paradas por impedimento:** —  
+**Próximo lote:** SPEC-0007
 
 | Onda | Spec | Título | Tier/Tam. | Status | Prontidão | Observação |
 |---|---|---|---|---|---|---|
-| 1 | SPEC-0005 | Pipeline de CI | full/M | in-progress | 🚧 parada por impedimento: IMP-02 (decisão → thomas (GitHub Pro, repositório público, ou seguir só com a política auto-on-green + pr-check até a decisão de custos no fim), 0d) |  |
-| 2 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 14d); contrato de SPEC-0005 mudou (v3 → v4): revisar spec | saiu da onda 1: arquivos em comum com SPEC-0005 |
-| 2 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ⛔ aguarda implementação de SPEC-0005 |  |
-| 3 | SPEC-0008 | Observabilidade básica | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
-| 3 | SPEC-0009 | Segurança básica e autorização | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
-| 4 | SPEC-0011 | Bar, configurações da noite e termos de uso | full/M | approved | ⛔ aguarda implementação de SPEC-0007; aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 |  |
-| 4 | SPEC-0012 | Tempo real por bar | full/M | approved | ⛔ aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 |  |
-| 4 | SPEC-0013 | Entrada do cliente com comanda e PIN da TV | full/M | approved | ⛔ aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 |  |
-| 5 | SPEC-0015 | Catálogo e busca local | full/M | approved | ⛔ aguarda implementação de SPEC-0007; aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 | saiu da onda 4: max_parallel=3 |
-| 5 | SPEC-0020 | Reprodução e controle do player | full/M | approved | ⛔ aguarda implementação de SPEC-0007; aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 | saiu da onda 4: max_parallel=3 |
-| 6 | SPEC-0014 | Busca externa no YouTube com controle de cota | full/M | approved | ⛔ aguarda implementação de SPEC-0015 |  |
-| 6 | SPEC-0018 | Fila justa | full/M | approved | ⛔ aguarda implementação de SPEC-0013; aguarda implementação de SPEC-0015 |  |
-| 6 | SPEC-0021 | Tela da TV | full/M | approved | ⛔ aguarda implementação de SPEC-0020 |  |
-| 7 | SPEC-0016 | Manutenção do catálogo | full/M | approved | ⛔ aguarda implementação de SPEC-0014 |  |
-| 7 | SPEC-0022 | Bloqueio de comanda e modo ouvinte | full/M | approved | ⛔ aguarda implementação de SPEC-0013; aguarda implementação de SPEC-0018 |  |
-| 7 | SPEC-0024 | Telas da fila, Minhas e pedido pela busca | full/M | approved | ⛔ aguarda implementação de SPEC-0018 |  |
-| 8 | SPEC-0023 | Painel do gerente | full/M | approved | ⛔ aguarda implementação de SPEC-0021; aguarda implementação de SPEC-0022 |  |
-| 8 | SPEC-0017 | Modo karaokê | full/M | approved | ⛔ aguarda implementação de SPEC-0014; aguarda implementação de SPEC-0020; aguarda implementação de SPEC-0024 |  |
-| 8 | SPEC-0019 | Votos e auto-remoção | full/M | approved | ⛔ aguarda implementação de SPEC-0024 |  |
-| 9 | SPEC-0029 | Pendências do review da SPEC-0025 | lite/S | proposed | ⏳ aguardando aprovação (H1) | saiu da onda 1: arquivos em comum com SPEC-0005; saiu da onda 2: arquivos em comum com SPEC-0007; saiu da onda 3: arquivos em comum com SPEC-0009; saiu da onda 4: arquivos em comum com SPEC-0011, SPEC-0013; saiu da onda 5: arquivos em comum com SPEC-0015, SPEC-0020; saiu da onda 6: arquivos em comum com SPEC-0014, SPEC-0021; saiu da onda 7: arquivos em comum com SPEC-0022, SPEC-0024; saiu da onda 8: arquivos em comum com SPEC-0023, SPEC-0017, SPEC-0019 |
+| 1 | SPEC-0006 | Ambientes, IaC, segredos, migrations e backup | full/M | approved | ⛔ impedimento IMP-01 (externo → thomas (provisionar a infraestrutura e cadastrar os segredos), 15d) |  |
+| 1 | SPEC-0007 | Walking skeleton: página do bar e TV tocando | full/M | approved | ✅ pronta |  |
+| 1 | SPEC-0030 | Reforço dos testes do Juker.Infrastructure (mutation score) | lite/S | proposed | ⏳ aguardando aprovação (H1) |  |
+| 2 | SPEC-0008 | Observabilidade básica | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
+| 2 | SPEC-0009 | Segurança básica e autorização | full/M | approved | ⛔ aguarda implementação de SPEC-0007 |  |
+| 3 | SPEC-0011 | Bar, configurações da noite e termos de uso | full/M | approved | ⛔ aguarda implementação de SPEC-0007; aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 |  |
+| 3 | SPEC-0012 | Tempo real por bar | full/M | approved | ⛔ aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 |  |
+| 3 | SPEC-0013 | Entrada do cliente com comanda e PIN da TV | full/M | approved | ⛔ aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 |  |
+| 4 | SPEC-0015 | Catálogo e busca local | full/M | approved | ⛔ aguarda implementação de SPEC-0007; aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 | saiu da onda 3: max_parallel=3 |
+| 4 | SPEC-0020 | Reprodução e controle do player | full/M | approved | ⛔ aguarda implementação de SPEC-0007; aguarda implementação de SPEC-0008; aguarda implementação de SPEC-0009 | saiu da onda 3: max_parallel=3 |
+| 5 | SPEC-0014 | Busca externa no YouTube com controle de cota | full/M | approved | ⛔ aguarda implementação de SPEC-0015 |  |
+| 5 | SPEC-0018 | Fila justa | full/M | approved | ⛔ aguarda implementação de SPEC-0013; aguarda implementação de SPEC-0015 |  |
+| 5 | SPEC-0021 | Tela da TV | full/M | approved | ⛔ aguarda implementação de SPEC-0020 |  |
+| 6 | SPEC-0016 | Manutenção do catálogo | full/M | approved | ⛔ aguarda implementação de SPEC-0014 |  |
+| 6 | SPEC-0022 | Bloqueio de comanda e modo ouvinte | full/M | approved | ⛔ aguarda implementação de SPEC-0013; aguarda implementação de SPEC-0018 |  |
+| 6 | SPEC-0024 | Telas da fila, Minhas e pedido pela busca | full/M | approved | ⛔ aguarda implementação de SPEC-0018 |  |
+| 7 | SPEC-0023 | Painel do gerente | full/M | approved | ⛔ aguarda implementação de SPEC-0021; aguarda implementação de SPEC-0022 |  |
+| 7 | SPEC-0017 | Modo karaokê | full/M | approved | ⛔ aguarda implementação de SPEC-0014; aguarda implementação de SPEC-0020; aguarda implementação de SPEC-0024 |  |
+| 7 | SPEC-0019 | Votos e auto-remoção | full/M | approved | ⛔ aguarda implementação de SPEC-0024 |  |
+| 8 | SPEC-0029 | Pendências do review da SPEC-0025 | lite/S | proposed | ⏳ aguardando aprovação (H1) | saiu da onda 1: arquivos em comum com SPEC-0007; saiu da onda 2: arquivos em comum com SPEC-0009; saiu da onda 3: arquivos em comum com SPEC-0011, SPEC-0013; saiu da onda 4: arquivos em comum com SPEC-0015, SPEC-0020; saiu da onda 5: arquivos em comum com SPEC-0014, SPEC-0021; saiu da onda 6: arquivos em comum com SPEC-0022, SPEC-0024; saiu da onda 7: arquivos em comum com SPEC-0023, SPEC-0017, SPEC-0019 |
 
 ## Épicos
 
 | Épico | Título | Status | Progresso |
 |---|---|---|---|
-| SPEC-0001 | Fundação do Juker | approved | 7/13 implementadas |
+| SPEC-0001 | Fundação do Juker | approved | 8/14 implementadas |
 | SPEC-0010 | MVP Jukebox colaborativa | approved | 0/14 implementadas |
 
 ## Grafo de Dependências
@@ -77,17 +76,16 @@ Seta contínua: depende da implementação. Seta tracejada: consome contrato.
 ```mermaid
 flowchart LR
   subgraph E0001["SPEC-0001 · Fundação do Juker"]
-    S0002["SPEC-0002<br/>Repositório, solução e tooling"]:::implemented
     S0003["SPEC-0003<br/>Harness de testes de integração e suíte…"]:::implemented
     S0004["SPEC-0004<br/>Building blocks dos módulos"]:::implemented
-    S0005["SPEC-0005<br/>Pipeline de CI"]:::inprogress
+    S0005["SPEC-0005<br/>Pipeline de CI"]:::implemented
     S0006["SPEC-0006<br/>Ambientes, IaC, segredos, migrations e …"]:::approved
     S0007["SPEC-0007<br/>Walking skeleton: página do bar e TV to…"]:::approved
     S0008["SPEC-0008<br/>Observabilidade básica"]:::approved
     S0009["SPEC-0009<br/>Segurança básica e autorização"]:::approved
     S0025["SPEC-0025<br/>Harness de E2E e ambiente de teste cont…"]:::implemented
-    S0027["SPEC-0027<br/>Pendências do review da SPEC-0003"]:::implemented
     S0029["SPEC-0029<br/>Pendências do review da SPEC-0025"]:::proposed
+    S0030["SPEC-0030<br/>Reforço dos testes do Juker.Infrastruct…"]:::proposed
   end
   subgraph E0010["SPEC-0010 · MVP Jukebox colaborativa"]
     S0011["SPEC-0011<br/>Bar, configurações da noite e termos de…"]:::approved
@@ -105,15 +103,11 @@ flowchart LR
     S0023["SPEC-0023<br/>Painel do gerente"]:::approved
     S0024["SPEC-0024<br/>Telas da fila, Minhas e pedido pela bus…"]:::approved
   end
-  S0002 --> S0003
-  S0002 --> S0004
   S0003 -. contrato v2 .-> S0004
-  S0002 --> S0005
-  S0027 --> S0005
   S0025 --> S0005
   S0003 -. contrato v2 .-> S0005
   S0025 -. contrato v3 .-> S0005
-  S0005 -. contrato v3 .-> S0006
+  S0005 -. contrato v4 .-> S0006
   S0003 --> S0007
   S0004 --> S0007
   S0005 --> S0007
@@ -170,8 +164,9 @@ flowchart LR
   S0020 -. contrato v1 .-> S0024
   S0012 -. contrato v1 .-> S0024
   S0003 --> S0025
-  S0003 --> S0027
   S0025 --> S0029
+  S0004 --> S0030
+  S0005 --> S0030
   classDef proposed fill:#fef3c7,stroke:#d97706,color:#111
   classDef approved fill:#dbeafe,stroke:#2563eb,color:#111
   classDef inprogress fill:#ede9fe,stroke:#7c3aed,color:#111
@@ -187,8 +182,8 @@ flowchart LR
 | [SPEC-0002](SPEC-0002-repositorio-solucao-e-tooling.md) | Repositório, solução e tooling | full | foundation | implemented | 2026-09-30 | SPEC-0001 | — | — |
 | [SPEC-0003](SPEC-0003-harness-de-testes-e-suite-de-arquitetura.md) | Harness de testes de integração e suíte de arquitetura | full | foundation | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002 | — |
 | [SPEC-0004](SPEC-0004-building-blocks-dos-modulos.md) | Building blocks dos módulos | full | foundation | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002 | SPEC-0003@2 |
-| [SPEC-0005](SPEC-0005-pipeline-de-ci.md) | Pipeline de CI | full | foundation | in-progress | 2026-09-30 | SPEC-0001 | SPEC-0002, SPEC-0027, SPEC-0025 | SPEC-0003@2, SPEC-0025@3 |
-| [SPEC-0006](SPEC-0006-ambientes-iac-segredos-migrations-e-backup.md) | Ambientes, IaC, segredos, migrations e backup | full | foundation | approved | 2026-09-30 | SPEC-0001 | — | SPEC-0005@3 |
+| [SPEC-0005](SPEC-0005-pipeline-de-ci.md) | Pipeline de CI | full | foundation | implemented | 2026-09-30 | SPEC-0001 | SPEC-0002, SPEC-0027, SPEC-0025 | SPEC-0003@2, SPEC-0025@3 |
+| [SPEC-0006](SPEC-0006-ambientes-iac-segredos-migrations-e-backup.md) | Ambientes, IaC, segredos, migrations e backup | full | foundation | approved | 2026-09-30 | SPEC-0001 | — | SPEC-0005@4 |
 | [SPEC-0007](SPEC-0007-walking-skeleton-pagina-do-bar-e-tv.md) | Walking skeleton: página do bar e TV tocando | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0003, SPEC-0004, SPEC-0005, SPEC-0025 | — |
 | [SPEC-0008](SPEC-0008-observabilidade-basica.md) | Observabilidade básica | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0007 | — |
 | [SPEC-0009](SPEC-0009-seguranca-basica-e-autorizacao.md) | Segurança básica e autorização | full | foundation | approved | 2026-09-30 | SPEC-0001 | SPEC-0007 | — |
@@ -212,6 +207,7 @@ flowchart LR
 | [SPEC-0027](SPEC-0027-pendencias-do-review-da-spec-0003.md) | Pendências do review da SPEC-0003 | lite | refactor | implemented | 2026-10-01 | SPEC-0001 | SPEC-0003 | — |
 | [SPEC-0028](SPEC-0028-pendencias-do-review-da-spec-0026.md) | Pendências do review da SPEC-0026 | lite | fix | implemented | 2026-10-01 | SPEC-0001 | SPEC-0026 | — |
 | [SPEC-0029](SPEC-0029-pendencias-do-review-da-spec-0025.md) | Pendências do review da SPEC-0025 | lite | fix | proposed | 2026-10-13 | SPEC-0001 | SPEC-0025 | — |
+| [SPEC-0030](SPEC-0030-reforco-dos-testes-do-juker-infrastructure-mutation-score.md) | Reforço dos testes do Juker.Infrastructure (mutation score) | lite | refactor | proposed | 2026-10-15 | SPEC-0001 | SPEC-0004, SPEC-0005 | — |
 
 ## ADRs
 
