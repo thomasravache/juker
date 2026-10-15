@@ -24,8 +24,9 @@ Endpoints do host:
 | Objetivo | Comando |
 |---|---|
 | Build | `dotnet build Juker.slnx -c Release -warnaserror` |
-| Testes | `dotnet test --project tests/Juker.IntegrationTests -c Release` |
+| Testes | `dotnet test --solution Juker.slnx -c Release` (Docker necessário) |
 | Lint | `dotnet format Juker.slnx --verify-no-changes` |
+| CI | GitHub Actions em todo PR e push na `main` — ver [docs/ci.md](docs/ci.md) |
 
 Convenções de código, commits (Conventional Commits com `Refs: SPEC-NNNN`), CHANGELOG (Keep a Changelog) e
 versões (SemVer) estão em [AGENTS.md](AGENTS.md). Specs em [docs/specs](docs/specs/INDEX.md), decisões em [docs/adr](docs/adr).

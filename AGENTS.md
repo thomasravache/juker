@@ -28,6 +28,8 @@ Jukebox colaborativa para bares: monólito modular em .NET 10 com vertical slice
 | Lint | `dotnet format Juker.slnx --verify-no-changes` (corrigir: `dotnet format Juker.slnx`) |
 | Rodar localmente | `dotnet run --project src/Aspire/Juker.AppHost` |
 | Estado das specs | `python3 tools/sdd/spec_graph.py status` |
+| CI (GitHub Actions) | `docs/ci.md` (jobs, como ler cada falha, artefatos, cota); acompanhar um PR: `gh pr checks --watch` |
+| Mutation testing | `bash tools/ci/mutation.sh -f tests/Juker.BuildingBlocks.UnitTests/stryker-config.json` (não bloqueante; `mutation.yml` semanal) |
 
 ## Convenções de código
 - Configuração comum em `Directory.Build.props` (net10.0, `Nullable`, `TreatWarningsAsErrors`, `AnalysisLevel=latest-recommended`,
