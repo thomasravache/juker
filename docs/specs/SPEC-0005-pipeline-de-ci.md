@@ -4,7 +4,7 @@ title: Pipeline de CI
 tier: full
 type: foundation
 user_facing: false
-status: in-progress
+status: implemented
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002, SPEC-0027, SPEC-0025]
@@ -182,7 +182,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | G5 Integração & CI | PASS | build exit 0 (Time Elapsed 00:00:16.61); test exit 0 (duration: 1m 51s 681ms); test_integration exit 0 (duration: 1m 44s 781ms); test_e2e exit 0 (duration: 22s 871ms); arch_test exit 0 (duration: 1s 422ms); security_scan exit 0 (6:46PM INF no leaks found) — dfd3a28; GitHub real (ci-check.sh, /tmp/spec-0005-it.tsv): IT-01 PARTIAL run 38641244130 (unit=failure, sem merge; bloqueio pela plataforma adiado — v4), IT-02 PASS run 38635305684, IT-03 PASS run 38636594256, IT-05 PASS run 38637766504, IT-06 PASS runs 38638653308/38639860693; IT-04 e IT-07 no PR de integração | 2026-10-14 |
 | H2 Integração aprovada | PASS | aprovado por thomas — política h2_policy auto-on-green (autorizada em 2026-10-13): PR #10 mesclado com merge commit 1fa8ef3 depois de todos os checks verdes (run 38681170219, 385 s) | 2026-10-15 |
 | G6 Deploy | N/A | CD adiado: deploy em ambiente é a SPEC-0006 (IMP-01, decisão de custos do fim); a entrega desta spec é o próprio workflow na main, verificado no GitHub real (IT-04: imagem ghcr.io/thomasravache/juker:1fa8ef3 publicada no push da main, run 38681772371) | 2026-10-15 |
-| G7 Pronto & Docs | PENDING | | |
+| G7 Pronto & Docs | PASS | Relatório de Entrega e Definição de Pronto: ok — 0848d03 | 2026-10-15 |
 
 ## 13. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
