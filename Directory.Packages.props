@@ -48,6 +48,10 @@
     <!-- Só no fixture de violações do IT-02 (ARQ-08): nunca em projeto de teste real -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
   </ItemGroup>
+  <ItemGroup Label="Testes do pipeline de CI (SPEC-0005, ADR-0011)">
+    <!-- Leitura dos workflows e do dependabot.yml no Juker.CiTests; mesma versão que o Aspire.Hosting traz -->
+    <PackageVersion Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
   <ItemGroup Label="Harness de E2E (SPEC-0025, ADR-0011, ADR-0013)">
     <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
     <!-- axe-core para o Playwright .NET (AssertNoA11yViolationsAsync, ADR-0013 regra 11) -->

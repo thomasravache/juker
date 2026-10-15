@@ -45,6 +45,7 @@ A SDD exige UT, IT com dependências reais, CT, E2E e testes de arquitetura, tod
 | Integração | xUnit v3 + WebApplicationFactory + Testcontainers (Postgres 18 real) + WireMock.Net | Dependências reais, sem banco em memória (ADR-0012) | Local com Docker e CI (job `integration`) |
 | Contrato | Snapshot de API pública (PublicApiGenerator) e testes sobre YAML/HTTP | Congela contratos aprovados | Local e CI |
 | E2E | Playwright .NET (Chromium e WebKit) com o app iniciado pelo `Aspire.Hosting.Testing` | Mesma linguagem, cobre celular (WebKit) e TV/painel (ADR-0013) | Local e CI (job `e2e`); smoke contra o ambiente no deploy |
+| Contrato de configuração (CI) | YamlDotNet para ler os workflows, o `dependabot.yml` e o `sdd-config.yml` nos testes do `Juker.CiTests` | Parser YAML maduro e MIT, já presente como dependência do Aspire.Hosting.Testing; fixado explicitamente (SPEC-0005, emenda de escopo aprovada por thomas em 2026-10-13) | Local e CI (job `unit`) |
 | Arquitetura | ArchUnitNET | Regras ARQ-01..ARQ-08 como testes (G3) | Local e CI (job `architecture`) |
 
 ### Consequências

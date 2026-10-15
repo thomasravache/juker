@@ -1,0 +1,13 @@
+# Configuração do gitleaks (job security do ci.yml; SPEC-0005:IT-03, ADR-0016).
+#
+# Usa as regras padrão do gitleaks sem enfraquecer nenhuma: um segredo commitado (inclusive a chave falsa
+# ghp_FAKE… da verificação IT-03) precisa continuar falhando o job. Nenhuma exceção é necessária hoje: o histórico
+# inteiro passa limpo com as regras padrão (gitleaks 8.30.1, 2026-10-13).
+#
+# Para acrescentar uma exceção: prefira o comentário `gitleaks:allow` na própria linha (falso positivo pontual) ou
+# uma entrada abaixo restrita ao caminho exato e ao trecho, nunca por regra inteira nem por diretório amplo;
+# cada entrada leva um comentário com o motivo e passa pela revisão do PR.
+title = "Juker"
+
+[extend]
+useDefault = true

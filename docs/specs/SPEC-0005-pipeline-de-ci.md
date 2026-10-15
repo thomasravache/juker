@@ -4,13 +4,13 @@ title: Pipeline de CI
 tier: full
 type: foundation
 user_facing: false
-status: approved
+status: in-progress
 created: 2026-09-30
 parent: SPEC-0001
 depends_on: [SPEC-0002, SPEC-0027, SPEC-0025]
 consumes_contract: [SPEC-0003@2, SPEC-0025@3]
-contract_version: 2
-touches: [.github/workflows/ci.yml, .github/workflows/mutation.yml, .github/dependabot.yml, .gitleaks.toml, .config/dotnet-tools.json, tools/sdd/**, tools/ci/**, tests/Juker.CiTests/**, tests/**/stryker-config.json, docs/ci.md]
+contract_version: 4
+touches: [.github/workflows/ci.yml, .github/workflows/mutation.yml, .github/dependabot.yml, .gitleaks.toml, .config/dotnet-tools.json, tools/sdd/**, tools/ci/**, tests/Juker.CiTests/**, tests/**/stryker-config.json, docs/ci.md, Juker.slnx, tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, Directory.Packages.props]
 adrs: [ADR-0009, ADR-0011, ADR-0013, ADR-0014]
 external: []
 size: M
@@ -21,7 +21,7 @@ approved_at: 2026-09-30
 # SPEC-0005 — Pipeline de CI
 
 ## 1. Visão Geral
-Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, lint, testes unitários, integração (com Docker), arquitetura, E2E (Playwright), auditoria de dependências, varredura de segredos, o job SDD (`validate` + `pr-check`) e o build da imagem do container. Os jobs viram checks obrigatórios na proteção da `main`, que fica sempre verde e implantável.
+Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, lint, testes unitários, integração (com Docker), arquitetura, E2E (Playwright), auditoria de dependências, varredura de segredos, o job SDD (`validate` + `pr-check`) e o build da imagem do container. Os jobs viram checks obrigatórios na proteção da `main` quando ela for ativada (adiada para a decisão de custos — emenda v4); até lá o merge só acontece com todos verdes (`auto-on-green`), e a `main` fica sempre verde e implantável.
 
 ## 2. Motivação & Escopo
 **Motivação:** o modelo não lembra do processo; o CI garante que nada chega à `main` sem spec aprovada, testes vermelhos antes dos verdes e todos os gates.
@@ -34,7 +34,8 @@ Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, 
 - `security`: `dotnet list package --vulnerable --include-transitive` (falha em High/Critical) e `gitleaks detect`.
 - `image`: build da imagem do `Juker.Host` (Dockerfile gerado pelo Aspire/SDK container) com tag `sha`; publicação no GHCR só em push na `main` (usada por SPEC-0006).
 - Resultados de teste publicados como artefato (TRX) e resumo no job.
-- `dependabot.yml` para NuGet e GitHub Actions (semanal).
+- `dependabot.yml` para NuGet e GitHub Actions (semanal, com as atualizações agrupadas num PR por ecossistema e no máximo 2 PRs abertos por ecossistema).
+- Consumo dentro da cota gratuita (emenda v3): `concurrency` com `cancel-in-progress` por branch/PR, artefatos com `retention-days: 7` e `actions/cache` para NuGet e navegadores.
 - `docs/ci.md` com a lista de checks obrigatórios e a instrução para o fundador ativar a proteção de branch (ação humana).
 - Preenche `ci`, `lint`, `security_scan`, `coverage` e `mutation` no `sdd-config.yml`.
 
@@ -50,7 +51,7 @@ Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, 
 ## 4. Decisão Arquitetural
 **Contexto:** projeto novo; ADR-0009 (GitHub Actions, GHCR), ADR-0011 (ferramentas de teste) e ADR-0013 (E2E com Chromium e WebKit e artefatos de falha).
 
-**Decisão:** um único workflow de CI com jobs paralelos após o `build`, reutilizando os artefatos de build, e o job `image` dependente de todos os jobs de qualidade.
+**Decisão:** um único workflow de CI com jobs paralelos após o `build`, cada um compilando o que usa (a saída de build passa da cota de artefatos do plano gratuito — emenda v4), `coverage` depois de `unit` e `integration` e o job `image` dependente de todos os jobs de qualidade.
 
 **Justificativa:** o feedback fica rápido com os jobs em paralelo, e a imagem só existe se tudo passou.
 
@@ -66,14 +67,14 @@ Workflow do GitHub Actions que roda em todo PR e em todo push em `main`: build, 
 - **Privacidade e dados pessoais:** N/A — sem dados de usuários.
 - **Disponibilidade e resiliência:** jobs idempotentes; falha de rede no restore tenta de novo uma vez (retry do `setup-dotnet`) — sem retry de testes (teste instável é defeito).
 - **Acessibilidade (UI):** N/A.
-- **Custo:** dentro da cota gratuita de minutos do GitHub para repositório privado — acompanhado no resumo de uso mensal.
+- **Custo:** dentro da cota gratuita do GitHub Free para repositório privado (2.000 min/mês de Actions e 500 MB de armazenamento de artefatos, compartilhado com Packages; imagens no GHCR hoje sem cobrança — docs.github.com, consultado em 2026-10-13). Estimativa: ~40 min-runner por execução completa do CI; mutation semanal; Dependabot agrupado. O uso real é medido no IT-04 e acompanhado no resumo mensal; qualquer coisa que exija plano pago é decisão do fundador (ADR-0019).
 
 ## 6. Artefato A — Contrato
 **Interface:** nomes dos checks obrigatórios, gatilhos e artefatos do workflow `ci.yml`.
 
 ```text
 on: pull_request (branches: main) | push (branches: main)
-jobs (checks obrigatórios na proteção da main):
+jobs (checks obrigatórios na proteção da main, quando ativada — emenda v4):
   build          → dotnet build Juker.slnx -c Release -warnaserror
   lint           → dotnet format Juker.slnx --verify-no-changes
   unit           → dotnet test --solution Juker.slnx -c Release --filter-trait "Category=Unit"
@@ -86,7 +87,7 @@ jobs (checks obrigatórios na proteção da main):
   sdd            → spec_graph.py validate --exclude-drafts ; spec_graph.py pr-check (só em PR)
   image          → needs: todos acima; push em main publica ghcr.io/<owner>/juker:<sha>
 artefatos: test-results-<job> (TRX), coverage-report, playwright-traces (só em falha do e2e), image digest (output "image_digest")
-mutation.yml (não obrigatório): on schedule (diário, 03:00 UTC) | workflow_dispatch
+mutation.yml (não obrigatório): on schedule (semanal, domingo 03:17 UTC) | workflow_dispatch
   → dotnet stryker -f tests/<Módulo>.UnitTests/stryker-config.json (break 80) ; artefato mutation-report
 ```
 
@@ -165,7 +166,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 - [ ] Validar: build + suíte completa + arquitetura + cobertura do diff ≥ 80% (G2/G3)
 
 **Fase final: Integração, entrega e documentação**
-- [ ] Review independente (G4)
+- [x] Review independente (G4)
 - [ ] Integração + CI verde (G5) e aprovação (H2)
 - [ ] Deploy via pipeline com smoke/E2E no ambiente (G6)
 - [ ] Relatório de Entrega, docs raiz e CHANGELOG (G7)
@@ -174,11 +175,11 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 | Gate | Status | Evidência | Data |
 |---|---|---|---|
 | G0 Spec | PASS | `spec_graph.py validate SPEC-0005` → G0 [SPEC-0005]: PASS — 0 erro(s), 0 aviso(s); checklist de julgamento do G0 revisado pelo Architect (revisão ADR-0014) | 2026-09-30 |
-| G1 Red | PENDING | | |
-| G2 Green | PENDING | | |
-| G3 Arquitetura | PENDING | | |
-| G4 Review | PENDING | | |
-| G5 Integração & CI | PENDING | | |
+| G1 Red | PASS | verify G1: PASS; `dotnet test --solution Juker.slnx -c Release` exit 2 (red: Test run completed with non-success exit code: 2 (see: https://aka.ms/testingplatform/exit) — 531ea2c | 2026-10-13 |
+| G2 Green | PASS | build exit 0 (Time Elapsed 00:00:05.08); test exit 0 (duration: 1m 31s 669ms); lint exit 0 () — 2fff29a | 2026-10-14 |
+| G3 Arquitetura | PASS | arch_test exit 0 (duration: 1s 263ms) — 2fff29a | 2026-10-14 |
+| G4 Review | PASS | verify G1+G4: PASS; revisão: Reviewer independente: APPROVED em 2fff29a contra o contrato v4 (aprovado por thomas em 2026-10-14); achados 1, 5 e 6 corrigidos em b12cfef/2fff29a; desvios (d) aceitos na emenda v4 — 2ec7bc3 | 2026-10-14 |
+| G5 Integração & CI | PASS | build exit 0 (Time Elapsed 00:00:16.61); test exit 0 (duration: 1m 51s 681ms); test_integration exit 0 (duration: 1m 44s 781ms); test_e2e exit 0 (duration: 22s 871ms); arch_test exit 0 (duration: 1s 422ms); security_scan exit 0 (6:46PM INF no leaks found) — dfd3a28; GitHub real (ci-check.sh, /tmp/spec-0005-it.tsv): IT-01 PARTIAL run 38641244130 (unit=failure, sem merge; bloqueio pela plataforma adiado — v4), IT-02 PASS run 38635305684, IT-03 PASS run 38636594256, IT-05 PASS run 38637766504, IT-06 PASS runs 38638653308/38639860693; IT-04 e IT-07 no PR de integração | 2026-10-14 |
 | H2 Integração aprovada | PENDING | | |
 | G6 Deploy | PENDING | | |
 | G7 Pronto & Docs | PENDING | | |
@@ -186,6 +187,9 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 13. Registro de Impedimentos
 | ID | Aberto em | Fase/Gate | Tipo | Descrição | Tentativas | Responsável | Resolução | Fechado em |
 |---|---|---|---|---|---|---|---|---|
+| IMP-01 | 2026-10-13 | G1 | spec | touches não inclui Juker.slnx nem tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj, necessários para registrar o projeto novo tests/Juker.CiTests (convenção da SPEC-0003/0027); os testes do CT-01 leem YAML com YamlDotNet, que chega só transitivamente pelo Aspire.Hosting.Testing e não está em nenhum ADR nem fixado no Directory.Packages.props | Test-writer escreveu UT-01, CT-01 e o script IT-01..IT-07 dentro do touches; verify PASS; não editou os dois arquivos | Architect (emenda de escopo) + thomas (aprovação) | Emenda de escopo de 2026-10-13 (touches com Juker.slnx, csproj da suíte de arquitetura e Directory.Packages.props; YamlDotNet explícito e no ADR-0011) — aprovada por thomas | 2026-10-13 |
+| IMP-02 | 2026-10-14 | G4 | decisão | GitHub Free não permite proteção de branch nem rulesets em repositório privado (API: 403 'Upgrade to GitHub Pro or make this repository public'); o contrato pede os jobs como checks obrigatórios na proteção da main, o IT-01 espera 'o PR não pode ser mesclado' e o rollout prevê o fundador ativando a proteção | Implementer e Architect consultaram repos/thomasravache/juker/branches/main/protection e /rulesets (403); docs/ci.md já traz o passo a passo para quando houver | thomas (GitHub Pro, repositório público, ou seguir só com a política auto-on-green + pr-check até a decisão de custos no fim) | Opção A aprovada por thomas no chat (2026-10-14): sem proteção de branch até a decisão de custos do fim (ADR-0019); merge só com todos os checks verdes pela política auto-on-green (ADR-0015); Emenda v4 | 2026-10-14 |
+| IMP-03 | 2026-10-14 | G5 | externo | Cota gratuita de Actions para repositórios privados da conta esgotada em 2026-10-14 (crash-games-provider 1989 min + juker 114 min > 2000): o run 38642965666 do PR #10 não iniciou nenhum job ('recent account payments have failed or your spending limit needs to be increased'); IT-04 (merge do PR #10 com checks verdes) e IT-07 (mutation.yml) não podem rodar | IT-01 PARTIAL e IT-02/03/05/06 PASS rodaram antes do limite; G5 local PASS em dfd3a28; uso por repositório conferido pela API de billing (por dia); PR #10 segue aberto, sem merge | thomas (esperar o reset em 2026-11-01, runner self-hosted na máquina local, ou orçamento pago — decisão de custos) | thomas decidiu no chat (2026-10-15): repositório público até o fim das implementações, depois volta a privado (Actions sem limite de minutos em repo público). Antes da troca: gitleaks em todo o histórico (--all, 130 commits) sem segredos; o token FALSO do IT-03 segue só em refs/pull/6/head; thomas aceitou expor o e-mail corporativo dos 68 commits de 30/09 a 06/10. PRs de fork exigem aprovação (first_time_contributors) | 2026-10-15 |
 
 ## 14. Relatório de Entrega
 
@@ -220,4 +224,7 @@ Registrada no frontmatter (`approved_by`, `approved_at`) somente depois que o hu
 ## 15. Emendas
 | Versão do contrato | Data | Mudança | Motivo | Specs impactadas | Aprovado por |
 |---|---|---|---|---|---|
+| 4 | 2026-10-14 | (a) Proteção de branch adiada para a decisão de custos do fim (ADR-0019): até lá, os checks rodam em todo PR e o merge só acontece com todos verdes pela política `auto-on-green` (ADR-0015), sem bloqueio pela plataforma; o IT-01 passa a exigir só o job `unit` vermelho e o PR sem merge; `docs/ci.md` mantém o passo a passo para ativar a proteção. (b) Decisão Arquitetural: cada job compila o que usa, em vez de reaproveitar os artefatos do `build` (a saída de build tem ~900 MB, acima dos 500 MB de artefatos do plano gratuito); `coverage` depende de `unit` e `integration` e `image` de todos. (c) O `mutation.yml` começa vermelho (score 46,94% no `Juker.Infrastructure`, abaixo do `break` 80) sem bloquear PRs; o reforço dos testes vira spec própria. ADR-0014 alinhado: Stryker semanal. (d) Desvios aceitos do review: `packages: write` vale para o job `image` inteiro (permissão de job não depende do evento; o login e a publicação só rodam em push na `main` e PR de fork recebe token só de leitura); `pull_request` sem o tipo `edited` (corrigir título/corpo do PR exige rodar o `sdd` de novo à mão, documentado em `docs/ci.md`, para não repetir o CI inteiro a cada edição e economizar cota) | IMP-02: GitHub Free não permite proteção de branch em repositório privado (403); Implementer: artefatos de build excedem a cota; Stryker real com 23 mortos, 11 sobreviventes e 15 sem cobertura | SPEC-0006 (consome @3 — só nomes de jobs/saída da imagem, sem mudança; repinar @4) | thomas, 2026-10-14 (chat: "Aprovado", opção A do IMP-02) |
+| escopo | 2026-10-13 | `touches` inclui `Juker.slnx` e `tests/Juker.ArchitectureTests/Juker.ArchitectureTests.csproj` (registrar o projeto `tests/Juker.CiTests`) e `Directory.Packages.props` (fixar YamlDotNet, referenciado explicitamente pelo `Juker.CiTests` em vez de chegar só pelo Aspire.Hosting.Testing); ADR-0011 passa a listar o YamlDotNet para leitura de YAML nos testes de contrato do CI | IMP-01 (SPEC_DEFECT do Test-writer): projeto de teste novo precisa estar na solução e nas referências da suíte de arquitetura (UT-02/UT-03 da SPEC-0027); dependência indireta não declarada quebraria sem aviso numa atualização do Aspire (ADR-0017) | Nenhuma | thomas — no chat em 2026-10-13 ("aprovado") |
+| 3 | 2026-10-13 | `mutation.yml` passa de diário a semanal (domingo 03:17 UTC) + manual; Dependabot agrupado por ecossistema com no máximo 2 PRs abertos; `concurrency` com `cancel-in-progress`, artefatos com `retention-days: 7` e cache de NuGet e navegadores; NFR de custo com os limites do GitHub Free | Revisão do Architect antes do despacho: com mutation diário e Dependabot sem agrupamento o consumo estimado se aproxima dos 2.000 min/mês do GitHub Free, e os artefatos do Playwright e da cobertura disputam os 500 MB; o fundador decide custos só no fim, então o CI precisa caber na cota gratuita | Nenhuma | thomas — no chat em 2026-10-13 ("aprovado") |
 | 2 | 2026-09-30 | Comandos de teste migrados para o Microsoft.Testing.Platform (xUnit v3 no .NET 10): `dotnet test --solution/--project … --filter-trait "Category=…"` e `--list-tests`, no lugar da sintaxe VSTest (`dotnet test <sln> --filter Category=…`) | O xUnit v3 4.x roda no MTP e o SDK do .NET 10 recusa a sintaxe VSTest (constatado na SPEC-0002; `global.json` com `test.runner = Microsoft.Testing.Platform`) | Nenhuma (nenhuma spec consome o contrato da SPEC-0005 além da SPEC-0006, que usa só o output/tag da imagem, inalterados) | thomas, 2026-09-30 |
